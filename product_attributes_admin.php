@@ -40,6 +40,10 @@ if (!$autoload_exists) {
 // Test basic FA UI functions
 display_notification("FrontAccounting UI functions are working");
 
+// Debug: Check FA constants and paths
+display_notification("FA_ROOT: " . (defined('FA_ROOT') ? constant('FA_ROOT') : 'not defined'));
+display_notification("TB_PREF: " . (defined('TB_PREF') ? constant('TB_PREF') : 'not defined'));
+
 use Ksfraser\FA_ProductAttributes\Db\FrontAccountingDbAdapter;
 use Ksfraser\FA_ProductAttributes\Dao\ProductAttributesDao;
 use Ksfraser\HTML\Elements\HtmlTable;
