@@ -40,44 +40,51 @@ try {
     exit;
 }
 
+// Debug: show table prefix
+display_notification("Table prefix: " . $db->getTablePrefix());
+
 $tab = $_GET['tab'] ?? 'categories';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = $_POST['action'] ?? '';
 
-    if ($action === 'upsert_category') {
-        $dao->upsertCategory(
-            trim((string)($_POST['code'] ?? '')),
-            trim((string)($_POST['label'] ?? '')),
-            trim((string)($_POST['description'] ?? '')),
-            (int)($_POST['sort_order'] ?? 0),
-            isset($_POST['active'])
-        );
-        display_notification(_("Saved category"));
-    }
-
-    if ($action === 'upsert_value') {
-        $categoryId = (int)($_POST['category_id'] ?? 0);
-        $dao->upsertValue(
-            $categoryId,
-            trim((string)($_POST['value'] ?? '')),
-            trim((string)($_POST['slug'] ?? '')),
-            (int)($_POST['sort_order'] ?? 0),
-            isset($_POST['active'])
-        );
-        display_notification(_("Saved value"));
-    }
-
-    if ($action === 'add_assignment') {
-        $stockId = trim((string)($_POST['stock_id'] ?? ''));
-        $categoryId = (int)($_POST['category_id'] ?? 0);
-        $valueId = (int)($_POST['value_id'] ?? 0);
-        $sortOrder = (int)($_POST['sort_order'] ?? 0);
-
-        if ($stockId !== '' && $categoryId > 0 && $valueId > 0) {
-            $dao->addAssignment($stockId, $categoryId, $valueId, $sortOrder);
-            display_notification(_("Added assignment"));
+    try {
+        if ($action === 'upsert_category') {
+            $dao->upsertCategory(
+                trim((string)($_POST['code'] ?? '')),
+                trim((string)($_POST['label'] ?? '')),
+                trim((string)($_POST['description'] ?? '')),
+                (int)($_POST['sort_order'] ?? 0),
+                isset($_POST['active'])
+            );
+            display_notification(_("Saved category"));
         }
+
+        if ($action === 'upsert_value') {
+            $categoryId = (int)($_POST['category_id'] ?? 0);
+            $dao->upsertValue(
+                $categoryId,
+                trim((string)($_POST['value'] ?? '')),
+                trim((string)($_POST['slug'] ?? '')),
+                (int)($_POST['sort_order'] ?? 0),
+                isset($_POST['active'])
+            );
+            display_notification(_("Saved value"));
+        }
+
+        if ($action === 'add_assignment') {
+            $stockId = trim((string)($_POST['stock_id'] ?? ''));
+            $categoryId = (int)($_POST['category_id'] ?? 0);
+            $valueId = (int)($_POST['value_id'] ?? 0);
+            $sortOrder = (int)($_POST['sort_order'] ?? 0);
+
+            if ($stockId !== '' && $categoryId > 0 && $valueId > 0) {
+                $dao->addAssignment($stockId, $categoryId, $valueId, $sortOrder);
+                display_notification(_("Added assignment"));
+            }
+        }
+    } catch (Exception $e) {
+        display_error("Error saving: " . $e->getMessage());
     }
 }
 
@@ -107,25 +114,24 @@ if ($tab === 'categories') {
             }
             end_table();
         }
+
+        echo '<br />';
+
+        start_form(true);
+        start_table(TABLESTYLE2);
+        table_section_title(_("Add / Update Category"));
+        text_row(_("Code"), 'code', '', 20, 64);
+        text_row(_("Label"), 'label', '', 20, 64);
+        text_row(_("Description"), 'description', '', 40, 255);
+        small_amount_row(_("Sort order"), 'sort_order', 0);
+        check_row(_("Active"), 'active', true);
+        hidden('action', 'upsert_category');
+        end_table(1);
+        submit_center('save', _("Save"));
+        end_form();
     } catch (Exception $e) {
-        display_error("Error rendering categories: " . $e->getMessage());
+        display_error("Error in categories tab: " . $e->getMessage());
     }
-
-    echo '<br />';
-
-    start_form(true);
-    start_table(TABLESTYLE2);
-    table_section_title(_("Add / Update Category"));
-    text_row(_("Code"), 'code', '', 20, 64);
-    text_row(_("Label"), 'label', '', 20, 64);
-    text_row(_("Description"), 'description', '', 40, 255);
-    small_amount_row(_("Sort order"), 'sort_order', 0);
-    check_row(_("Active"), 'active', true);
-    hidden('action', 'upsert_category');
-    end_table(1);
-    submit_center('save', _("Save"));
-    end_form();
-
 } else if ($tab === 'values') {
     $categoryId = (int)($_GET['category_id'] ?? 0);
     $cats = $dao->listCategories();
