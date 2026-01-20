@@ -41,6 +41,11 @@ try {
 }
 
 // Debug: show table prefix
+if (defined('TB_PREF')) {
+    display_notification("TB_PREF defined: " . constant('TB_PREF'));
+} else {
+    display_notification("TB_PREF not defined");
+}
 display_notification("Table prefix: " . $db->getTablePrefix());
 
 $tab = $_GET['tab'] ?? 'categories';

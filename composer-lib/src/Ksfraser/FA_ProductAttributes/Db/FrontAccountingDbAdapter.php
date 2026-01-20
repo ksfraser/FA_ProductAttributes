@@ -14,13 +14,7 @@ final class FrontAccountingDbAdapter implements DbAdapterInterface
             return;
         }
 
-        if (defined('TB_PREF')) {
-            /** @var string $p */
-            $p = constant('TB_PREF');
-            $this->prefix = $p;
-            return;
-        }
-
+        // For FrontAccounting, use '0_' as default prefix for company 0
         $this->prefix = '0_';
     }
 
