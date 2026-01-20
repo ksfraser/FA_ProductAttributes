@@ -60,7 +60,17 @@ class hooks_FA_ProductAttributes extends hooks
     }
 
     function activate_extension($company, $check_only=true) {
-        global $db_connections;
+        global $db_connections, $path_to_root;
+
+        // Ensure database schema exists (programmatic creation as backup)
+        if (!$check_only) {
+            try {
+                $module_path = $path_to_root . '/modules/FA_ProductAttributes';
+                $this->createDatabaseSchema($module_path);
+            } catch (Exception $e) {
+                error_log('FA_ProductAttributes: Failed to create database schema on activation: ' . $e->getMessage());
+            }
+        }
 
         $updates = array(
             'schema.sql' => array('product_attribute_categories', 'product_attribute_values', 'product_attribute_assignments')
