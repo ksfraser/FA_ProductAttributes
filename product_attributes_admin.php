@@ -12,6 +12,13 @@ add_access_extensions();
 
 include_once($path_to_root . "/includes/ui.inc");
 
+// Force use of master database for admin operations
+global $db_connections, $db;
+$company = $_SESSION['wa_current_user']->company;
+$master_db = mysql_connect($db_connections[$company]['host'], $db_connections[$company]['user'], $db_connections[$company]['password']);
+mysql_select_db($db_connections[$company]['name'], $master_db);
+$db = $master_db;
+
 // Debug: check path
 display_notification("path_to_root: " . $path_to_root);
 display_notification("session.inc exists: " . (file_exists($path_to_root . "/includes/session.inc") ? "yes" : "no"));
