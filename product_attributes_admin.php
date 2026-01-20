@@ -119,6 +119,7 @@ if (isset($_SESSION['wa_current_user']->company)) {
     global $db_connections;
     if (isset($db_connections[$_SESSION['wa_current_user']->company]['name'])) {
         display_notification("DB name: " . $db_connections[$_SESSION['wa_current_user']->company]['name']);
+        display_notification("DB host: " . $db_connections[$_SESSION['wa_current_user']->company]['host']);
     }
 } else {
     display_notification("Current company not set");
