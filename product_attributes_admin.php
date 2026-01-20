@@ -17,6 +17,11 @@ if (!defined('FA_ROOT')) {
     define('FA_ROOT', $path_to_root . '/');
 }
 
+// Fix TB_PREF if it's incorrectly set
+if (isset($_SESSION['wa_current_user']->company)) {
+    define('TB_PREF', $_SESSION['wa_current_user']->company . '_');
+}
+
 $autoload = __DIR__ . "/composer-lib/vendor/autoload.php";
 if (is_file($autoload)) {
     require_once $autoload;
@@ -47,6 +52,17 @@ if (defined('TB_PREF')) {
     display_notification("TB_PREF not defined");
 }
 display_notification("Table prefix: " . $db->getTablePrefix());
+
+// Debug: check if tables exist
+$tables = $db->selectAll("SHOW TABLES LIKE '" . $db->getTablePrefix() . "product_attribute_%'");
+display_notification("Product attribute tables found: " . count($tables));
+
+// Debug: current company
+if (isset($_SESSION['wa_current_user']->company)) {
+    display_notification("Current company: " . $_SESSION['wa_current_user']->company);
+} else {
+    display_notification("Current company not set");
+}
 
 $tab = $_GET['tab'] ?? 'categories';
 
