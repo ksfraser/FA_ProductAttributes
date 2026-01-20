@@ -25,7 +25,15 @@ class hooks_FA_ProductAttributes extends hooks
             }
         }
 
-        return true; // Installation should continue even if composer fails
+        // Create database schema
+        try {
+            $this->createDatabaseSchema($module_path);
+        } catch (Exception $e) {
+            error_log('FA_ProductAttributes: Failed to create database schema: ' . $e->getMessage());
+            // Don't fail installation if schema creation fails
+        }
+
+        return true; // Installation should continue even if composer or schema fails
     }
 
     function install_options($app)
@@ -52,42 +60,24 @@ class hooks_FA_ProductAttributes extends hooks
     }
 
     /**
-     * Install composer dependencies for the module
+     * Create database schema for the module
      *
      * @param string $modulePath
-     * @return array
+     * @throws Exception
      */
-    private function installComposerDependencies($modulePath)
+    private function createDatabaseSchema($modulePath)
     {
-        // Include the composer autoloader if it exists
+        // Include the composer autoloader if available
         $autoloader = $modulePath . '/composer-lib/vendor/autoload.php';
         if (file_exists($autoloader)) {
             require_once $autoloader;
         }
 
-        // Try to load the ComposerInstaller class
-        $installerClass = 'Ksfraser\\FA_ProductAttributes\\Install\\ComposerInstaller';
-
-        if (class_exists($installerClass)) {
-            $installer = new $installerClass($modulePath);
-            return $installer->install();
-        } else {
-            // Fallback: try to include the file directly
-            $installerFile = $modulePath . '/composer-lib/src/Ksfraser/FA_ProductAttributes/Install/ComposerInstaller.php';
-            if (file_exists($installerFile)) {
-                require_once $installerFile;
-                if (class_exists($installerClass)) {
-                    $installer = new $installerClass($modulePath);
-                    return $installer->install();
-                }
-            }
-        }
-
-        // If we can't load the class, return an error
-        return [
-            'success' => false,
-            'message' => 'Could not load ComposerInstaller class. Make sure the module files are properly installed.',
-            'output' => ''
-        ];
+        // Create database adapter and schema manager
+        $db = new \Ksfraser\FA_ProductAttributes\Db\FrontAccountingDbAdapter();
+        $schemaManager = new \Ksfraser\FA_ProductAttributes\Schema\SchemaManager();
+        
+        // Create the schema
+        $schemaManager->ensureSchema($db);
     }
 }
