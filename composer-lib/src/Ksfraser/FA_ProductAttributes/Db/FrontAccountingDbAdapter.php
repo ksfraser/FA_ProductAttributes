@@ -14,8 +14,12 @@ final class FrontAccountingDbAdapter implements DbAdapterInterface
             return;
         }
 
-        // For FrontAccounting, use '0_' as default prefix for company 0
-        $this->prefix = '0_';
+        // Use company-based prefix if session is available, otherwise default to '0_'
+        if (isset($_SESSION['wa_current_user']->company)) {
+            $this->prefix = $_SESSION['wa_current_user']->company . '_';
+        } else {
+            $this->prefix = '0_';
+        }
     }
 
     public function getTablePrefix(): string
