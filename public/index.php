@@ -65,6 +65,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         header('Location: ?tab=values&category_id=' . $categoryId);
         exit;
     }
+
+    if ($action === 'add_assignment') {
+      $stockId = trim((string)($_POST['stock_id'] ?? ''));
+      $categoryId = (int)($_POST['category_id'] ?? 0);
+      $valueId = (int)($_POST['value_id'] ?? 0);
+      $sortOrder = (int)($_POST['sort_order'] ?? 0);
+
+      if ($stockId !== '' && $categoryId > 0 && $valueId > 0) {
+        $dao->addAssignment($stockId, $categoryId, $valueId, $sortOrder);
+      }
+
+      header('Location: ?tab=assignments&stock_id=' . rawurlencode($stockId) . '&category_id=' . $categoryId);
+      exit;
+    }
 }
 
 ?><!doctype html>
@@ -80,6 +94,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <nav>
   <a href="?tab=categories">Categories</a>
   <a href="?tab=values">Values</a>
+  <a href="?tab=assignments">Assignments</a>
 </nav>
 
 <?php if ($tab === 'categories'):
@@ -159,6 +174,87 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <div style="margin-top:8px"><button type="submit">Save</button></div>
   </form>
 </fieldset>
+
+<?php endif; ?>
+
+<?php if ($tab === 'assignments'):
+    $stockId = trim((string)($_GET['stock_id'] ?? ''));
+    $categoryId = (int)($_GET['category_id'] ?? 0);
+    $cats = $dao->listCategories();
+    if ($categoryId === 0 && count($cats) > 0) {
+        $categoryId = (int)$cats[0]['id'];
+    }
+    $values = $categoryId ? $dao->listValues($categoryId) : [];
+?>
+
+<h2>Assignments</h2>
+
+<form method="get">
+  <input type="hidden" name="tab" value="assignments" />
+  <div>
+    <label>Stock ID</label>
+    <input type="text" name="stock_id" value="<?= htmlspecialchars($stockId) ?>" placeholder="SKU / stock_id" />
+  </div>
+  <div style="margin-top:6px">
+    <label>Category</label>
+    <select name="category_id" onchange="this.form.submit()">
+      <?php foreach ($cats as $c): $id = (int)$c['id']; ?>
+        <option value="<?= htmlspecialchars((string)$id) ?>" <?= $id === $categoryId ? 'selected' : '' ?>>
+          <?= htmlspecialchars((string)$c['code']) ?>
+        </option>
+      <?php endforeach; ?>
+    </select>
+  </div>
+  <div style="margin-top:8px"><button type="submit">Load</button></div>
+</form>
+
+<?php if ($stockId !== ''):
+    $assignments = $dao->listAssignments($stockId);
+    $table = new HtmlTable(new HtmlString(''));
+    $table->addAttribute(new \Ksfraser\HTML\HtmlAttribute('class', 'tablestyle2'));
+    $table->addNested(TableBuilder::createHeaderRow(['Category', 'Value', 'Slug', 'Sort']));
+    foreach ($assignments as $a) {
+        $table->addNested(TableBuilder::createDataRow([
+            (string)($a['category_code'] ?? ''),
+            (string)($a['value_label'] ?? ''),
+            (string)($a['value_slug'] ?? ''),
+            (string)($a['sort_order'] ?? 0),
+        ]));
+    }
+    $table->toHtml();
+?>
+
+<fieldset>
+  <legend>Add Assignment</legend>
+  <form method="post">
+    <input type="hidden" name="action" value="add_assignment" />
+    <input type="hidden" name="stock_id" value="<?= htmlspecialchars($stockId) ?>" />
+    <div><label>Category</label>
+      <select name="category_id">
+        <?php foreach ($cats as $c): $id = (int)$c['id']; ?>
+          <option value="<?= htmlspecialchars((string)$id) ?>" <?= $id === $categoryId ? 'selected' : '' ?>>
+            <?= htmlspecialchars((string)$c['code']) ?>
+          </option>
+        <?php endforeach; ?>
+      </select>
+    </div>
+    <div><label>Value</label>
+      <select name="value_id">
+        <?php foreach ($values as $v): $vid = (int)$v['id']; ?>
+          <option value="<?= htmlspecialchars((string)$vid) ?>">
+            <?= htmlspecialchars((string)$v['value']) ?> (<?= htmlspecialchars((string)$v['slug']) ?>)
+          </option>
+        <?php endforeach; ?>
+      </select>
+    </div>
+    <div><label>Sort order</label><input type="number" name="sort_order" value="0" /></div>
+    <div style="margin-top:8px"><button type="submit">Add</button></div>
+  </form>
+</fieldset>
+
+<?php else: ?>
+<p>Enter a Stock ID to view/add assignments.</p>
+<?php endif; ?>
 
 <?php endif; ?>
 

@@ -59,11 +59,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         );
         display_notification(_("Saved value"));
     }
+
+    if ($action === 'add_assignment') {
+        $stockId = trim((string)($_POST['stock_id'] ?? ''));
+        $categoryId = (int)($_POST['category_id'] ?? 0);
+        $valueId = (int)($_POST['value_id'] ?? 0);
+        $sortOrder = (int)($_POST['sort_order'] ?? 0);
+
+        if ($stockId !== '' && $categoryId > 0 && $valueId > 0) {
+            $dao->addAssignment($stockId, $categoryId, $valueId, $sortOrder);
+            display_notification(_("Added assignment"));
+        }
+    }
 }
 
 echo '<div style="margin:8px 0">'
     . '<a href="?tab=categories">Categories</a> | '
-    . '<a href="?tab=values">Values</a>'
+    . '<a href="?tab=values">Values</a> | '
+    . '<a href="?tab=assignments">Assignments</a>'
     . '</div>';
 
 if ($tab === 'categories') {
@@ -97,7 +110,7 @@ if ($tab === 'categories') {
     submit_center('save', _("Save"));
     end_form();
 
-} else {
+} else if ($tab === 'values') {
     $categoryId = (int)($_GET['category_id'] ?? 0);
     $cats = $dao->listCategories();
     if ($categoryId === 0 && count($cats) > 0) {
@@ -149,6 +162,74 @@ if ($tab === 'categories') {
     end_table(1);
     submit_center('save', _("Save"));
     end_form();
+} else {
+    $stockId = trim((string)($_GET['stock_id'] ?? ''));
+    $categoryId = (int)($_GET['category_id'] ?? 0);
+    $cats = $dao->listCategories();
+    if ($categoryId === 0 && count($cats) > 0) {
+        $categoryId = (int)$cats[0]['id'];
+    }
+    $values = $categoryId ? $dao->listValues($categoryId) : [];
+
+    start_form(false);
+    start_table(TABLESTYLE2);
+    table_section_title(_("Assignments"));
+    text_row(_("Stock ID"), 'stock_id', $stockId, 20, 32);
+    echo '<tr><td>' . _("Category") . '</td><td><select name="category_id" onchange="this.form.submit()">';
+    foreach ($cats as $c) {
+        $id = (int)$c['id'];
+        $sel = $id === $categoryId ? ' selected' : '';
+        echo '<option value="' . htmlspecialchars((string)$id) . '"' . $sel . '>'
+            . htmlspecialchars((string)$c['code'])
+            . '</option>';
+    }
+    echo '</select></td></tr>';
+    hidden('tab', 'assignments');
+    end_table(1);
+    submit_center('load', _("Load"));
+    end_form();
+
+    if ($stockId !== '') {
+        $assignments = $dao->listAssignments($stockId);
+
+        $table = new HtmlTable(new HtmlString(''));
+        $table->addAttribute(new \Ksfraser\HTML\HtmlAttribute('class', 'tablestyle2'));
+        $table->addNested(TableBuilder::createHeaderRow(['Category', 'Value', 'Slug', 'Sort']));
+        foreach ($assignments as $a) {
+            $table->addNested(TableBuilder::createDataRow([
+                (string)($a['category_code'] ?? ''),
+                (string)($a['value_label'] ?? ''),
+                (string)($a['value_slug'] ?? ''),
+                (string)($a['sort_order'] ?? 0),
+            ]));
+        }
+        $table->toHtml();
+
+        echo '<br />';
+
+        start_form(true);
+        start_table(TABLESTYLE2);
+        table_section_title(_("Add Assignment"));
+        hidden('action', 'add_assignment');
+        hidden('tab', 'assignments');
+        hidden('stock_id', $stockId);
+        hidden('category_id', (string)$categoryId);
+
+        echo '<tr><td>' . _("Value") . '</td><td><select name="value_id">';
+        foreach ($values as $v) {
+            $vid = (int)$v['id'];
+            echo '<option value="' . htmlspecialchars((string)$vid) . '">'
+                . htmlspecialchars((string)$v['value'])
+                . ' (' . htmlspecialchars((string)$v['slug']) . ')'
+                . '</option>';
+        }
+        echo '</select></td></tr>';
+
+        small_amount_row(_("Sort order"), 'sort_order', 0);
+        end_table(1);
+        submit_center('add', _("Add"));
+        end_form();
+    }
 }
 
 end_page();
