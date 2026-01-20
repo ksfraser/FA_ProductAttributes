@@ -7,8 +7,29 @@ final class FrontAccountingDbAdapter implements DbAdapterInterface
     /** @var string */
     private $prefix;
 
+    /** @var resource */
+    private $connection;
+
     public function __construct(?string $prefix = null)
     {
+        global $db_connections;
+
+        $company = $_SESSION['wa_current_user']->company ?? 0;
+
+        $this->connection = mysql_connect(
+            $db_connections[$company]['host'],
+            $db_connections[$company]['user'],
+            $db_connections[$company]['password']
+        );
+
+        if (!$this->connection) {
+            throw new \Exception("Failed to connect to database");
+        }
+
+        if (!mysql_select_db($db_connections[$company]['name'], $this->connection)) {
+            throw new \Exception("Failed to select database");
+        }
+
         if ($prefix !== null) {
             $this->prefix = $prefix;
             return;
@@ -36,9 +57,12 @@ final class FrontAccountingDbAdapter implements DbAdapterInterface
     public function selectAll(string $sql, array $params = []): array
     {
         $sql = $this->bindParams($sql, $params);
-        $res = db_query($sql);
+        $result = mysql_query($sql, $this->connection);
+        if (!$result) {
+            throw new \Exception("DB select error: " . mysql_error($this->connection));
+        }
         $rows = [];
-        while ($row = db_fetch_assoc($res)) {
+        while ($row = mysql_fetch_assoc($result)) {
             $rows[] = $row;
         }
         return $rows;
@@ -47,17 +71,15 @@ final class FrontAccountingDbAdapter implements DbAdapterInterface
     public function execute(string $sql, array $params = []): void
     {
         $sql = $this->bindParams($sql, $params);
-        db_query($sql);
+        $result = mysql_query($sql, $this->connection);
+        if (!$result) {
+            throw new \Exception("DB execute error: " . mysql_error($this->connection));
+        }
     }
 
     public function lastInsertId(): ?int
     {
-        $res = db_query('SELECT LAST_INSERT_ID() AS id');
-        $row = db_fetch_assoc($res);
-        if (!$row || !isset($row['id'])) {
-            return null;
-        }
-        return (int)$row['id'];
+        return mysql_insert_id($this->connection);
     }
 
     private function bindParams(string $sql, array $params): string
