@@ -6,7 +6,7 @@
 
 -- NOTE: In FrontAccounting, prefix with TB_PREF (e.g. 0_)
 
-CREATE TABLE IF NOT EXISTS {{prefix}}product_attribute_categories (
+CREATE TABLE IF NOT EXISTS 0_product_attribute_categories (
   id INT(11) NOT NULL AUTO_INCREMENT,
   code VARCHAR(64) NOT NULL,
   label VARCHAR(64) NOT NULL,
@@ -18,7 +18,7 @@ CREATE TABLE IF NOT EXISTS {{prefix}}product_attribute_categories (
   UNIQUE KEY uq_code (code)
 );
 
-CREATE TABLE IF NOT EXISTS {{prefix}}product_attribute_values (
+CREATE TABLE IF NOT EXISTS 0_product_attribute_values (
   id INT(11) NOT NULL AUTO_INCREMENT,
   category_id INT(11) NOT NULL,
   value VARCHAR(64) NOT NULL,
@@ -31,7 +31,7 @@ CREATE TABLE IF NOT EXISTS {{prefix}}product_attribute_values (
   KEY idx_category (category_id)
 );
 
-CREATE TABLE IF NOT EXISTS {{prefix}}product_attribute_assignments (
+CREATE TABLE IF NOT EXISTS 0_product_attribute_assignments (
   id INT(11) NOT NULL AUTO_INCREMENT,
   stock_id VARCHAR(32) NOT NULL,
   category_id INT(11) NOT NULL,
