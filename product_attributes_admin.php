@@ -58,14 +58,14 @@ if (defined('TB_PREF')) {
 display_notification("Table prefix: " . $db->getTablePrefix());
 
 // Debug: check if tables exist
-$query = "SELECT TABLE_NAME FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name LIKE '" . $db->getTablePrefix() . "product_attribute_%'";
+$query = "SELECT TABLE_NAME FROM information_schema.tables WHERE LOWER(table_schema) = LOWER(DATABASE()) AND table_name LIKE '" . $db->getTablePrefix() . "product_attribute_%'";
 display_notification("Query: " . $query);
 $tables = $db->selectAll($query);
 display_notification("Product attribute tables found: " . count($tables));
 
 // Debug: test db connection
-$test = $db->selectAll("SELECT 1 as test");
-display_notification("Test query result count: " . count($test));
+$test = $db->selectAll("SELECT 1 FROM " . $db->getTablePrefix() . "stock_master LIMIT 1");
+display_notification("Test query on FA table result count: " . count($test));
 
 // Debug: current company
 if (isset($_SESSION['wa_current_user']->company)) {
@@ -92,6 +92,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 (int)($_POST['sort_order'] ?? 0),
                 isset($_POST['active'])
             );
+            // Debug: check count after save
+            $check = $db->selectAll("SELECT COUNT(*) as cnt FROM " . $db->getTablePrefix() . "product_attribute_categories");
+            display_notification("Categories count after save: " . ($check[0]['cnt'] ?? 'error'));
             display_notification(_("Saved category"));
         }
 
