@@ -40,13 +40,6 @@ use Ksfraser\HTML\Elements\TableBuilder;
 use Ksfraser\HTML\HtmlString;
 
 try {
-    // Force use of master database for admin operations
-    global $db_connections, $db;
-    $company = $_SESSION['wa_current_user']->company;
-    $master_db = mysql_connect($db_connections[$company]['host'], $db_connections[$company]['user'], $db_connections[$company]['password']);
-    mysql_select_db($db_connections[$company]['name'], $master_db);
-    $db = $master_db;
-
     $db_adapter = new FrontAccountingDbAdapter();
     $dao = new ProductAttributesDao($db_adapter);
     $dao->ensureSchema();
