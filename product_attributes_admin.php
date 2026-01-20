@@ -5,10 +5,7 @@
 
 $page_security = 'SA_PRODUCTATTRIBUTES';
 
-$path_to_root = realpath(__DIR__ . '/../../');
-if ($path_to_root === false) {
-    $path_to_root = '../..';
-}
+$path_to_root = '../..';
 
 include($path_to_root . "/includes/session.inc");
 add_access_extensions();
