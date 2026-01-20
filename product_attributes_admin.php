@@ -54,10 +54,14 @@ if (defined('TB_PREF')) {
 display_notification("Table prefix: " . $db->getTablePrefix());
 
 // Debug: check if tables exist
-$query = "SHOW TABLES LIKE '" . $db->getTablePrefix() . "product_attribute_%'";
+$query = "SELECT TABLE_NAME FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name LIKE '" . $db->getTablePrefix() . "product_attribute_%'";
 display_notification("Query: " . $query);
 $tables = $db->selectAll($query);
 display_notification("Product attribute tables found: " . count($tables));
+
+// Debug: test db connection
+$test = $db->selectAll("SELECT 1 as test");
+display_notification("Test query result count: " . count($test));
 
 // Debug: current company
 if (isset($_SESSION['wa_current_user']->company)) {
