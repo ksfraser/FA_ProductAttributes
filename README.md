@@ -18,3 +18,5 @@ Install composer dependencies in `composer-lib`:
 - `cd composer-lib`
 - `composer install`
 
+Note: Composer may prompt for a GitHub token due to API rate limits; a read-only token for public repos is sufficient.
+
