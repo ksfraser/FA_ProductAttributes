@@ -143,20 +143,28 @@ echo '<div style="margin:8px 0">'
 if ($tab === 'categories') {
     try {
         $cats = $dao->listCategories();
+        display_notification("Found " . count($cats) . " categories");
 
-        // Use FA-compatible table classes from your library
-        $table = \Ksfraser\HTML\Elements\HtmlTable::createFaTable(2); // TABLESTYLE2
-        $table->addNested(TableBuilder::createHeaderRow(['Code', 'Label', 'Sort', 'Active']));
-        foreach ($cats as $c) {
-            $table->addNested(TableBuilder::createDataRow([
-                (string)($c['code'] ?? ''),
-                (string)($c['label'] ?? ''),
-                (string)($c['sort_order'] ?? 0),
-                (string)($c['active'] ?? 0 ? 'Yes' : 'No'),
-            ]));
+        if (count($cats) > 0) {
+            // Temporarily use FA's standard table functions to verify data
+            start_table(TABLESTYLE2);
+            $th = array(_("Code"), _("Label"), _("Sort"), _("Active"));
+            table_header($th);
+
+            foreach ($cats as $c) {
+                start_row();
+                label_cell($c['code'] ?? '');
+                label_cell($c['label'] ?? '');
+                label_cell($c['sort_order'] ?? 0);
+                label_cell($c['active'] ?? 0 ? _("Yes") : _("No"));
+                end_row();
+            }
+            end_table();
+
+            display_notification("Categories table rendered with FA functions");
+        } else {
+            display_notification("No categories found - database might be empty");
         }
-        $table->toHtml();
-        display_notification("Categories table rendered successfully");
     } catch (Exception $e) {
         display_error("Error rendering categories: " . $e->getMessage());
     }
