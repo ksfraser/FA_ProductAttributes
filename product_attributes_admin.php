@@ -28,6 +28,19 @@ if (isset($defined_constants['user'])) {
     }
 }
 
+// Debug: Check if TB_PREF is defined as a variable instead of constant
+if (isset($TB_PREF)) {
+    display_notification("TB_PREF variable found: " . $TB_PREF);
+} else {
+    display_notification("TB_PREF variable not found");
+}
+
+// Manually define FA_ROOT if it's not set
+if (!defined('FA_ROOT')) {
+    define('FA_ROOT', $path_to_root . '/');
+    display_notification("Manually defined FA_ROOT: " . FA_ROOT);
+}
+
 // Debug: Check if autoload exists and is readable
 $autoload = __DIR__ . "/composer-lib/vendor/autoload.php";
 $autoload_exists = is_file($autoload);
