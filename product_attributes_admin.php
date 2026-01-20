@@ -12,69 +12,17 @@ add_access_extensions();
 
 include_once($path_to_root . "/includes/ui.inc");
 
-// Debug: Check what constants are defined AFTER session.inc loads
-$defined_constants = get_defined_constants(true);
-if (isset($defined_constants['user'])) {
-    $fa_constants = array_filter($defined_constants['user'], function($key) {
-        return strpos($key, 'FA_') === 0 || strpos($key, 'TB_') === 0 || strpos($key, 'DEF') === 0;
-    }, ARRAY_FILTER_USE_KEY);
-    if (!empty($fa_constants)) {
-        display_notification("FA constants defined: " . implode(', ', array_keys($fa_constants)));
-    } else {
-        display_notification("No FA-related constants found");
-    }
-}
-
-// Debug: Check if TB_PREF is defined as a variable instead of constant
-if (isset($TB_PREF)) {
-    display_notification("TB_PREF variable found: " . $TB_PREF);
-} else {
-    display_notification("TB_PREF variable not found");
-}
-
 // Manually define FA_ROOT if it's not set
 if (!defined('FA_ROOT')) {
     define('FA_ROOT', $path_to_root . '/');
-    display_notification("Manually defined FA_ROOT: " . FA_ROOT);
 }
 
-// Debug: Check if autoload exists and is readable
 $autoload = __DIR__ . "/composer-lib/vendor/autoload.php";
-$autoload_exists = is_file($autoload);
-$autoload_readable = is_readable($autoload);
-
-// Debug path information
-display_notification("Current directory: " . __DIR__);
-display_notification("Path to root: " . $path_to_root);
-display_notification("Autoload path: " . $autoload);
+if (is_file($autoload)) {
+    require_once $autoload;
+}
 
 page(_("Product Attributes"));
-
-// Debug output
-if (!$autoload_exists) {
-    display_error("Composer autoload file not found at: " . $autoload);
-} elseif (!$autoload_readable) {
-    display_error("Composer autoload file not readable at: " . $autoload);
-} else {
-    require_once $autoload;
-    display_notification("Composer autoload loaded successfully");
-}
-
-// Test basic FA UI functions
-display_notification("FrontAccounting UI functions are working");
-
-// Debug: Check if config.php exists and try to load it manually
-$config_path = $path_to_root . "/config.php";
-if (file_exists($config_path)) {
-    display_notification("Config file found at: " . $config_path);
-    include_once($config_path);
-} else {
-    display_error("Config file NOT found at: " . $config_path);
-}
-
-// Debug: Check FA constants and paths
-display_notification("FA_ROOT: " . (defined('FA_ROOT') ? constant('FA_ROOT') : 'not defined'));
-display_notification("TB_PREF: " . (defined('TB_PREF') ? constant('TB_PREF') : 'not defined'));
 
 use Ksfraser\FA_ProductAttributes\Db\FrontAccountingDbAdapter;
 use Ksfraser\FA_ProductAttributes\Dao\ProductAttributesDao;
@@ -86,7 +34,6 @@ try {
     $db = new FrontAccountingDbAdapter();
     $dao = new ProductAttributesDao($db);
     $dao->ensureSchema();
-    display_notification("Database connection and schema setup successful");
 } catch (Exception $e) {
     display_error("Database error: " . $e->getMessage());
     end_page();
@@ -143,10 +90,9 @@ echo '<div style="margin:8px 0">'
 if ($tab === 'categories') {
     try {
         $cats = $dao->listCategories();
-        display_notification("Found " . count($cats) . " categories");
 
         if (count($cats) > 0) {
-            // Temporarily use FA's standard table functions to verify data
+            // Use FA's standard table functions
             start_table(TABLESTYLE2);
             $th = array(_("Code"), _("Label"), _("Sort"), _("Active"));
             table_header($th);
@@ -160,10 +106,6 @@ if ($tab === 'categories') {
                 end_row();
             }
             end_table();
-
-            display_notification("Categories table rendered with FA functions");
-        } else {
-            display_notification("No categories found - database might be empty");
         }
     } catch (Exception $e) {
         display_error("Error rendering categories: " . $e->getMessage());
