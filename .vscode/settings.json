@@ -1,0 +1,16 @@
+{
+    "chat.tools.terminal.autoApprove": {
+        "/^cd \"c:\\\\Users\\\\prote\\\\Documents\\\\FA_ProductAttributes\\\\composer-lib\" ; php phpunit\\.phar$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^cd 'c:\\\\Users\\\\prote\\\\Documents\\\\FA_ProductAttributes\\\\composer-lib' ; php phpunit\\.phar$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^cd \"c:\\\\Users\\\\prote\\\\Documents\\\\FA_ProductAttributes\\\\composer-lib\" ; php phpunit\\.phar --verbose$/": {
+            "approve": true,
+            "matchCommandLine": true
+        }
+    }
+}
