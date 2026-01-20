@@ -15,6 +15,15 @@ add_access_extensions();
 
 include_once($path_to_root . "/includes/ui.inc");
 
+// Debug: Check if config.php exists and try to load it manually
+$config_path = $path_to_root . "/config.php";
+if (file_exists($config_path)) {
+    display_notification("Config file found at: " . $config_path);
+    include_once($config_path);
+} else {
+    display_error("Config file NOT found at: " . $config_path);
+}
+
 // Debug: Check if autoload exists and is readable
 $autoload = __DIR__ . "/composer-lib/vendor/autoload.php";
 $autoload_exists = is_file($autoload);
@@ -39,6 +48,15 @@ if (!$autoload_exists) {
 
 // Test basic FA UI functions
 display_notification("FrontAccounting UI functions are working");
+
+// Debug: Check if config.php exists and try to load it manually
+$config_path = $path_to_root . "/config.php";
+if (file_exists($config_path)) {
+    display_notification("Config file found at: " . $config_path);
+    include_once($config_path);
+} else {
+    display_error("Config file NOT found at: " . $config_path);
+}
 
 // Debug: Check FA constants and paths
 display_notification("FA_ROOT: " . (defined('FA_ROOT') ? constant('FA_ROOT') : 'not defined'));
