@@ -10,19 +10,38 @@ if ($path_to_root === false) {
     $path_to_root = '../..';
 }
 
+// Debug: Check if config.php exists and try to load it manually BEFORE session.inc
+$config_path = $path_to_root . "/config.php";
+if (file_exists($config_path)) {
+    display_notification("Config file found at: " . $config_path);
+    // Try to include it BEFORE session.inc
+    include_once($config_path);
+    display_notification("Config file included BEFORE session.inc");
+    
+    // Check what constants were defined
+    $defined_constants = get_defined_constants(true);
+    if (isset($defined_constants['user'])) {
+        $fa_constants = array_filter($defined_constants['user'], function($key) {
+            return strpos($key, 'FA_') === 0 || strpos($key, 'TB_') === 0;
+        }, ARRAY_FILTER_USE_KEY);
+        if (!empty($fa_constants)) {
+            display_notification("FA constants defined: " . implode(', ', array_keys($fa_constants)));
+        }
+    }
+} else {
+    display_error("Config file NOT found at: " . $config_path);
+    // Try alternative config locations
+    $alt_config = $path_to_root . "/config.default.php";
+    if (file_exists($alt_config)) {
+        display_notification("Trying alternative config: " . $alt_config);
+        include_once($alt_config);
+    }
+}
+
 include($path_to_root . "/includes/session.inc");
 add_access_extensions();
 
 include_once($path_to_root . "/includes/ui.inc");
-
-// Debug: Check if config.php exists and try to load it manually
-$config_path = $path_to_root . "/config.php";
-if (file_exists($config_path)) {
-    display_notification("Config file found at: " . $config_path);
-    include_once($config_path);
-} else {
-    display_error("Config file NOT found at: " . $config_path);
-}
 
 // Debug: Check if autoload exists and is readable
 $autoload = __DIR__ . "/composer-lib/vendor/autoload.php";
