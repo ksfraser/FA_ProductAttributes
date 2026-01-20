@@ -15,10 +15,30 @@ add_access_extensions();
 
 include_once($path_to_root . "/includes/ui.inc");
 
+// Debug: Check if autoload exists and is readable
 $autoload = __DIR__ . "/composer-lib/vendor/autoload.php";
-if (is_file($autoload)) {
+$autoload_exists = is_file($autoload);
+$autoload_readable = is_readable($autoload);
+
+// Debug path information
+display_notification("Current directory: " . __DIR__);
+display_notification("Path to root: " . $path_to_root);
+display_notification("Autoload path: " . $autoload);
+
+page(_("Product Attributes"));
+
+// Debug output
+if (!$autoload_exists) {
+    display_error("Composer autoload file not found at: " . $autoload);
+} elseif (!$autoload_readable) {
+    display_error("Composer autoload file not readable at: " . $autoload);
+} else {
     require_once $autoload;
+    display_notification("Composer autoload loaded successfully");
 }
+
+// Test basic FA UI functions
+display_notification("FrontAccounting UI functions are working");
 
 use Ksfraser\FA_ProductAttributes\Db\FrontAccountingDbAdapter;
 use Ksfraser\FA_ProductAttributes\Dao\ProductAttributesDao;
@@ -26,11 +46,16 @@ use Ksfraser\HTML\Elements\HtmlTable;
 use Ksfraser\HTML\Elements\TableBuilder;
 use Ksfraser\HTML\HtmlString;
 
-page(_("Product Attributes"));
-
-$db = new FrontAccountingDbAdapter();
-$dao = new ProductAttributesDao($db);
-$dao->ensureSchema();
+try {
+    $db = new FrontAccountingDbAdapter();
+    $dao = new ProductAttributesDao($db);
+    $dao->ensureSchema();
+    display_notification("Database connection and schema setup successful");
+} catch (Exception $e) {
+    display_error("Database error: " . $e->getMessage());
+    end_page();
+    exit;
+}
 
 $tab = $_GET['tab'] ?? 'categories';
 
@@ -80,20 +105,25 @@ echo '<div style="margin:8px 0">'
     . '</div>';
 
 if ($tab === 'categories') {
-    $cats = $dao->listCategories();
+    try {
+        $cats = $dao->listCategories();
 
-    $table = new HtmlTable(new HtmlString(''));
-    $table->addAttribute(new \Ksfraser\HTML\HtmlAttribute('class', 'tablestyle2'));
-    $table->addNested(TableBuilder::createHeaderRow(['Code', 'Label', 'Sort', 'Active']));
-    foreach ($cats as $c) {
-        $table->addNested(TableBuilder::createDataRow([
-            (string)($c['code'] ?? ''),
-            (string)($c['label'] ?? ''),
-            (string)($c['sort_order'] ?? 0),
-            (string)($c['active'] ?? 0),
-        ]));
+        $table = new HtmlTable(new HtmlString(''));
+        $table->addAttribute(new \Ksfraser\HTML\HtmlAttribute('class', 'tablestyle2'));
+        $table->addNested(TableBuilder::createHeaderRow(['Code', 'Label', 'Sort', 'Active']));
+        foreach ($cats as $c) {
+            $table->addNested(TableBuilder::createDataRow([
+                (string)($c['code'] ?? ''),
+                (string)($c['label'] ?? ''),
+                (string)($c['sort_order'] ?? 0),
+                (string)($c['active'] ?? 0),
+            ]));
+        }
+        $table->toHtml();
+        display_notification("Categories table rendered successfully");
+    } catch (Exception $e) {
+        display_error("Error rendering categories: " . $e->getMessage());
     }
-    $table->toHtml();
 
     echo '<br />';
 
