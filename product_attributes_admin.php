@@ -88,36 +88,6 @@ try {
     exit;
 }
 
-// Debug: show table prefix
-if (defined('TB_PREF')) {
-    display_notification("TB_PREF defined: " . constant('TB_PREF'));
-} else {
-    display_notification("TB_PREF not defined");
-}
-display_notification("Table prefix: " . $db->getTablePrefix());
-
-// Debug: check if tables exist
-$query = "SELECT TABLE_NAME FROM information_schema.tables WHERE LOWER(table_schema) = LOWER(DATABASE()) AND table_name LIKE '" . $db->getTablePrefix() . "product_attribute_%'";
-display_notification("Query: " . $query);
-$tables = $db->selectAll($query);
-display_notification("Product attribute tables found: " . count($tables));
-
-// Debug: test db connection
-$test = $db->selectAll("SELECT 1 FROM " . $db->getTablePrefix() . "stock_master LIMIT 1");
-display_notification("Test query on FA table result count: " . count($test));
-
-// Debug: current company
-if (isset($_SESSION['wa_current_user']->company)) {
-    display_notification("Current company: " . $_SESSION['wa_current_user']->company);
-    global $db_connections;
-    if (isset($db_connections[$_SESSION['wa_current_user']->company]['name'])) {
-        display_notification("DB name: " . $db_connections[$_SESSION['wa_current_user']->company]['name']);
-        display_notification("DB host: " . $db_connections[$_SESSION['wa_current_user']->company]['host']);
-    }
-} else {
-    display_notification("Current company not set");
-}
-
 $tab = $_GET['tab'] ?? 'categories';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
