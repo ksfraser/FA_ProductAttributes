@@ -130,21 +130,18 @@ if ($tab === 'categories') {
     try {
         $cats = $dao->listCategories();
 
-        // Use FA's standard table functions instead of custom HTML classes
-        start_table(TABLESTYLE2);
-        $th = array(_("Code"), _("Label"), _("Sort"), _("Active"));
-        table_header($th);
-
+        // Use FA-compatible table classes from your library
+        $table = \Ksfraser\HTML\Elements\HtmlTable::createFaTable(2); // TABLESTYLE2
+        $table->addNested(TableBuilder::createHeaderRow(['Code', 'Label', 'Sort', 'Active']));
         foreach ($cats as $c) {
-            start_row();
-            label_cell($c['code'] ?? '');
-            label_cell($c['label'] ?? '');
-            label_cell($c['sort_order'] ?? 0);
-            label_cell($c['active'] ?? 0 ? _("Yes") : _("No"));
-            end_row();
+            $table->addNested(TableBuilder::createDataRow([
+                (string)($c['code'] ?? ''),
+                (string)($c['label'] ?? ''),
+                (string)($c['sort_order'] ?? 0),
+                (string)($c['active'] ?? 0 ? 'Yes' : 'No'),
+            ]));
         }
-        end_table();
-
+        $table->toHtml();
         display_notification("Categories table rendered successfully");
     } catch (Exception $e) {
         display_error("Error rendering categories: " . $e->getMessage());
@@ -190,18 +187,17 @@ if ($tab === 'categories') {
 
     $values = $categoryId ? $dao->listValues($categoryId) : [];
 
-    start_table(TABLESTYLE2);
-    $th = array(_("Value"), _("Slug"), _("Sort"), _("Active"));
-    table_header($th);
+    $table = \Ksfraser\HTML\Elements\HtmlTable::createFaTable(2); // TABLESTYLE2
+    $table->addNested(TableBuilder::createHeaderRow(['Value', 'Slug', 'Sort', 'Active']));
     foreach ($values as $v) {
-        start_row();
-        label_cell($v['value'] ?? '');
-        label_cell($v['slug'] ?? '');
-        label_cell($v['sort_order'] ?? 0);
-        label_cell($v['active'] ?? 0 ? _("Yes") : _("No"));
-        end_row();
+        $table->addNested(TableBuilder::createDataRow([
+            (string)($v['value'] ?? ''),
+            (string)($v['slug'] ?? ''),
+            (string)($v['sort_order'] ?? 0),
+            (string)($v['active'] ?? 0 ? 'Yes' : 'No'),
+        ]));
     }
-    end_table();
+    $table->toHtml();
 
     echo '<br />';
 
@@ -247,18 +243,17 @@ if ($tab === 'categories') {
     if ($stockId !== '') {
         $assignments = $dao->listAssignments($stockId);
 
-        start_table(TABLESTYLE2);
-        $th = array(_("Category"), _("Value"), _("Slug"), _("Sort"));
-        table_header($th);
+        $table = \Ksfraser\HTML\Elements\HtmlTable::createFaTable(2); // TABLESTYLE2
+        $table->addNested(TableBuilder::createHeaderRow(['Category', 'Value', 'Slug', 'Sort']));
         foreach ($assignments as $a) {
-            start_row();
-            label_cell($a['category_code'] ?? '');
-            label_cell($a['value_label'] ?? '');
-            label_cell($a['value_slug'] ?? '');
-            label_cell($a['sort_order'] ?? 0);
-            end_row();
+            $table->addNested(TableBuilder::createDataRow([
+                (string)($a['category_code'] ?? ''),
+                (string)($a['value_label'] ?? ''),
+                (string)($a['value_slug'] ?? ''),
+                (string)($a['sort_order'] ?? 0),
+            ]));
         }
-        end_table();
+        $table->toHtml();
 
         echo '<br />';
 
