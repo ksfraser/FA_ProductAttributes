@@ -41,6 +41,23 @@ if (!defined('FA_ROOT')) {
     display_notification("Manually defined FA_ROOT: " . FA_ROOT);
 }
 
+// Check for theme-related constants and define them if missing
+$theme_constants = [
+    'DEF_THEME' => 'default',
+    'DEF_LANG' => 'en_US',
+    'DEF_DECIMALS' => 2,
+    'DEF_MONEYFORMAT' => 1,
+    'DEF_DATEFORMAT' => 1,
+    'DEF_FISCALYEAR' => date('Y'),
+];
+
+foreach ($theme_constants as $const => $default) {
+    if (!defined($const)) {
+        define($const, $default);
+        display_notification("Defined missing constant: $const = $default");
+    }
+}
+
 // Debug: Check if autoload exists and is readable
 $autoload = __DIR__ . "/composer-lib/vendor/autoload.php";
 $autoload_exists = is_file($autoload);
