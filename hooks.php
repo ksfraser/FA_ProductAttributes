@@ -11,50 +11,9 @@ class hooks_FA_ProductAttributes extends hooks
 
     function install()
     {
-        // Standard FA module SQL installation array
-        $sql = array(
-            "CREATE TABLE IF NOT EXISTS 0_product_attribute_categories (
-                id INT(11) NOT NULL AUTO_INCREMENT,
-                code VARCHAR(64) NOT NULL,
-                label VARCHAR(64) NOT NULL,
-                description VARCHAR(255) NULL,
-                sort_order INT(11) NOT NULL DEFAULT 0,
-                active TINYINT(1) NOT NULL DEFAULT 1,
-                updated_ts TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                PRIMARY KEY (id),
-                UNIQUE KEY uq_code (code)
-            )",
-
-            "CREATE TABLE IF NOT EXISTS 0_product_attribute_values (
-                id INT(11) NOT NULL AUTO_INCREMENT,
-                category_id INT(11) NOT NULL,
-                value VARCHAR(64) NOT NULL,
-                slug VARCHAR(32) NOT NULL,
-                sort_order INT(11) NOT NULL DEFAULT 0,
-                active TINYINT(1) NOT NULL DEFAULT 1,
-                updated_ts TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                PRIMARY KEY (id),
-                UNIQUE KEY uq_category_slug (category_id, slug),
-                KEY idx_category (category_id)
-            )",
-
-            "CREATE TABLE IF NOT EXISTS 0_product_attribute_assignments (
-                id INT(11) NOT NULL AUTO_INCREMENT,
-                stock_id VARCHAR(32) NOT NULL,
-                category_id INT(11) NOT NULL,
-                value_id INT(11) NOT NULL,
-                sort_order INT(11) NOT NULL DEFAULT 0,
-                updated_ts TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                PRIMARY KEY (id),
-                UNIQUE KEY uq_stock_category_value (stock_id, category_id, value_id),
-                KEY idx_stock (stock_id),
-                KEY idx_category (category_id),
-                KEY idx_value (value_id)
-            )"
-        );
-
-        // Install composer dependencies (additional setup)
         global $path_to_root;
+
+        // Install composer dependencies
         $module_path = $path_to_root . '/modules/FA_ProductAttributes';
         $result = $this->installComposerDependencies($module_path);
 
@@ -74,7 +33,7 @@ class hooks_FA_ProductAttributes extends hooks
             // Don't fail installation if schema creation fails
         }
 
-        return $sql; // Return the SQL array for FA's module system
+        return true; // Standard FA install return
     }
 
     function install_options($app)
