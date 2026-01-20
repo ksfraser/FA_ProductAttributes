@@ -12,6 +12,10 @@ add_access_extensions();
 
 include_once($path_to_root . "/includes/ui.inc");
 
+// Debug: check path
+display_notification("path_to_root: " . $path_to_root);
+display_notification("session.inc exists: " . (file_exists($path_to_root . "/includes/session.inc") ? "yes" : "no"));
+
 // Manually define FA_ROOT if it's not set
 if (!defined('FA_ROOT')) {
     define('FA_ROOT', $path_to_root . '/');
