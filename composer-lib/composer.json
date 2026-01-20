@@ -1,0 +1,34 @@
+{
+  "name": "ksfraser/fa-product-attributes",
+  "version": "0.1.0",
+  "description": "FrontAccounting-compatible ordered product attributes (royal order of adjectives)",
+  "type": "library",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "KS Fraser"
+    }
+  ],
+  "require": {
+    "php": ">=7.4",
+    "ksfraser/html": "^1.0",
+    "ksfraser/ksf-modules-dao": "^0.1"
+  },
+  "repositories": [
+    {
+      "type": "vcs",
+      "url": "https://github.com/ksfraser/origin"
+    },
+    {
+      "type": "vcs",
+      "url": "https://github.com/ksfraser/ModulesDAO"
+    }
+  ],
+  "autoload": {
+    "psr-4": {
+      "Ksfraser\\FA_ProductAttributes\\": "src/Ksfraser/FA_ProductAttributes/"
+    }
+  },
+  "minimum-stability": "stable",
+  "prefer-stable": true
+}

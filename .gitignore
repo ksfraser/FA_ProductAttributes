@@ -1,0 +1,3 @@
+/composer-lib/vendor/
+/data/
+/public/.phpunit.result.cache

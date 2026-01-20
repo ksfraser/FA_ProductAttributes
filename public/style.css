@@ -1,0 +1,12 @@
+body { font-family: Arial, sans-serif; margin: 20px; }
+h1 { margin: 0 0 12px 0; }
+nav a { margin-right: 12px; }
+
+/* Simple FA-ish table styling */
+table.tablestyle2 { border-collapse: collapse; width: 100%; margin-top: 10px; }
+table.tablestyle2 th, table.tablestyle2 td { border: 1px solid #ccc; padding: 6px 8px; }
+table.tablestyle2 th { background: #f3f3f3; text-align: left; }
+
+fieldset { border: 1px solid #ddd; padding: 10px 12px; margin-top: 14px; }
+label { display: inline-block; min-width: 120px; }
+input[type=text], input[type=number] { padding: 4px 6px; }
