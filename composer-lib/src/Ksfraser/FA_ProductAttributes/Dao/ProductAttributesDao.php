@@ -5,7 +5,7 @@ namespace Ksfraser\FA_ProductAttributes\Dao;
 use Ksfraser\FA_ProductAttributes\Db\DbAdapterInterface;
 use Ksfraser\FA_ProductAttributes\Schema\SchemaManager;
 
-final class ProductAttributesDao
+class ProductAttributesDao
 {
     /** @var DbAdapterInterface */
     private $db;
@@ -124,7 +124,7 @@ final class ProductAttributesDao
     {
         $p = $this->db->getTablePrefix();
         return $this->db->selectAll(
-            "SELECT a.*, c.code AS category_code, c.label AS category_label, v.value AS value_label, v.slug AS value_slug\n"
+            "SELECT a.*, c.code AS category_code, c.label AS category_label, c.sort_order AS category_sort_order, v.value AS value_label, v.slug AS value_slug\n"
             . "FROM {$p}product_attribute_assignments a\n"
             . "JOIN {$p}product_attribute_categories c ON c.id = a.category_id\n"
             . "JOIN {$p}product_attribute_values v ON v.id = a.value_id\n"
@@ -146,6 +146,15 @@ final class ProductAttributesDao
                 'value_id' => $valueId,
                 'sort_order' => $sortOrder,
             ]
+        );
+    }
+
+    public function deleteAssignment(int $assignmentId): void
+    {
+        $p = $this->db->getTablePrefix();
+        $this->db->execute(
+            "DELETE FROM {$p}product_attribute_assignments WHERE id = :id",
+            ['id' => $assignmentId]
         );
     }
 }
