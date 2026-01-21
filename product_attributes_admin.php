@@ -12,6 +12,14 @@ add_access_extensions();
 
 include_once($path_to_root . "/includes/ui.inc");
 
+// Force use of configured database connection
+/*global $db_connections, $db;
+$company = $_SESSION['wa_current_user']->company;
+$configured_db = mysql_connect($db_connections[$company]['host'], $db_connections[$company]['user'], $db_connections[$company]['password']);
+mysql_select_db($db_connections[$company]['name'], $configured_db);
+$db = $configured_db;
+*/
+
 // Debug: check path
 display_notification("path_to_root: " . $path_to_root);
 display_notification("session.inc exists: " . (file_exists($path_to_root . "/includes/session.inc") ? "yes" : "no"));
