@@ -61,6 +61,7 @@ try {
     exit;
 }
 
+try {
 // Debug: show table prefix
 DebugTBPref::debug(0);
 display_notification("Table prefix: " . $db_adapter->getTablePrefix());
@@ -73,6 +74,9 @@ DebugConnection::debug($db_adapter,0);
 
 // Debug: current company
 DebugCompany::debug();
+} catch (Exception $e) {
+    display_error("Debug error: " . $e->getMessage());
+}
 
 $tab = $_GET['tab'] ?? 'categories';
 
