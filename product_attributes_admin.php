@@ -45,13 +45,9 @@ page(_("Product Attributes"));
 
 use Ksfraser\FA_ProductAttributes\Db\FrontAccountingDbAdapter;
 use Ksfraser\FA_ProductAttributes\Dao\ProductAttributesDao;
-use Ksfraser\FA_ProductAttributes\Debug\DebugTBPref;
-use Ksfraser\FA_ProductAttributes\Debug\DebugSchemaNames;
-use Ksfraser\FA_ProductAttributes\Debug\DebugConnection;
-use Ksfraser\FA_ProductAttributes\Debug\DebugCompany;
-use Ksfraser\HTML\Elements\HtmlTable;
-use Ksfraser\HTML\Elements\TableBuilder;
-use Ksfraser\HTML\HtmlString;
+use Ksfraser\FA_ProductAttributes\UI\CategoriesTab;
+use Ksfraser\FA_ProductAttributes\UI\ValuesTab;
+use Ksfraser\FA_ProductAttributes\UI\AssignmentsTab;
 
 try {
     $db_adapter = new FrontAccountingDbAdapter();
@@ -75,16 +71,6 @@ DebugConnection::debug($db_adapter);
 
 // Debug: current company
 DebugCompany::debug();
-
-try {
-    $db = new FrontAccountingDbAdapter();
-    $dao = new ProductAttributesDao($db);
-    $dao->ensureSchema();
-} catch (Exception $e) {
-    display_error("Database error: " . $e->getMessage());
-    end_page();
-    exit;
-}
 
 $tab = $_GET['tab'] ?? 'categories';
 
