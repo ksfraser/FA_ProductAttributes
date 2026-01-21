@@ -79,7 +79,7 @@ DebugCompany::debug();
 }
 
 $tab = $_GET['tab'] ?? 'categories';
-
+/*
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = $_POST['action'] ?? '';
     display_notification("POST data: " . json_encode($_POST));
@@ -126,7 +126,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         display_error("Error saving: " . $e->getMessage());
     }
 }
-
+*/
 echo '<div style="margin:8px 0">'
     . '<a href="?tab=categories">Categories</a> | '
     . '<a href="?tab=values">Values</a> | '
