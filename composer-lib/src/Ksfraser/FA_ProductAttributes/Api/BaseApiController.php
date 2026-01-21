@@ -51,9 +51,7 @@ abstract class BaseApiController
     protected function errorResponse(string $message, int $statusCode = 400): void
     {
         $this->jsonResponse(['error' => $message], $statusCode);
-        if ($this->testMode) {
-            throw new \RuntimeException('API Error: ' . $message);
-        }
+        // In test mode, don't throw exceptions - just output JSON for testing
     }
 
     /**

@@ -26,12 +26,24 @@ class ActionHandler
                     $handler = new UpsertCategoryAction($this->dao, $this->dbAdapter);
                     return $handler->handle($postData);
 
+                case 'delete_category':
+                    $handler = new DeleteCategoryAction($this->dao, $this->dbAdapter);
+                    return $handler->handle($postData);
+
                 case 'upsert_value':
                     $handler = new UpsertValueAction($this->dao);
                     return $handler->handle($postData);
 
+                case 'delete_value':
+                    $handler = new DeleteValueAction($this->dao);
+                    return $handler->handle($postData);
+
                 case 'add_assignment':
                     $handler = new AddAssignmentAction($this->dao);
+                    return $handler->handle($postData);
+
+                case 'delete_assignment':
+                    $handler = new DeleteAssignmentAction($this->dao);
                     return $handler->handle($postData);
 
                 default:

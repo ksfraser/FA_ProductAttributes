@@ -23,6 +23,10 @@
         "/^cd c:\\\\Users\\\\prote\\\\Documents\\\\FA_ProductAttributes\\\\composer-lib ; php phpunit\\.phar --version$/": {
             "approve": true,
             "matchCommandLine": true
+        },
+        "/^cd composer-lib ; php phpunit\\.phar$/": {
+            "approve": true,
+            "matchCommandLine": true
         }
     }
 }

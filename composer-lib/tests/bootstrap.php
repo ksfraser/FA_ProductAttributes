@@ -1,5 +1,8 @@
 <?php
 
+// Load FA function mocks first
+require_once __DIR__ . '/FAMock.php';
+
 // Simple autoload for testing
 $files = [
     __DIR__ . '/../src/Ksfraser/FA_ProductAttributes/Db/DbAdapterInterface.php',

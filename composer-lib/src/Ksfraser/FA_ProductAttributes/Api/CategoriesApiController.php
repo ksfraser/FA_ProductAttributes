@@ -34,6 +34,7 @@ class CategoriesApiController extends BaseApiController
 
         if (!$category) {
             $this->errorResponse('Category not found', 404);
+            return;
         }
 
         $this->jsonResponse(['category' => $category]);
@@ -131,17 +132,19 @@ class CategoriesApiController extends BaseApiController
 
         if (!$category) {
             $this->errorResponse('Category not found', 404);
+            return;
         }
 
         // Check if category is in use
         $p = $this->db->getTablePrefix();
-        $usage = $this->db->selectAll(
-            "SELECT COUNT(*) as count FROM {$p}product_attribute_assignments WHERE category_id = :category_id",
+        $usage = $this->db->query(
+            "SELECT COUNT(*) as count FROM `{$p}product_attribute_assignments` WHERE category_id = :category_id",
             ['category_id' => $id]
         );
 
         if ($usage[0]['count'] > 0) {
             $this->errorResponse('Cannot delete category that is in use by products', 409);
+            return;
         }
 
         try {

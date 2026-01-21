@@ -36,6 +36,7 @@ class ValuesApiController extends BaseApiController
 
         if (!$value) {
             $this->errorResponse('Value not found', 404);
+            return;
         }
 
         $this->jsonResponse(['value' => $value]);
@@ -51,6 +52,7 @@ class ValuesApiController extends BaseApiController
 
         if (!$this->validateRequired($data, ['value', 'slug'])) {
             $this->errorResponse('Missing required fields: value, slug');
+            return;
         }
 
         try {
@@ -136,17 +138,19 @@ class ValuesApiController extends BaseApiController
 
         if (!$value) {
             $this->errorResponse('Value not found', 404);
+            return;
         }
 
         // Check if value is in use
         $p = $this->db->getTablePrefix();
-        $usage = $this->db->selectAll(
-            "SELECT COUNT(*) as count FROM {$p}product_attribute_assignments WHERE value_id = :value_id",
+        $usage = $this->db->query(
+            "SELECT COUNT(*) as count FROM `{$p}product_attribute_assignments` WHERE value_id = :value_id",
             ['value_id' => $id]
         );
 
         if ($usage[0]['count'] > 0) {
             $this->errorResponse('Cannot delete value that is in use by products', 409);
+            return;
         }
 
         try {

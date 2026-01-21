@@ -20,11 +20,11 @@
 | BR3.5 | Set parent flag to false and parent_stock_id for variations | Distinguish child products | Flag and ID update in creation | TC16: Test flag and ID setting | Pending |
 | BR3.6 | Generate new variations for added attributes | Extend existing product lines | Combination logic for new attrs | TC17: Test new variation generation | Pending |
 | BR3.7 | Replace ${ATTRIB_CLASS} placeholders in description | Template description support | String replacement logic | TC18: Test placeholder replacement | Pending |
-| BR4 | Admin screen for categories/variables | Manage attribute structure | New admin page | TC19: Verify admin menu access | Pending |
-| BR4.1 | CRUD for categories, including Royal Order field | Create/edit/delete categories with ordering | Form and DB operations | TC20: Test CRUD operations | Pending |
-| BR4.1.1 | Royal Order column for sequencing, with editable UI and sort options | Define attribute order | Integer field in category table, sortable table UI | TC21: Test order sorting and editing | Pending |
-| BR4.2 | CRUD for variables | Add values to categories | Hierarchical UI | TC22: Test variable management | Pending |
-| BR4.3 | Validation for usage | Prevent deletion if in use | Check associations | TC23: Test deletion blocked if used | Pending |
+| BR4 | Admin screen for categories/variables | Manage attribute structure | New admin page | TC19: Verify admin menu access | Completed |
+| BR4.1 | CRUD for categories, including Royal Order field | Create/edit/delete categories with ordering | Form and DB operations | TC20: Test CRUD operations | Completed |
+| BR4.1.1 | Royal Order column for sequencing, with editable UI and sort options | Define attribute order | Integer field in category table, sortable table UI | TC21: Test order sorting and editing | Completed |
+| BR4.2 | CRUD for variables | Add values to categories | Hierarchical UI | TC22: Test variable management | Completed |
+| BR4.3 | Validation for usage | Prevent deletion if in use | Check associations | TC23: Test deletion blocked if used | Completed |
 
 | BR6 | Custom pricing per variation | Individual prices | Price update sub-screen | TC24: Test pricing | Pending |
 | BR6.1 | Integrate with FA_BulkPriceUpdate module | Use external bulk pricing if available | Check for module and call its function | TC25: Test integration | Pending |
@@ -37,17 +37,17 @@
 | BR9.3 | Suggest parent-child associations | Link existing products | Hierarchy detection | TC32: Test association suggestions | Pending |
 | BR9.4 | Bulk edit screen for assignments | Assign multiple at once | UI with checkboxes and assign button | TC33: Test bulk assignment | Pending |
 | BR9.5 | Sanity checks and force options | Validate assignments | Warning dialogs and confirmations | TC34: Test validation and force | Pending |
-| BR10 | API for external integration | REST endpoints for CRUD | External system access | TC35: Test API endpoints | Pending |
-| BR10.1 | Authentication and security | API key validation | Secure access | TC36: Test auth mechanisms | Pending |
+| BR10 | API for external integration | REST endpoints for CRUD | External system access | TC35: Test API endpoints | Completed |
+| BR10.1 | Authentication and security | API key validation | Secure access | TC36: Test auth mechanisms | Completed |
 | NFR1 | Seamless integration | No disruption to FA | Hooks-based implementation | TC37: Test core FA unchanged | Pending |
 | NFR2 | Security | Authorized access with greyed UI | Permission checks | TC38: Test unauthorized access denied | Pending |
 | NFR3 | Performance | Efficient loading/saving | Optimized queries | TC39: Test load times | Pending |
 | NFR4 | Usability | Intuitive UI with tooltips/confirmations | User-friendly elements | TC40: User acceptance testing | Pending |
-| NFR5 | Data persistence | Extend DB schema with parent_stock_id | New tables in schema.sql | TC41: Verify DB schema | Pending |
+| NFR5 | Data persistence | Extend DB schema with parent_stock_id | New tables in schema.sql | TC41: Verify DB schema | Completed |
 | NFR5.1 | Data integrity via Make Inactive | Prevent orphans | Deactivate with warnings | TC42: Test deactivation | Pending |
 | NFR6 | Compatibility | FA 2.3.22 and PHP 7.3 | Code compatibility | TC43: Test on specified versions | Pending |
 | NFR7 | Code Quality | SOLID principles, DI, SRP | Interfaces, traits, polymorphism | TC44: Test adherence | Pending |
-| NFR8 | Testing | Unit tests for all code, edge cases | PHPUnit framework | TC45: Test coverage metrics | Pending |
+| NFR8 | Testing | Unit tests for all code, edge cases | PHPUnit framework | TC45: Test coverage metrics | Completed |
 | NFR9 | Documentation | PHPDoc, UML diagrams | ERD, Message Flow, flowcharts | TC46: Verify completeness | Pending |
 
 ## Notes

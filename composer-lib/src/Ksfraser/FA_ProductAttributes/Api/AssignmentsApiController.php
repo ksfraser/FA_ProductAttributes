@@ -36,6 +36,7 @@ class AssignmentsApiController extends BaseApiController
 
         if (!$assignment) {
             $this->errorResponse('Assignment not found', 404);
+            return;
         }
 
         $this->jsonResponse(['assignment' => $assignment]);
@@ -51,6 +52,7 @@ class AssignmentsApiController extends BaseApiController
 
         if (!$this->validateRequired($data, ['category_id', 'value_id'])) {
             $this->errorResponse('Missing required fields: category_id, value_id');
+            return;
         }
 
         // Validate that category and value exist
@@ -65,6 +67,7 @@ class AssignmentsApiController extends BaseApiController
 
         if (!$categoryExists) {
             $this->errorResponse('Invalid category_id', 400);
+            return;
         }
 
         $values = $this->dao->listValues($data['category_id']);
@@ -78,6 +81,7 @@ class AssignmentsApiController extends BaseApiController
 
         if (!$valueExists) {
             $this->errorResponse('Invalid value_id for the specified category', 400);
+            return;
         }
 
         try {
@@ -118,6 +122,7 @@ class AssignmentsApiController extends BaseApiController
 
         if (!$assignment) {
             $this->errorResponse('Assignment not found', 404);
+            return;
         }
 
         try {

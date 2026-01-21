@@ -12,6 +12,22 @@ Maintain a canonical, ordered dictionary of product attributes (the “royal ord
 - Standalone: `public/index.php`
 - FrontAccounting wrapper: `product_attributes_admin.php`
 
+### Features
+- **Categories Management**: Create, edit, delete attribute categories with Royal Order sequencing
+- **Values Management**: Add, edit, delete attribute values within categories
+- **Assignments Management**: Associate attributes with products
+- **Table Actions**: Each table row includes Edit and Delete buttons with confirmation dialogs
+- **Validation**: Prevents deletion of items currently in use by products
+- **Form Pre-filling**: Edit buttons load existing data into forms for easy modification
+
+### API
+RESTful API endpoints for external integration:
+- `GET/POST/PUT/DELETE /api/categories` - Manage categories
+- `GET/POST/PUT/DELETE /api/categories/{id}/values` - Manage values
+- `GET/POST/PUT/DELETE /api/products/{stockId}/assignments` - Manage product assignments
+
+All endpoints return JSON responses with proper error handling.
+
 ## Dev
 Install composer dependencies in `composer-lib`:
 

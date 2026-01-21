@@ -70,10 +70,12 @@ class ValuesApiControllerTest extends TestCase
 
         $controller = new ValuesApiController($dao, $db, true);
 
-        $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage('API Error: Value not found');
-        
+        ob_start();
         $controller->show(1, 999);
+        $output = ob_get_clean();
+
+        $response = json_decode($output, true);
+        $this->assertEquals(['error' => 'Value not found'], $response);
     }
 
     public function testCreateSuccess(): void
@@ -126,10 +128,12 @@ class ValuesApiControllerTest extends TestCase
             }
         };
 
-        $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage('API Error: Missing required fields: value, slug');
-        
+        ob_start();
         $controller->create(1);
+        $output = ob_get_clean();
+
+        $response = json_decode($output, true);
+        $this->assertEquals(['error' => 'Missing required fields: value, slug'], $response);
     }
 
     public function testDeleteSuccess(): void
@@ -144,8 +148,8 @@ class ValuesApiControllerTest extends TestCase
 
         $db->method('getTablePrefix')->willReturn('fa_');
         $db->expects($this->once())
-            ->method('selectAll')
-            ->with('SELECT COUNT(*) as count FROM fa_product_attribute_assignments WHERE value_id = :value_id', ['value_id' => 1])
+            ->method('query')
+            ->with('SELECT COUNT(*) as count FROM `fa_product_attribute_assignments` WHERE value_id = :value_id', ['value_id' => 1])
             ->willReturn([['count' => 0]]);
 
         $dao->expects($this->once())
@@ -175,10 +179,12 @@ class ValuesApiControllerTest extends TestCase
 
         $controller = new ValuesApiController($dao, $db, true);
 
-        $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage('API Error: Value not found');
-        
+        ob_start();
         $controller->delete(1, 999);
+        $output = ob_get_clean();
+
+        $response = json_decode($output, true);
+        $this->assertEquals(['error' => 'Value not found'], $response);
     }
 
     public function testDeleteInUse(): void
@@ -193,15 +199,17 @@ class ValuesApiControllerTest extends TestCase
 
         $db->method('getTablePrefix')->willReturn('fa_');
         $db->expects($this->once())
-            ->method('selectAll')
-            ->with('SELECT COUNT(*) as count FROM fa_product_attribute_assignments WHERE value_id = :value_id', ['value_id' => 1])
+            ->method('query')
+            ->with('SELECT COUNT(*) as count FROM `fa_product_attribute_assignments` WHERE value_id = :value_id', ['value_id' => 1])
             ->willReturn([['count' => 1]]);
 
         $controller = new ValuesApiController($dao, $db, true);
 
-        $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage('API Error: Cannot delete value that is in use by products');
-        
+        ob_start();
         $controller->delete(1, 1);
+        $output = ob_get_clean();
+
+        $response = json_decode($output, true);
+        $this->assertEquals(['error' => 'Cannot delete value that is in use by products'], $response);
     }
 }

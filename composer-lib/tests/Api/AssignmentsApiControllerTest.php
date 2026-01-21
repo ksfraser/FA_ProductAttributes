@@ -69,10 +69,12 @@ class AssignmentsApiControllerTest extends TestCase
 
         $controller = new AssignmentsApiController($dao, $db, true);
 
-        $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage('API Error: Assignment not found');
-        
+        ob_start();
         $controller->show('ABC123', 999);
+        $output = ob_get_clean();
+
+        $response = json_decode($output, true);
+        $this->assertEquals(['error' => 'Assignment not found'], $response);
     }
 
     public function testCreateSuccess(): void
@@ -135,10 +137,12 @@ class AssignmentsApiControllerTest extends TestCase
             }
         };
 
-        $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage('API Error: Invalid category_id');
-        
+        ob_start();
         $controller->create('ABC123');
+        $output = ob_get_clean();
+
+        $response = json_decode($output, true);
+        $this->assertEquals(['error' => 'Invalid category_id'], $response);
     }
 
     public function testCreateInvalidValue(): void
@@ -163,10 +167,12 @@ class AssignmentsApiControllerTest extends TestCase
             }
         };
 
-        $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage('API Error: Invalid value_id for the specified category');
-        
+        ob_start();
         $controller->create('ABC123');
+        $output = ob_get_clean();
+
+        $response = json_decode($output, true);
+        $this->assertEquals(['error' => 'Invalid value_id for the specified category'], $response);
     }
 
     public function testDeleteSuccess(): void
@@ -206,10 +212,12 @@ class AssignmentsApiControllerTest extends TestCase
 
         $controller = new AssignmentsApiController($dao, $db, true);
 
-        $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage('API Error: Assignment not found');
-        
+        ob_start();
         $controller->delete('ABC123', 999);
+        $output = ob_get_clean();
+
+        $response = json_decode($output, true);
+        $this->assertEquals(['error' => 'Assignment not found'], $response);
     }
 
     public function testBulkUpdate(): void

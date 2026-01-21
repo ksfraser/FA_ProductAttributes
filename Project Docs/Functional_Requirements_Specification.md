@@ -48,9 +48,12 @@ This document details the functional behavior of the Product Attributes module f
 - **Trigger**: User navigates to Inventory > Stock > Product Attributes.
 - **Process**:
   1. Display categories in a sortable table (by Name or Royal Order).
-  2. Table columns: Category Name, Royal Order (editable input), Actions.
-  3. Provide CRUD forms for categories and variables.
-  4. On delete, check for usage in products.
+  2. Table includes columns: Category Name, Royal Order (editable input), Actions (Edit/Delete).
+  3. Display values in a separate tab/table with columns: Value, Slug, Sort Order, Active, Actions (Edit/Delete).
+  4. Display assignments in a separate tab/table with columns: Category, Value, Slug, Sort Order, Actions (Delete).
+  5. Edit buttons pre-fill forms with existing data and change button text to "Update".
+  6. Delete buttons show confirmation dialogs and prevent deletion if items are in use.
+  7. Provide CRUD forms for categories and variables with validation.
 - **Output**: Updated categories and variables in DB.
 
 ### FR5: Inventory and Stock Management (Already Supported by FA)

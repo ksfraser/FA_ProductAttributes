@@ -47,7 +47,7 @@ class AssignmentsTab
 
             // Display assignments table
             start_table(TABLESTYLE2);
-            $th = array(_("Category"), _("Value"), _("Slug"), _("Sort"));
+            $th = array(_("Category"), _("Value"), _("Slug"), _("Sort"), _("Actions"));
             table_header($th);
 
             if (count($assignments) > 0) {
@@ -57,11 +57,24 @@ class AssignmentsTab
                     label_cell($a['value_label'] ?? '');
                     label_cell($a['value_slug'] ?? '');
                     label_cell($a['sort_order'] ?? 0);
+                    
+                    // Actions column
+                    echo '<td>';
+                    echo '<a href="javascript:void(0)" onclick="if(confirm(\'' . sprintf(_("Remove assignment '%s - %s' from product?"), addslashes($a['category_code']), addslashes($a['value_label'])) . '\')) { ';
+                    echo 'document.getElementById(\'delete_assignment_form_' . $a['id'] . '\').submit(); }">' . _("Delete") . '</a>';
+                    echo '<form id="delete_assignment_form_' . $a['id'] . '" method="post" style="display:none">';
+                    echo '<input type="hidden" name="action" value="delete_assignment">';
+                    echo '<input type="hidden" name="tab" value="assignments">';
+                    echo '<input type="hidden" name="assignment_id" value="' . $a['id'] . '">';
+                    echo '<input type="hidden" name="stock_id" value="' . $stockId . '">';
+                    echo '</form>';
+                    echo '</td>';
+                    
                     end_row();
                 }
             } else {
                 start_row();
-                label_cell(_("No assignments found"), '', 'colspan=4');
+                label_cell(_("No assignments found"), '', 'colspan=5');
                 end_row();
             }
             end_table();

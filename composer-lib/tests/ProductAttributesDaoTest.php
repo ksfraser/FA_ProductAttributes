@@ -14,7 +14,7 @@ class ProductAttributesDaoTest extends TestCase
         $db->method('getTablePrefix')->willReturn('fa_');
         $db->expects($this->once())
             ->method('query')
-            ->with('SELECT * FROM fa_product_attribute_categories ORDER BY sort_order, code')
+            ->with('SELECT * FROM `fa_product_attribute_categories` ORDER BY sort_order, code')
             ->willReturn([
                 ['id' => 1, 'code' => 'color', 'label' => 'Color', 'sort_order' => 2],
                 ['id' => 2, 'code' => 'size', 'label' => 'Size', 'sort_order' => 1],
@@ -58,12 +58,12 @@ class ProductAttributesDaoTest extends TestCase
         $db->method('getTablePrefix')->willReturn('fa_');
         $db->expects($this->once())
             ->method('query')
-            ->with('SELECT id FROM fa_product_attribute_categories WHERE code = :code', ['code' => 'color'])
+            ->with('SELECT id FROM `fa_product_attribute_categories` WHERE code = :code', ['code' => 'color'])
             ->willReturn([['id' => 1]]);
         $db->expects($this->once())
             ->method('execute')
             ->with(
-                "UPDATE fa_product_attribute_categories\nSET label = :label, description = :description, sort_order = :sort_order, active = :active\nWHERE code = :code",
+                "UPDATE `fa_product_attribute_categories`\nSET label = :label, description = :description, sort_order = :sort_order, active = :active\nWHERE code = :code",
                 [
                     'label' => 'Color',
                     'description' => '',

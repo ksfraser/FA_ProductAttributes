@@ -67,10 +67,12 @@ class CategoriesApiControllerTest extends TestCase
 
         $controller = new CategoriesApiController($dao, $db, true);
 
-        $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage('API Error: Category not found');
-        
+        ob_start();
         $controller->show(999);
+        $output = ob_get_clean();
+
+        $response = json_decode($output, true);
+        $this->assertEquals(['error' => 'Category not found'], $response);
     }
 
     public function testCreateSuccess(): void
@@ -133,15 +135,17 @@ class CategoriesApiControllerTest extends TestCase
 
         $db->method('getTablePrefix')->willReturn('fa_');
         $db->expects($this->once())
-            ->method('selectAll')
-            ->with('SELECT COUNT(*) as count FROM fa_product_attribute_assignments WHERE category_id = :category_id', ['category_id' => 1])
+            ->method('query')
+            ->with('SELECT COUNT(*) as count FROM `fa_product_attribute_assignments` WHERE category_id = :category_id', ['category_id' => 1])
             ->willReturn([['count' => 1]]);
 
         $controller = new CategoriesApiController($dao, $db, true);
 
-        $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage('API Error: Cannot delete category that is in use by products');
-        
+        ob_start();
         $controller->delete(1);
+        $output = ob_get_clean();
+
+        $response = json_decode($output, true);
+        $this->assertEquals(['error' => 'Cannot delete category that is in use by products'], $response);
     }
 }
