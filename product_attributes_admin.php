@@ -109,6 +109,9 @@ echo '<div style="margin:8px 0">'
     . '<a href="?tab=values">Values</a> | '
     . '<a href="?tab=assignments">Assignments</a>'
     . '</div>';
+display_notification("DEBUG: Tab navigation rendered");
+
+display_notification("Current tab: '$tab'");
 
 if ($tab === 'categories') {
     display_notification("Rendering categories tab");
@@ -129,4 +132,5 @@ if ($tab === 'categories') {
     $assignmentsTab->render();
 }
 
+display_notification("DEBUG: About to call end_page()");
 end_page();
