@@ -55,7 +55,7 @@ use Ksfraser\FA_ProductAttributes\Actions\ActionHandler;
 try {
     $db_adapter = new FrontAccountingDbAdapter();
     $dao = new ProductAttributesDao($db_adapter);
-    //$dao->ensureSchema();
+    $dao->ensureSchema();
 } catch (Exception $e) {
     display_error("Database error: " . $e->getMessage());
     end_page();
