@@ -140,6 +140,7 @@ final class FrontAccountingDbAdapter implements DbAdapterInterface
     {
         if ($this->driver === 'fa') {
             $sql = $this->bindParams($sql, $params);
+            display_notification("Executing SQL: " . $sql);
             db_query($sql);
         } elseif ($this->driver === 'pdo') {
             $stmt = $this->connection->prepare($sql);
