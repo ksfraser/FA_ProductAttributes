@@ -23,8 +23,8 @@
       "url": "https://github.com/ksfraser/origin"
     },
     {
-      "type": "path",
-      "url": "../ksf_ModulesDAO"
+      "type": "git",
+      "url": "https://github.com/ksfraser/ksf_ModulesDAO"
     }
   ],
   "autoload": {
