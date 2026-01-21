@@ -21,13 +21,6 @@ class CategoriesTab
             $cats = $this->dao->listCategories();
             display_notification("Categories found: " . count($cats));
 
-    public function render(): void
-    {
-        display_notification("CategoriesTab render() called");
-        try {
-            $cats = $this->dao->listCategories();
-            display_notification("Categories found: " . count($cats));
-
             // Check for edit mode
             $editCategoryId = (int)($_GET['edit_category_id'] ?? $_POST['edit_category_id'] ?? 0);
             $editCategory = null;
