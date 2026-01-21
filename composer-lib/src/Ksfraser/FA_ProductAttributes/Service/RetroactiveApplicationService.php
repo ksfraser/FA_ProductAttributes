@@ -48,7 +48,7 @@ class RetroactiveApplicationService
     private function getAllStockIds(): array
     {
         $p = $this->faDb->getTablePrefix();
-        $result = $this->faDb->query("SELECT stock_id FROM {$p}stock_master ORDER BY stock_id");
+        $result = $this->faDb->query("SELECT stock_id FROM `{$p}stock_master` ORDER BY stock_id");
         return array_column($result, 'stock_id');
     }
 

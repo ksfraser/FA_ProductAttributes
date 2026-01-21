@@ -29,7 +29,7 @@ class ProductAttributesDao
     {
         $p = $this->db->getTablePrefix();
         return $this->db->query(
-            "SELECT * FROM {$p}product_attribute_categories ORDER BY sort_order, code"
+            "SELECT * FROM `{$p}product_attribute_categories` ORDER BY sort_order, code"
         );
     }
 
@@ -38,13 +38,13 @@ class ProductAttributesDao
         $p = $this->db->getTablePrefix();
 
         $existing = $this->db->query(
-            "SELECT id FROM {$p}product_attribute_categories WHERE code = :code",
+            "SELECT id FROM `{$p}product_attribute_categories` WHERE code = :code",
             ['code' => $code]
         );
 
         if (count($existing) > 0) {
             $this->db->execute(
-                "UPDATE {$p}product_attribute_categories\n"
+                "UPDATE `{$p}product_attribute_categories`\n"
                 . "SET label = :label, description = :description, sort_order = :sort_order, active = :active\n"
                 . "WHERE code = :code",
                 [
@@ -59,7 +59,7 @@ class ProductAttributesDao
         }
 
         $this->db->execute(
-            "INSERT INTO {$p}product_attribute_categories (code, label, description, sort_order, active)\n"
+            "INSERT INTO `{$p}product_attribute_categories` (code, label, description, sort_order, active)\n"
             . "VALUES (:code, :label, :description, :sort_order, :active)",
             [
                 'code' => $code,
@@ -76,7 +76,7 @@ class ProductAttributesDao
     {
         $p = $this->db->getTablePrefix();
         return $this->db->query(
-            "SELECT * FROM {$p}product_attribute_values WHERE category_id = :category_id ORDER BY sort_order, slug",
+            "SELECT * FROM `{$p}product_attribute_values` WHERE category_id = :category_id ORDER BY sort_order, slug",
             ['category_id' => $categoryId]
         );
     }
@@ -86,13 +86,13 @@ class ProductAttributesDao
         $p = $this->db->getTablePrefix();
 
         $existing = $this->db->query(
-            "SELECT id FROM {$p}product_attribute_values WHERE category_id = :category_id AND slug = :slug",
+            "SELECT id FROM `{$p}product_attribute_values` WHERE category_id = :category_id AND slug = :slug",
             ['category_id' => $categoryId, 'slug' => $slug]
         );
 
         if (count($existing) > 0) {
             $this->db->execute(
-                "UPDATE {$p}product_attribute_values\n"
+                "UPDATE `{$p}product_attribute_values`\n"
                 . "SET value = :value, sort_order = :sort_order, active = :active\n"
                 . "WHERE category_id = :category_id AND slug = :slug",
                 [
@@ -107,7 +107,7 @@ class ProductAttributesDao
         }
 
         $this->db->execute(
-            "INSERT INTO {$p}product_attribute_values (category_id, value, slug, sort_order, active)\n"
+            "INSERT INTO `{$p}product_attribute_values` (category_id, value, slug, sort_order, active)\n"
             . "VALUES (:category_id, :value, :slug, :sort_order, :active)",
             [
                 'category_id' => $categoryId,
@@ -125,9 +125,9 @@ class ProductAttributesDao
         $p = $this->db->getTablePrefix();
         return $this->db->query(
             "SELECT a.*, c.code AS category_code, c.label AS category_label, c.sort_order AS category_sort_order, v.value AS value_label, v.slug AS value_slug\n"
-            . "FROM {$p}product_attribute_assignments a\n"
-            . "JOIN {$p}product_attribute_categories c ON c.id = a.category_id\n"
-            . "JOIN {$p}product_attribute_values v ON v.id = a.value_id\n"
+            . "FROM `{$p}product_attribute_assignments` a\n"
+            . "JOIN `{$p}product_attribute_categories` c ON c.id = a.category_id\n"
+            . "JOIN `{$p}product_attribute_values` v ON v.id = a.value_id\n"
             . "WHERE a.stock_id = :stock_id\n"
             . "ORDER BY a.sort_order, c.sort_order, c.code, v.sort_order, v.slug",
             ['stock_id' => $stockId]
@@ -138,7 +138,7 @@ class ProductAttributesDao
     {
         $p = $this->db->getTablePrefix();
         $this->db->execute(
-            "INSERT INTO {$p}product_attribute_assignments (stock_id, category_id, value_id, sort_order)\n"
+            "INSERT INTO `{$p}product_attribute_assignments` (stock_id, category_id, value_id, sort_order)\n"
             . "VALUES (:stock_id, :category_id, :value_id, :sort_order)",
             [
                 'stock_id' => $stockId,
@@ -153,7 +153,7 @@ class ProductAttributesDao
     {
         $p = $this->db->getTablePrefix();
         $this->db->execute(
-            "DELETE FROM {$p}product_attribute_assignments WHERE id = :id",
+            "DELETE FROM `{$p}product_attribute_assignments` WHERE id = :id",
             ['id' => $assignmentId]
         );
     }

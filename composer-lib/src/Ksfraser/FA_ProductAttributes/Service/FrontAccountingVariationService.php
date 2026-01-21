@@ -47,7 +47,7 @@ class FrontAccountingVariationService extends VariationService
 
         // Get parent product data
         $parentData = $this->faDb->query(
-            "SELECT * FROM {$p}stock_master WHERE stock_id = :stock_id",
+            "SELECT * FROM `{$p}stock_master` WHERE stock_id = :stock_id",
             ['stock_id' => $parentStockId]
         );
 
@@ -118,14 +118,14 @@ class FrontAccountingVariationService extends VariationService
 
         // Get parent prices
         $parentPrices = $this->faDb->query(
-            "SELECT * FROM {$p}prices WHERE stock_id = :stock_id",
+            "SELECT * FROM `{$p}prices` WHERE stock_id = :stock_id",
             ['stock_id' => $parentStockId]
         );
 
         // Insert prices for variation
         foreach ($parentPrices as $price) {
             $this->faDb->execute(
-                "INSERT INTO {$p}prices (stock_id, sales_type_id, curr_abrev, price) 
+                "INSERT INTO `{$p}prices` (stock_id, sales_type_id, curr_abrev, price)
                  VALUES (:stock_id, :sales_type_id, :curr_abrev, :price)",
                 [
                     'stock_id' => $variationStockId,
@@ -146,7 +146,7 @@ class FrontAccountingVariationService extends VariationService
     {
         $p = $this->faDb->getTablePrefix();
         $result = $this->faDb->query(
-            "SELECT description FROM {$p}stock_master WHERE stock_id = :stock_id",
+            "SELECT description FROM `{$p}stock_master` WHERE stock_id = :stock_id",
             ['stock_id' => $stockId]
         );
 

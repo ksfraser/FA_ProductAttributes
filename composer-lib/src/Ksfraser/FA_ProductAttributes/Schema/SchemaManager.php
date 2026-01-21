@@ -61,7 +61,7 @@ class SchemaManager
     {
         // Categories table: Defines attribute types (Color, Size, Material, etc.)
         $db->execute(
-            "CREATE TABLE IF NOT EXISTS {$p}product_attribute_categories (\n"
+            "CREATE TABLE IF NOT EXISTS `{$p}product_attribute_categories` (\n"
             . "  id INT(11) NOT NULL AUTO_INCREMENT,\n"
             . "  code VARCHAR(64) NOT NULL,\n"           // Unique identifier (e.g., 'color', 'size')
             . "  label VARCHAR(64) NOT NULL,\n"          // Human-readable name (e.g., 'Color', 'Size')
@@ -76,7 +76,7 @@ class SchemaManager
 
         // Values table: Defines specific values within categories
         $db->execute(
-            "CREATE TABLE IF NOT EXISTS {$p}product_attribute_values (\n"
+            "CREATE TABLE IF NOT EXISTS `{$p}product_attribute_values` (\n"
             . "  id INT(11) NOT NULL AUTO_INCREMENT,\n"
             . "  category_id INT(11) NOT NULL,\n"        // Foreign key to categories
             . "  value VARCHAR(64) NOT NULL,\n"          // Display value (e.g., 'Red', 'Large')
@@ -92,7 +92,7 @@ class SchemaManager
 
         // Assignments table: Links products to their attribute values
         $db->execute(
-            "CREATE TABLE IF NOT EXISTS {$p}product_attribute_assignments (\n"
+            "CREATE TABLE IF NOT EXISTS `{$p}product_attribute_assignments` (\n"
             . "  id INT(11) NOT NULL AUTO_INCREMENT,\n"
             . "  stock_id VARCHAR(32) NOT NULL,\n"       // FrontAccounting stock_id (SKU)
             . "  category_id INT(11) NOT NULL,\n"        // Attribute category
@@ -118,7 +118,7 @@ class SchemaManager
     {
         // Categories table for SQLite
         $db->execute(
-            "CREATE TABLE IF NOT EXISTS {$p}product_attribute_categories (\n"
+            "CREATE TABLE IF NOT EXISTS `{$p}product_attribute_categories` (\n"
             . "  id INTEGER PRIMARY KEY AUTOINCREMENT,\n"
             . "  code TEXT NOT NULL UNIQUE,\n"
             . "  label TEXT NOT NULL,\n"
@@ -131,7 +131,7 @@ class SchemaManager
 
         // Values table for SQLite
         $db->execute(
-            "CREATE TABLE IF NOT EXISTS {$p}product_attribute_values (\n"
+            "CREATE TABLE IF NOT EXISTS `{$p}product_attribute_values` (\n"
             . "  id INTEGER PRIMARY KEY AUTOINCREMENT,\n"
             . "  category_id INTEGER NOT NULL,\n"
             . "  value TEXT NOT NULL,\n"
@@ -143,11 +143,11 @@ class SchemaManager
             . ");"
         );
         // Explicit index for category lookups
-        $db->execute("CREATE INDEX IF NOT EXISTS idx_pav_category ON {$p}product_attribute_values(category_id);");
+        $db->execute("CREATE INDEX IF NOT EXISTS idx_pav_category ON `{$p}product_attribute_values`(category_id);");
 
         // Assignments table for SQLite
         $db->execute(
-            "CREATE TABLE IF NOT EXISTS {$p}product_attribute_assignments (\n"
+            "CREATE TABLE IF NOT EXISTS `{$p}product_attribute_assignments` (\n"
             . "  id INTEGER PRIMARY KEY AUTOINCREMENT,\n"
             . "  stock_id TEXT NOT NULL,\n"
             . "  category_id INTEGER NOT NULL,\n"
@@ -158,8 +158,8 @@ class SchemaManager
             . ");"
         );
         // Explicit indexes for performance
-        $db->execute("CREATE INDEX IF NOT EXISTS idx_paa_stock ON {$p}product_attribute_assignments(stock_id);");
-        $db->execute("CREATE INDEX IF NOT EXISTS idx_paa_category ON {$p}product_attribute_assignments(category_id);");
-        $db->execute("CREATE INDEX IF NOT EXISTS idx_paa_value ON {$p}product_attribute_assignments(value_id);");
+        $db->execute("CREATE INDEX IF NOT EXISTS idx_paa_stock ON `{$p}product_attribute_assignments`(stock_id);");
+        $db->execute("CREATE INDEX IF NOT EXISTS idx_paa_category ON `{$p}product_attribute_assignments`(category_id);");
+        $db->execute("CREATE INDEX IF NOT EXISTS idx_paa_value ON `{$p}product_attribute_assignments`(value_id);");
     }
 }
