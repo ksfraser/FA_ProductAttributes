@@ -2,30 +2,33 @@
 
 namespace Ksfraser\FA_ProductAttributes\Actions;
 
-use Ksfraser\FA_ProductAttributes\Dao\ProductAttributesDao;
+use Ksfraser\FA_ProductAttributes\Services\AssignmentService;
 
 class AddAssignmentAction
 {
-    /** @var ProductAttributesDao */
-    private $dao;
+    /** @var AssignmentService */
+    private $assignmentService;
 
-    public function __construct(ProductAttributesDao $dao)
+    public function __construct(AssignmentService $assignmentService)
     {
-        $this->dao = $dao;
+        $this->assignmentService = $assignmentService;
     }
 
     public function handle(array $postData): string
     {
-        $stockId = trim((string)($postData['stock_id'] ?? ''));
-        $categoryId = (int)($postData['category_id'] ?? 0);
-        $valueId = (int)($postData['value_id'] ?? 0);
-        $sortOrder = (int)($postData['sort_order'] ?? 0);
+        try {
+            $data = [
+                'stock_id' => trim((string)($postData['stock_id'] ?? '')),
+                'category_id' => (int)($postData['category_id'] ?? 0),
+                'value_id' => (int)($postData['value_id'] ?? 0),
+                'sort_order' => (int)($postData['sort_order'] ?? 0)
+            ];
 
-        if ($stockId !== '' && $categoryId > 0 && $valueId > 0) {
-            $this->dao->addAssignment($stockId, $categoryId, $valueId, $sortOrder);
+            $this->assignmentService->createAssignment($data);
             return _("Added assignment");
+        } catch (\Exception $e) {
+            display_error("Error adding assignment: " . $e->getMessage());
+            return _("Invalid assignment data");
         }
-
-        return _("Invalid assignment data");
     }
 }

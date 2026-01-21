@@ -19,6 +19,9 @@ $files = [
     __DIR__ . '/../src/Ksfraser/FA_ProductAttributes/Api/AssignmentsApiController.php',
     __DIR__ . '/../src/Ksfraser/FA_ProductAttributes/Api/ApiRouter.php',
     __DIR__ . '/../src/Ksfraser/FA_ProductAttributes/Install/ComposerInstaller.php',
+    __DIR__ . '/../src/Ksfraser/FA_ProductAttributes/Services/CategoryService.php',
+    __DIR__ . '/../src/Ksfraser/FA_ProductAttributes/Services/ValueService.php',
+    __DIR__ . '/../src/Ksfraser/FA_ProductAttributes/Services/AssignmentService.php',
 ];
 
 foreach ($files as $file) {

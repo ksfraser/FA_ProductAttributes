@@ -2,20 +2,26 @@
 
 namespace Ksfraser\FA_ProductAttributes\Actions;
 
-use Ksfraser\FA_ProductAttributes\Dao\ProductAttributesDao;
-use Ksfraser\FA_ProductAttributes\Db\FrontAccountingDbAdapter;
+use Ksfraser\FA_ProductAttributes\Services\CategoryService;
+use Ksfraser\FA_ProductAttributes\Services\ValueService;
+use Ksfraser\FA_ProductAttributes\Services\AssignmentService;
 
 class ActionHandler
 {
-    /** @var ProductAttributesDao */
-    private $dao;
-    /** @var FrontAccountingDbAdapter */
-    private $dbAdapter;
+    /** @var CategoryService */
+    private $categoryService;
 
-    public function __construct(ProductAttributesDao $dao, FrontAccountingDbAdapter $dbAdapter)
+    /** @var ValueService */
+    private $valueService;
+
+    /** @var AssignmentService */
+    private $assignmentService;
+
+    public function __construct(CategoryService $categoryService, ValueService $valueService, AssignmentService $assignmentService)
     {
-        $this->dao = $dao;
-        $this->dbAdapter = $dbAdapter;
+        $this->categoryService = $categoryService;
+        $this->valueService = $valueService;
+        $this->assignmentService = $assignmentService;
     }
 
     public function handle(string $action, array $postData): ?string
@@ -23,27 +29,27 @@ class ActionHandler
         try {
             switch ($action) {
                 case 'upsert_category':
-                    $handler = new UpsertCategoryAction($this->dao, $this->dbAdapter);
+                    $handler = new UpsertCategoryAction($this->categoryService);
                     return $handler->handle($postData);
 
                 case 'delete_category':
-                    $handler = new DeleteCategoryAction($this->dao, $this->dbAdapter);
+                    $handler = new DeleteCategoryAction($this->categoryService);
                     return $handler->handle($postData);
 
                 case 'upsert_value':
-                    $handler = new UpsertValueAction($this->dao);
+                    $handler = new UpsertValueAction($this->valueService);
                     return $handler->handle($postData);
 
                 case 'delete_value':
-                    $handler = new DeleteValueAction($this->dao, $this->dbAdapter);
+                    $handler = new DeleteValueAction($this->valueService);
                     return $handler->handle($postData);
 
                 case 'add_assignment':
-                    $handler = new AddAssignmentAction($this->dao);
+                    $handler = new AddAssignmentAction($this->assignmentService);
                     return $handler->handle($postData);
 
                 case 'delete_assignment':
-                    $handler = new DeleteAssignmentAction($this->dao);
+                    $handler = new DeleteAssignmentAction($this->assignmentService);
                     return $handler->handle($postData);
 
                 default:
