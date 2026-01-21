@@ -90,6 +90,7 @@ $tab = $_GET['tab'] ?? 'categories';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = $_POST['action'] ?? '';
+    display_notification("POST data: " . json_encode($_POST));
 
     try {
         if ($action === 'upsert_category') {
