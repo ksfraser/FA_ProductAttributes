@@ -1,6 +1,6 @@
 {
   "name": "ksfraser/ksf-modules-dao",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Cross-platform DAO abstraction (DB, WordPress, SuiteCRM, FrontAccounting, CSV, XML)",
   "type": "library",
   "license": "MIT",
