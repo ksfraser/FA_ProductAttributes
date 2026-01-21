@@ -12,8 +12,9 @@ class CategoriesTab
 
     public function __construct(ProductAttributesDao $dao)
     {
-        display_notification("CategoriesTab constructor called");
+        display_notification("CategoriesTab constructor START");
         $this->dao = $dao;
+        display_notification("CategoriesTab constructor END");
     }
 
     public function render(): void

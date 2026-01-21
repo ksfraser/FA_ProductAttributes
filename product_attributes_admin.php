@@ -116,13 +116,17 @@ display_notification("Current tab: '$tab'");
 if ($tab === 'categories') {
     display_notification("Rendering categories tab");
     display_notification("DEBUG: About to instantiate CategoriesTab");
+    display_notification("DEBUG: dao type: " . get_class($dao));
+    display_notification("DEBUG: dao is object: " . (is_object($dao) ? 'yes' : 'no'));
     try {
         $categoriesTab = new CategoriesTab($dao);
         display_notification("DEBUG: CategoriesTab instantiated successfully");
         $categoriesTab->render();
         display_notification("DEBUG: CategoriesTab render() completed");
-    } catch (Exception $e) {
+    } catch (Throwable $e) {
         display_error("ERROR instantiating CategoriesTab: " . $e->getMessage());
+        display_error("ERROR type: " . get_class($e));
+        display_error("ERROR file: " . $e->getFile() . ":" . $e->getLine());
     }
 } else if ($tab === 'values') {
     $valuesTab = new ValuesTab($dao);
