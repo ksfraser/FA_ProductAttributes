@@ -143,13 +143,14 @@ echo '<div style="margin:8px 0">'
 if ($tab === 'categories') {
     try {
         $cats = $dao->listCategories();
+        display_notification("Categories found: " . count($cats));
+
+        // Always show the table
+        start_table(TABLESTYLE2);
+        $th = array(_("Code"), _("Label"), _("Sort"), _("Active"));
+        table_header($th);
 
         if (count($cats) > 0) {
-            // Use FA's standard table functions
-            start_table(TABLESTYLE2);
-            $th = array(_("Code"), _("Label"), _("Sort"), _("Active"));
-            table_header($th);
-
             foreach ($cats as $c) {
                 start_row();
                 label_cell($c['code'] ?? '');
@@ -158,8 +159,12 @@ if ($tab === 'categories') {
                 label_cell($c['active'] ?? 0 ? _("Yes") : _("No"));
                 end_row();
             }
-            end_table();
+        } else {
+            start_row();
+            label_cell(_("No categories found"), '', 'colspan=4');
+            end_row();
         }
+        end_table();
 
         echo '<br />';
 
