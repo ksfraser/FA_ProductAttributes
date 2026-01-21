@@ -68,6 +68,7 @@ class ValuesTab
         table_section_title(_("Add / Update Value"));
         hidden('action', 'upsert_value');
         hidden('category_id', (string)$categoryId);
+        hidden('tab', 'values');
         text_row(_("Value"), 'value', '', 20, 64);
         text_row(_("Slug"), 'slug', '', 20, 32);
         small_amount_row(_("Sort order"), 'sort_order', 0);

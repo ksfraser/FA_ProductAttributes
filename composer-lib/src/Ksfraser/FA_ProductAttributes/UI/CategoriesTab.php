@@ -53,6 +53,7 @@ class CategoriesTab
             small_amount_row(_("Sort order"), 'sort_order', 0);
             check_row(_("Active"), 'active', true);
             hidden('action', 'upsert_category');
+            hidden('tab', 'categories');
             end_table(1);
             submit_center('save', _("Save"));
             end_form();
