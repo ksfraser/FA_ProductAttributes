@@ -65,7 +65,7 @@ try {
 
 // Debug: show table prefix
 DebugTBPref::debug();
-display_notification("Table prefix: " . $db->getTablePrefix());
+display_notification("Table prefix: " . $db_adapter->getTablePrefix());
 
 // Debug: check if tables exist
 DebugSchemaNames::debug($db_adapter);
