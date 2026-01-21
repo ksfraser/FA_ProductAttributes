@@ -50,6 +50,7 @@ use Ksfraser\FA_ProductAttributes\Dao\ProductAttributesDao;
 use Ksfraser\FA_ProductAttributes\UI\CategoriesTab;
 use Ksfraser\FA_ProductAttributes\UI\ValuesTab;
 use Ksfraser\FA_ProductAttributes\UI\AssignmentsTab;
+use Ksfraser\FA_ProductAttributes\Actions\ActionHandler;
 
 try {
     $db_adapter = new FrontAccountingDbAdapter();
@@ -85,48 +86,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = $_POST['action'] ?? '';
     display_notification("POST data: " . json_encode($_POST));
 
-    try {
-        if ($action === 'upsert_category') {
-            $dao->upsertCategory(
-                trim((string)($_POST['code'] ?? '')),
-                trim((string)($_POST['label'] ?? '')),
-                trim((string)($_POST['description'] ?? '')),
-                (int)($_POST['sort_order'] ?? 0),
-                isset($_POST['active'])
-            );
-            // Debug: check count after save
-            $check = $db_adapter->query("SELECT COUNT(*) as cnt FROM `" . $db_adapter->getTablePrefix() . "product_attribute_categories`");
-            display_notification("Categories count after save: " . ($check[0]['cnt'] ?? 'error'));
-            display_notification(_("Saved category"));
-        }
+    $actionHandler = new ActionHandler($dao, $db_adapter);
+    $message = $actionHandler->handle($action, $_POST);
 
-        if ($action === 'upsert_value') {
-            $categoryId = (int)($_POST['category_id'] ?? 0);
-            $dao->upsertValue(
-                $categoryId,
-                trim((string)($_POST['value'] ?? '')),
-                trim((string)($_POST['slug'] ?? '')),
-                (int)($_POST['sort_order'] ?? 0),
-                isset($_POST['active'])
-            );
-            display_notification(_("Saved value"));
-        }
-
-        if ($action === 'add_assignment') {
-            $stockId = trim((string)($_POST['stock_id'] ?? ''));
-            $categoryId = (int)($_POST['category_id'] ?? 0);
-            $valueId = (int)($_POST['value_id'] ?? 0);
-            $sortOrder = (int)($_POST['sort_order'] ?? 0);
-
-            if ($stockId !== '' && $categoryId > 0 && $valueId > 0) {
-                $dao->addAssignment($stockId, $categoryId, $valueId, $sortOrder);
-                display_notification(_("Added assignment"));
-            }
-        }
-    } catch (Exception $e) {
-        display_error("Error saving: " . $e->getMessage());
+    if ($message) {
+        display_notification($message);
     }
-        
 }
 
 
