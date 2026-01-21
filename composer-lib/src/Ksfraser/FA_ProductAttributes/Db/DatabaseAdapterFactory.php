@@ -12,8 +12,7 @@ class DatabaseAdapterFactory
      *
      * @param string $driver The driver type ('fa', 'pdo', 'mysql')
      * @param string|null $prefix Custom table prefix (for FA driver)
-     * @return DbAdapterInterface
-     */
+     * @return DbAdapterInterface     * @throws \InvalidArgumentException     */
     public static function create(string $driver = 'fa', ?string $prefix = null): DbAdapterInterface
     {
         switch ($driver) {
