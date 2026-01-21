@@ -151,7 +151,7 @@ class FrontAccountingVariationServiceTest extends TestCase
                     })
                 ],
                 [
-                    $this->stringContains('INSERT INTO fa_prices'),
+                    $this->stringContains('INSERT INTO `fa_prices`'),
                     $this->callback(function($params) {
                         return $params['stock_id'] === 'ABC123-S' &&
                                $params['price'] == 10.00;
@@ -174,7 +174,7 @@ class FrontAccountingVariationServiceTest extends TestCase
         $faDb->method('getTablePrefix')->willReturn('fa_');
         $faDb->expects($this->once())
             ->method('query')
-            ->with('SELECT description FROM fa_stock_master WHERE stock_id = :stock_id', ['stock_id' => 'ABC123'])
+            ->with('SELECT description FROM `fa_stock_master` WHERE stock_id = :stock_id', ['stock_id' => 'ABC123'])
             ->willReturn([['description' => 'Test Description']]);
 
         $service = new FrontAccountingVariationService($dao, $attributesDb, $faDb);

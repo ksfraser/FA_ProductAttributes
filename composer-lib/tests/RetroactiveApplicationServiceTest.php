@@ -18,7 +18,7 @@ class RetroactiveApplicationServiceTest extends TestCase
         $faDb->method('getTablePrefix')->willReturn('fa_');
         $faDb->expects($this->once())
             ->method('query')
-            ->with('SELECT stock_id FROM fa_stock_master ORDER BY stock_id')
+            ->with('SELECT stock_id FROM `fa_stock_master` ORDER BY stock_id')
             ->willReturn([
                 ['stock_id' => 'ABC-S'],
                 ['stock_id' => 'ABC-M'],
@@ -164,7 +164,7 @@ class RetroactiveApplicationServiceTest extends TestCase
         $faDb->method('getTablePrefix')->willReturn('fa_');
         $faDb->expects($this->once())
             ->method('query')
-            ->with('SELECT stock_id FROM fa_stock_master ORDER BY stock_id')
+            ->with('SELECT stock_id FROM `fa_stock_master` ORDER BY stock_id')
             ->willReturn([
                 ['stock_id' => 'ABC'],
                 ['stock_id' => 'XYZ'],

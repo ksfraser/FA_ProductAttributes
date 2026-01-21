@@ -33,12 +33,12 @@ class ProductAttributesDaoTest extends TestCase
         $db->method('getTablePrefix')->willReturn('fa_');
         $db->expects($this->once())
             ->method('query')
-            ->with('SELECT id FROM fa_product_attribute_categories WHERE code = :code', ['code' => 'color'])
+            ->with('SELECT id FROM `fa_product_attribute_categories` WHERE code = :code', ['code' => 'color'])
             ->willReturn([]);
         $db->expects($this->once())
             ->method('execute')
             ->with(
-                "INSERT INTO fa_product_attribute_categories (code, label, description, sort_order, active)\nVALUES (:code, :label, :description, :sort_order, :active)",
+                "INSERT INTO `fa_product_attribute_categories` (code, label, description, sort_order, active)\nVALUES (:code, :label, :description, :sort_order, :active)",
                 [
                     'code' => 'color',
                     'label' => 'Color',
@@ -96,7 +96,7 @@ class ProductAttributesDaoTest extends TestCase
         $db->method('getTablePrefix')->willReturn('fa_');
         $db->expects($this->once())
             ->method('query')
-            ->with('SELECT * FROM fa_product_attribute_values WHERE category_id = :category_id ORDER BY sort_order, slug', ['category_id' => 1])
+            ->with('SELECT * FROM `fa_product_attribute_values` WHERE category_id = :category_id ORDER BY sort_order, slug', ['category_id' => 1])
             ->willReturn([
                 ['id' => 1, 'category_id' => 1, 'value' => 'Red', 'slug' => 'red', 'sort_order' => 1],
             ]);
@@ -114,12 +114,12 @@ class ProductAttributesDaoTest extends TestCase
         $db->method('getTablePrefix')->willReturn('fa_');
         $db->expects($this->once())
             ->method('query')
-            ->with('SELECT id FROM fa_product_attribute_values WHERE category_id = :category_id AND slug = :slug', ['category_id' => 1, 'slug' => 'red'])
+            ->with('SELECT id FROM `fa_product_attribute_values` WHERE category_id = :category_id AND slug = :slug', ['category_id' => 1, 'slug' => 'red'])
             ->willReturn([]);
         $db->expects($this->once())
             ->method('execute')
             ->with(
-                "INSERT INTO fa_product_attribute_values (category_id, value, slug, sort_order, active)\nVALUES (:category_id, :value, :slug, :sort_order, :active)",
+                "INSERT INTO `fa_product_attribute_values` (category_id, value, slug, sort_order, active)\nVALUES (:category_id, :value, :slug, :sort_order, :active)",
                 [
                     'category_id' => 1,
                     'value' => 'Red',
@@ -139,12 +139,12 @@ class ProductAttributesDaoTest extends TestCase
         $db->method('getTablePrefix')->willReturn('fa_');
         $db->expects($this->once())
             ->method('query')
-            ->with('SELECT id FROM fa_product_attribute_values WHERE category_id = :category_id AND slug = :slug', ['category_id' => 1, 'slug' => 'red'])
+            ->with('SELECT id FROM `fa_product_attribute_values` WHERE category_id = :category_id AND slug = :slug', ['category_id' => 1, 'slug' => 'red'])
             ->willReturn([['id' => 1]]);
         $db->expects($this->once())
             ->method('execute')
             ->with(
-                "UPDATE fa_product_attribute_values\nSET value = :value, sort_order = :sort_order, active = :active\nWHERE category_id = :category_id AND slug = :slug",
+                "UPDATE `fa_product_attribute_values`\nSET value = :value, sort_order = :sort_order, active = :active\nWHERE category_id = :category_id AND slug = :slug",
                 [
                     'category_id' => 1,
                     'slug' => 'red',
@@ -165,7 +165,7 @@ class ProductAttributesDaoTest extends TestCase
         $db->expects($this->once())
             ->method('query')
             ->with(
-                "SELECT a.*, c.code AS category_code, c.label AS category_label, c.sort_order AS category_sort_order, v.value AS value_label, v.slug AS value_slug\nFROM fa_product_attribute_assignments a\nJOIN fa_product_attribute_categories c ON c.id = a.category_id\nJOIN fa_product_attribute_values v ON v.id = a.value_id\nWHERE a.stock_id = :stock_id\nORDER BY a.sort_order, c.sort_order, c.code, v.sort_order, v.slug",
+                "SELECT a.*, c.code AS category_code, c.label AS category_label, c.sort_order AS category_sort_order, v.value AS value_label, v.slug AS value_slug\nFROM `fa_product_attribute_assignments` a\nJOIN `fa_product_attribute_categories` c ON c.id = a.category_id\nJOIN `fa_product_attribute_values` v ON v.id = a.value_id\nWHERE a.stock_id = :stock_id\nORDER BY a.sort_order, c.sort_order, c.code, v.sort_order, v.slug",
                 ['stock_id' => 'ABC123']
             )
             ->willReturn([
@@ -186,7 +186,7 @@ class ProductAttributesDaoTest extends TestCase
         $db->expects($this->once())
             ->method('execute')
             ->with(
-                "INSERT INTO fa_product_attribute_assignments (stock_id, category_id, value_id, sort_order)\nVALUES (:stock_id, :category_id, :value_id, :sort_order)",
+                "INSERT INTO `fa_product_attribute_assignments` (stock_id, category_id, value_id, sort_order)\nVALUES (:stock_id, :category_id, :value_id, :sort_order)",
                 [
                     'stock_id' => 'ABC123',
                     'category_id' => 1,

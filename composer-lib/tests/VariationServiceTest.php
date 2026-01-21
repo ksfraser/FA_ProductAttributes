@@ -130,7 +130,7 @@ class VariationServiceTest extends TestCase
             ->willReturn('fa_');
         $db->expects($this->once())
             ->method('query')
-            ->with('SELECT description FROM fa_stock_master WHERE stock_id = :stock_id', ['stock_id' => 'ABC123'])
+            ->with('SELECT description FROM `fa_stock_master` WHERE stock_id = :stock_id', ['stock_id' => 'ABC123'])
             ->willReturn([['description' => 'Product ABC123 - ${SIZE} ${COLOR}']]);
 
         $service = new VariationService($dao, $db);
@@ -156,7 +156,7 @@ class VariationServiceTest extends TestCase
             ->willReturn('fa_');
         $db->expects($this->exactly(2))
             ->method('query')
-            ->with('SELECT description FROM fa_stock_master WHERE stock_id = :stock_id', ['stock_id' => 'ABC123'])
+            ->with('SELECT description FROM `fa_stock_master` WHERE stock_id = :stock_id', ['stock_id' => 'ABC123'])
             ->willReturn([['description' => 'Product ABC123 - ${SIZE} ${COLOR}']]);
         
         $dao->expects($this->once())
