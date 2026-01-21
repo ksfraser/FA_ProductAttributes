@@ -60,14 +60,7 @@ class AssignmentsTab
                     
                     // Actions column
                     echo '<td>';
-                    echo '<a href="javascript:void(0)" onclick="if(confirm(\'' . sprintf(_("Remove assignment '%s - %s' from product?"), addslashes($a['category_code']), addslashes($a['value_label'])) . '\')) { ';
-                    echo 'document.getElementById(\'delete_assignment_form_' . $a['id'] . '\').submit(); }">' . _("Delete") . '</a>';
-                    echo '<form id="delete_assignment_form_' . $a['id'] . '" method="post" style="display:none">';
-                    echo '<input type="hidden" name="action" value="delete_assignment">';
-                    echo '<input type="hidden" name="tab" value="assignments">';
-                    echo '<input type="hidden" name="assignment_id" value="' . $a['id'] . '">';
-                    echo '<input type="hidden" name="stock_id" value="' . $stockId . '">';
-                    echo '</form>';
+                    echo '<a href="?tab=assignments&action=delete_assignment&assignment_id=' . $a['id'] . '&stock_id=' . urlencode($stockId) . '" onclick="return confirm(\'' . sprintf(_("Remove assignment '%s - %s' from product?"), addslashes($a['category_code']), addslashes($a['value_label'])) . '\')">' . _("Delete") . '</a>';
                     echo '</td>';
                     
                     end_row();

@@ -85,28 +85,31 @@ DebugCompany::debug();
 $tab = $_GET['tab'] ?? $_POST['tab'] ?? 'categories';
 display_notification("DEBUG: tab variable set to: '$tab'");
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    display_notification("DEBUG: POST request detected");
-    $action = $_POST['action'] ?? '';
-    display_notification("POST data: " . json_encode($_POST));
+// Handle both POST and GET actions
+$requestData = $_POST;
+$action = $_POST['action'] ?? '';
+
+if (empty($action) && isset($_GET['action'])) {
+    // Handle GET actions (like delete links)
+    $action = $_GET['action'];
+    $requestData = $_GET;
+    display_notification("DEBUG: GET action detected: '$action'");
+}
+
+if (!empty($action)) {
+    display_notification("DEBUG: Action detected: '$action'");
+    display_notification("Request data: " . json_encode($requestData));
 
     $actionHandler = new ActionHandler($dao, $db_adapter);
     display_notification("DEBUG: ActionHandler instantiated");
 
-    $message = $actionHandler->handle($action, $_POST);
+    $message = $actionHandler->handle($action, $requestData);
     display_notification("DEBUG: ActionHandler->handle() returned: '$message'");
 
     if ($message) {
         display_notification($message);
     }
-
-    // Redirect to preserve tab state after POST processing
-    header("Location: ?tab=" . urlencode($tab));
-    exit;
-} else {
-    display_notification("DEBUG: Not a POST request");
 }
-
 
 echo '<div style="margin:8px 0">'
     . '<a href="?tab=categories">Categories</a> | '

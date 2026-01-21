@@ -69,14 +69,7 @@ class ValuesTab
                 // Actions column
                 echo '<td>';
                 echo '<a href="?tab=values&category_id=' . $categoryId . '&edit_value_id=' . $v['id'] . '">' . _("Edit") . '</a> | ';
-                echo '<a href="javascript:void(0)" onclick="if(confirm(\'' . sprintf(_("Delete value '%s'?"), addslashes($v['value'])) . '\')) { ';
-                echo 'document.getElementById(\'delete_value_form_' . $v['id'] . '\').submit(); }">' . _("Delete") . '</a>';
-                echo '<form id="delete_value_form_' . $v['id'] . '" method="post" style="display:none">';
-                echo '<input type="hidden" name="action" value="delete_value">';
-                echo '<input type="hidden" name="tab" value="values">';
-                echo '<input type="hidden" name="category_id" value="' . $categoryId . '">';
-                echo '<input type="hidden" name="value_id" value="' . $v['id'] . '">';
-                echo '</form>';
+                echo '<a href="?tab=values&action=delete_value&category_id=' . $categoryId . '&value_id=' . $v['id'] . '" onclick="return confirm(\'' . sprintf(_("Delete value '%s'?"), addslashes($v['value'])) . '\')">' . _("Delete") . '</a>';
                 echo '</td>';
                 
                 end_row();
