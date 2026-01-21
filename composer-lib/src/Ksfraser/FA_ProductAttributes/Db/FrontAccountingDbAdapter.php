@@ -189,8 +189,10 @@ final class FrontAccountingDbAdapter implements DbAdapterInterface
 
             if ($v === null) {
                 $replacement = 'NULL';
+            } elseif (is_numeric($v)) {
+                $replacement = (string)$v;
             } else {
-                $replacement = "'" . db_escape((string)$v) . "'";
+                $replacement = "'" . addslashes((string)$v) . "'";
             }
 
             $sql = str_replace($name, $replacement, $sql);
