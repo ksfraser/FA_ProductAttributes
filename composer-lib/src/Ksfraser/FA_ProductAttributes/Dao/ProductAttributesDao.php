@@ -37,12 +37,17 @@ class ProductAttributesDao
     {
         $p = $this->db->getTablePrefix();
 
+        display_notification("DAO upsertCategory: table_prefix='$p', code='$code'");
+
         $existing = $this->db->query(
             "SELECT id FROM `{$p}product_attribute_categories` WHERE code = :code",
             ['code' => $code]
         );
 
+        display_notification("Existing categories with code '$code': " . count($existing));
+
         if (count($existing) > 0) {
+            display_notification("Updating existing category");
             $this->db->execute(
                 "UPDATE `{$p}product_attribute_categories`\n"
                 . "SET label = :label, description = :description, sort_order = :sort_order, active = :active\n"
@@ -58,6 +63,7 @@ class ProductAttributesDao
             return;
         }
 
+        display_notification("Inserting new category");
         $this->db->execute(
             "INSERT INTO `{$p}product_attribute_categories` (code, label, description, sort_order, active)\n"
             . "VALUES (:code, :label, :description, :sort_order, :active)",

@@ -21,7 +21,7 @@ class CategoriesTab
 
             // Always show the table
             start_table(TABLESTYLE2);
-            $th = array(_("Code"), _("Label"), _("Sort"), _("Active"));
+            $th = array(_("Code"), _("Label"), _("Description"), _("Sort"), _("Active"), "");
             table_header($th);
 
             if (count($cats) > 0) {
@@ -29,6 +29,7 @@ class CategoriesTab
                     start_row();
                     label_cell($c['code'] ?? '');
                     label_cell($c['label'] ?? '');
+                    label_cell($c['description'] ?? '');
                     label_cell($c['sort_order'] ?? 0);
                     label_cell($c['active'] ?? 0 ? _("Yes") : _("No"));
                     end_row();

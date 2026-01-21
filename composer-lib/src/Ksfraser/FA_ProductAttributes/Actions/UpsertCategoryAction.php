@@ -18,13 +18,15 @@ class UpsertCategoryAction
 
     public function handle(array $postData): string
     {
-        $this->dao->upsertCategory(
-            trim((string)($postData['code'] ?? '')),
-            trim((string)($postData['label'] ?? '')),
-            trim((string)($postData['description'] ?? '')),
-            (int)($postData['sort_order'] ?? 0),
-            isset($postData['active'])
-        );
+        $code = trim((string)($postData['code'] ?? ''));
+        $label = trim((string)($postData['label'] ?? ''));
+        $description = trim((string)($postData['description'] ?? ''));
+        $sortOrder = (int)($postData['sort_order'] ?? 0);
+        $active = isset($postData['active']);
+
+        display_notification("UpsertCategoryAction: code='$code', label='$label', description='$description', sort_order=$sortOrder, active=" . ($active ? 'true' : 'false'));
+
+        $this->dao->upsertCategory($code, $label, $description, $sortOrder, $active);
 
         // Debug: check count after save
         $check = $this->dbAdapter->query("SELECT COUNT(*) as cnt FROM `" . $this->dbAdapter->getTablePrefix() . "product_attribute_categories`");
