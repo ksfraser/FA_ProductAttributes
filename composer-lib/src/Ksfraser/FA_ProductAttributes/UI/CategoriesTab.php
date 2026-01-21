@@ -49,8 +49,8 @@ class CategoriesTab
                     // Actions column
                     echo '<td>';
                     echo '<a href="?tab=categories&edit_category_id=' . $c['id'] . '">' . _("Edit") . '</a> | ';
-                    echo '<button type="button" onclick="if(confirm(\'' . sprintf(_("Delete category '%s'?"), addslashes($c['label'])) . '\')) { ';
-                    echo 'document.getElementById(\'delete_category_form_' . $c['id'] . '\').submit(); }">' . _("Delete") . '</button>';
+                    echo '<a href="javascript:void(0)" onclick="if(confirm(\'' . sprintf(_("Delete category '%s'?"), addslashes($c['label'])) . '\')) { ';
+                    echo 'document.getElementById(\'delete_category_form_' . $c['id'] . '\').submit(); }">' . _("Delete") . '</a>';
                     echo '<form id="delete_category_form_' . $c['id'] . '" method="post" style="display:none">';
                     echo '<input type="hidden" name="action" value="delete_category">';
                     echo '<input type="hidden" name="tab" value="categories">';
