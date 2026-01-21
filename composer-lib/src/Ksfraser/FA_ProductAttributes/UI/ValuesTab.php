@@ -69,8 +69,8 @@ class ValuesTab
                 // Actions column
                 echo '<td>';
                 echo '<a href="?tab=values&category_id=' . $categoryId . '&edit_value_id=' . $v['id'] . '">' . _("Edit") . '</a> | ';
-                echo '<a href="javascript:void(0)" onclick="if(confirm(\'' . sprintf(_("Delete value '%s'?"), addslashes($v['value'])) . '\')) { ';
-                echo 'document.getElementById(\'delete_value_form_' . $v['id'] . '\').submit(); }">' . _("Delete") . '</a>';
+                echo '<button type="button" onclick="if(confirm(\'' . sprintf(_("Delete value '%s'?"), addslashes($v['value'])) . '\')) { ';
+                echo 'document.getElementById(\'delete_value_form_' . $v['id'] . '\').submit(); }">' . _("Delete") . '</button>';
                 echo '<form id="delete_value_form_' . $v['id'] . '" method="post" style="display:none">';
                 echo '<input type="hidden" name="action" value="delete_value">';
                 echo '<input type="hidden" name="tab" value="values">';

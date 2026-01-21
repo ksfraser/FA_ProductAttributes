@@ -36,11 +36,30 @@ class ProductAttributesDao
         return $result;
     }
 
-    public function upsertCategory(string $code, string $label, string $description = '', int $sortOrder = 0, bool $active = true): void
+    public function upsertCategory(string $code, string $label, string $description = '', int $sortOrder = 0, bool $active = true, int $categoryId = 0): void
     {
         $p = $this->db->getTablePrefix();
 
         display_notification("DAO upsertCategory: table_prefix='$p', code='$code'");
+
+        // If categoryId is provided, this is an update
+        if ($categoryId > 0) {
+            display_notification("Updating category by ID: $categoryId");
+            $this->db->execute(
+                "UPDATE `{$p}product_attribute_categories`\n"
+                . "SET code = :code, label = :label, description = :description, sort_order = :sort_order, active = :active\n"
+                . "WHERE id = :id",
+                [
+                    'id' => $categoryId,
+                    'code' => $code,
+                    'label' => $label,
+                    'description' => $description,
+                    'sort_order' => $sortOrder,
+                    'active' => $active ? 1 : 0,
+                ]
+            );
+            return;
+        }
 
         $existing = $this->db->query(
             "SELECT id FROM `{$p}product_attribute_categories` WHERE code = :code",
@@ -90,10 +109,28 @@ class ProductAttributesDao
         );
     }
 
-    public function upsertValue(int $categoryId, string $value, string $slug, int $sortOrder = 0, bool $active = true): void
+    public function upsertValue(int $categoryId, string $value, string $slug, int $sortOrder = 0, bool $active = true, int $valueId = 0): void
     {
         $p = $this->db->getTablePrefix();
 
+        // If valueId is provided, this is an update
+        if ($valueId > 0) {
+            $this->db->execute(
+                "UPDATE `{$p}product_attribute_values`\n"
+                . "SET value = :value, slug = :slug, sort_order = :sort_order, active = :active\n"
+                . "WHERE id = :id",
+                [
+                    'id' => $valueId,
+                    'value' => $value,
+                    'slug' => $slug,
+                    'sort_order' => $sortOrder,
+                    'active' => $active ? 1 : 0,
+                ]
+            );
+            return;
+        }
+
+        // Check if value already exists for insert
         $existing = $this->db->query(
             "SELECT id FROM `{$p}product_attribute_values` WHERE category_id = :category_id AND slug = :slug",
             ['category_id' => $categoryId, 'slug' => $slug]

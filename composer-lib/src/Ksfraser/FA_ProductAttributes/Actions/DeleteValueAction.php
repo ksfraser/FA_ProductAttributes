@@ -46,7 +46,8 @@ class DeleteValueAction
                 $valueToDelete['value'],
                 $valueToDelete['slug'],
                 $valueToDelete['sort_order'],
-                false // Deactivate
+                false, // Deactivate
+                $valueId
             );
 
             return sprintf(_("Value '%s' deactivated successfully"), $valueToDelete['value']);

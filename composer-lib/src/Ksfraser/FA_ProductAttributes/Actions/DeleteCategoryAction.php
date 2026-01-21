@@ -60,7 +60,8 @@ class DeleteCategoryAction
                 $categoryToDelete['label'],
                 $categoryToDelete['description'],
                 $categoryToDelete['sort_order'],
-                false // Deactivate
+                false, // Deactivate
+                $categoryId
             );
 
             return sprintf(_("Category '%s' deactivated successfully"), $categoryToDelete['label']);

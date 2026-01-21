@@ -66,7 +66,7 @@ class UpsertCategoryAction
                 }
             }
 
-            $this->dao->upsertCategory($code, $label, $description, $sortOrder, $active);
+            $this->dao->upsertCategory($code, $label, $description, $sortOrder, $active, $categoryId);
 
             // Debug: check count after save
             $check = $this->dbAdapter->query("SELECT COUNT(*) as cnt FROM `" . $this->dbAdapter->getTablePrefix() . "product_attribute_categories`");

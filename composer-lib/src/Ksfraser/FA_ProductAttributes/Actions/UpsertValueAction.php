@@ -66,7 +66,8 @@ class UpsertValueAction
                 $value,
                 $slug,
                 (int)($postData['sort_order'] ?? 0),
-                isset($postData['active'])
+                isset($postData['active']),
+                $valueId
             );
 
             return $valueId > 0 ? _("Value updated successfully") : _("Value saved successfully");
