@@ -44,17 +44,26 @@ class AssignmentsTab
         if ($stockId !== '') {
             $assignments = $this->dao->listAssignments($stockId);
 
-            $table = \Ksfraser\HTML\Elements\HtmlTable::createFaTable(2); // TABLESTYLE2
-            $table->addNested(TableBuilder::createHeaderRow(['Category', 'Value', 'Slug', 'Sort']));
-            foreach ($assignments as $a) {
-                $table->addNested(TableBuilder::createDataRow([
-                    (string)($a['category_code'] ?? ''),
-                    (string)($a['value_label'] ?? ''),
-                    (string)($a['value_slug'] ?? ''),
-                    (string)($a['sort_order'] ?? 0),
-                ]));
+            // Display assignments table
+            start_table(TABLESTYLE2);
+            $th = array(_("Category"), _("Value"), _("Slug"), _("Sort"));
+            table_header($th);
+
+            if (count($assignments) > 0) {
+                foreach ($assignments as $a) {
+                    start_row();
+                    label_cell($a['category_code'] ?? '');
+                    label_cell($a['value_label'] ?? '');
+                    label_cell($a['value_slug'] ?? '');
+                    label_cell($a['sort_order'] ?? 0);
+                    end_row();
+                }
+            } else {
+                start_row();
+                label_cell(_("No assignments found"), '', 'colspan=4');
+                end_row();
             }
-            $table->toHtml();
+            end_table();
 
             echo '<br />';
 

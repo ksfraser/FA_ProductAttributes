@@ -129,11 +129,27 @@ if ($tab === 'categories') {
         display_error("ERROR file: " . $e->getFile() . ":" . $e->getLine());
     }
 } else if ($tab === 'values') {
-    $valuesTab = new ValuesTab($dao);
-    $valuesTab->render();
+    try {
+        $valuesTab = new ValuesTab($dao);
+        display_notification("DEBUG: ValuesTab instantiated successfully");
+        $valuesTab->render();
+        display_notification("DEBUG: ValuesTab render() completed");
+    } catch (Throwable $e) {
+        display_error("ERROR instantiating/rendering ValuesTab: " . $e->getMessage());
+        display_error("ERROR type: " . get_class($e));
+        display_error("ERROR file: " . $e->getFile() . ":" . $e->getLine());
+    }
 } else {
-    $assignmentsTab = new AssignmentsTab($dao);
-    $assignmentsTab->render();
+    try {
+        $assignmentsTab = new AssignmentsTab($dao);
+        display_notification("DEBUG: AssignmentsTab instantiated successfully");
+        $assignmentsTab->render();
+        display_notification("DEBUG: AssignmentsTab render() completed");
+    } catch (Throwable $e) {
+        display_error("ERROR instantiating/rendering AssignmentsTab: " . $e->getMessage());
+        display_error("ERROR type: " . get_class($e));
+        display_error("ERROR file: " . $e->getFile() . ":" . $e->getLine());
+    }
 }
 
 display_notification("DEBUG: About to call end_page()");
