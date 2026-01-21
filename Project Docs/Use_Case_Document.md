@@ -310,14 +310,20 @@
    - Views sortable table of categories (columns: Name, Royal Order, Actions).
    - Clicks "Add Category" to create new category with name and Royal Order.
    - Clicks Edit link to modify existing category (form pre-fills with current data).
-   - Clicks Delete link to remove category (confirmation dialog, blocked if in use).
+   - Clicks Delete link to remove category:
+     - If category is NOT used by any products: Permanently deletes category and all its values
+     - If category IS used by products: Deactivates category (soft delete) to preserve references
+     - Shows confirmation dialog in both cases with appropriate messaging.
    - Edits Royal Order values inline to change attribute sequencing.
 4. On Values tab:
    - Selects category from dropdown to view its values.
    - Views table of values (columns: Value, Slug, Sort Order, Active, Actions).
    - Clicks "Add Value" to create new value for selected category.
    - Clicks Edit link to modify existing value (form pre-fills, updates existing record).
-   - Clicks Delete link to deactivate value (confirmation dialog, blocked if in use by products).
+   - Clicks Delete link to remove value:
+     - If value is NOT used by any products: Permanently deletes the value
+     - If value IS used by products: Deactivates value (soft delete) to preserve references
+     - Shows confirmation dialog in both cases with appropriate messaging.
 5. On Assignments tab:
    - Selects product by stock_id to view its attribute assignments.
    - Views table of assignments (columns: Category, Value, Slug, Sort Order, Actions).
@@ -342,5 +348,8 @@
 ### Business Rules
 - Categories have unique codes, values unique within categories.
 - Royal Order determines attribute sequencing in stock_ids and descriptions.
-- Soft deletes (deactivation) preserve data integrity.
+- Delete operations check usage before deletion:
+  - Hard delete (permanent removal) when items are not referenced by products
+  - Soft delete (deactivation) when items are referenced by products to preserve data integrity
+  - Categories: cascade delete removes category and all its values when safe
 - Edit operations update existing records, never create duplicates.

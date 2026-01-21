@@ -16,8 +16,10 @@ Maintain a canonical, ordered dictionary of product attributes (the “royal ord
 - **Categories Management**: Create, edit, delete attribute categories with Royal Order sequencing
 - **Values Management**: Add, edit, delete attribute values within categories
 - **Assignments Management**: Associate attributes with products
-- **Table Actions**: Each table row includes Edit and Delete buttons with confirmation dialogs
-- **Validation**: Prevents deletion of items currently in use by products
+- **Table Actions**: Each table row includes Edit and Delete buttons with confirmation dialogs- **Intelligent Deletion**: 
+  - Permanently delete unused categories/values when safe
+  - Deactivate items in use to preserve data integrity
+  - Cascade delete removes categories and all related values- **Validation**: Prevents deletion of items currently in use by products
 - **Form Pre-filling**: Edit buttons load existing data into forms for easy modification
 - **Data Integrity**: Edit operations properly update existing records instead of creating duplicates
 - **UI Consistency**: Delete actions use JavaScript links consistent with FrontAccounting patterns

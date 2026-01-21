@@ -52,7 +52,11 @@ This document details the functional behavior of the Product Attributes module f
   3. Display values in a separate tab/table with columns: Value, Slug, Sort Order, Active, Actions (Edit/Delete).
   4. Display assignments in a separate tab/table with columns: Category, Value, Slug, Sort Order, Actions (Delete).
   5. Edit buttons pre-fill forms with existing data and change button text to "Update". Edit operations update existing records rather than creating duplicates.
-  6. Delete buttons show confirmation dialogs and prevent deletion if items are in use. Delete links use JavaScript onclick handlers for form submission with confirmation.
+  6. Delete buttons show confirmation dialogs and perform different actions based on usage:
+     - If the item is NOT in use by products: Permanently delete from database
+     - If the item IS in use by products: Deactivate (soft delete) to preserve data integrity
+     - For categories: When hard deleting, all related values are also deleted
+     - Delete links use GET requests with confirmation dialogs.
   7. Provide CRUD forms for categories and variables with validation.
 - **Output**: Updated categories and variables in DB.
 

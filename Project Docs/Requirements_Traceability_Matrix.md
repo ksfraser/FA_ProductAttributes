@@ -27,6 +27,9 @@
 | BR4.2.1 | Edit operations update existing records | Prevent duplicate creation on edit | ID-based update logic in DAO | TC22a: Test edit updates vs inserts | Completed |
 | BR4.2.2 | Delete links use JavaScript onclick handlers | Consistent FA UI patterns | href="javascript:void(0)" with onclick | TC22b: Test delete link functionality | Completed |
 | BR4.3 | Validation for usage | Prevent deletion if in use | Check associations | TC23: Test deletion blocked if used | Completed |
+| BR4.3.1 | Hard delete when safe | Permanently remove unused items | Delete from DB when not referenced | TC23a: Test hard delete for unused items | Completed |
+| BR4.3.2 | Soft delete when in use | Deactivate items referenced by products | Set active=false when in use | TC23b: Test soft delete for used items | Completed |
+| BR4.3.3 | Cascade delete for categories | Remove category and all values when safe | Delete category + values when not used | TC23c: Test cascade deletion | Completed |
 
 | BR6 | Custom pricing per variation | Individual prices | Price update sub-screen | TC24: Test pricing | Pending |
 | BR6.1 | Integrate with FA_BulkPriceUpdate module | Use external bulk pricing if available | Check for module and call its function | TC25: Test integration | Pending |
