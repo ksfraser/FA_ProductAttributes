@@ -14,7 +14,6 @@
     "ksfraser/html": "^1.0",
     "ksfraser/ksf-modules-dao": "0.1.1"
   },
-  "require-dev": {
   "repositories": [
     {
       "type": "git",
