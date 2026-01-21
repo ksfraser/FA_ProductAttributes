@@ -101,7 +101,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 isset($_POST['active'])
             );
             // Debug: check count after save
-            $check = $db->query("SELECT COUNT(*) as cnt FROM `" . $db->getTablePrefix() . "product_attribute_categories`");
+            $check = $db_adapter->query("SELECT COUNT(*) as cnt FROM `" . $db_adapter->getTablePrefix() . "product_attribute_categories`");
             display_notification("Categories count after save: " . ($check[0]['cnt'] ?? 'error'));
             display_notification(_("Saved category"));
         }

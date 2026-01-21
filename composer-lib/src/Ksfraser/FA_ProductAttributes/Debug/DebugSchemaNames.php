@@ -14,8 +14,15 @@ class DebugSchemaNames
 
         // Debug: check if tables exist
         $query = "SELECT TABLE_NAME FROM information_schema.tables WHERE LOWER(table_schema) = LOWER(DATABASE()) AND table_name LIKE '" . $db->getTablePrefix() . "product_attribute_%'";
-        display_notification("Query: " . $query);
         $tables = $db->query($query);
-        display_notification("Product attribute tables found: " . count($tables));
+        $count = count($tables);
+        $expected = 3; // categories, values, assignments
+
+        if ($count < $expected) {
+            display_notification("WARNING: Only $count product attribute tables found (expected $expected). Schema may be incomplete.");
+        } elseif ($count > $expected) {
+            display_error("ERROR: $count product attribute tables found (expected $expected). Unexpected tables detected.");
+        }
+        // If count == expected, display nothing
     }
 }
