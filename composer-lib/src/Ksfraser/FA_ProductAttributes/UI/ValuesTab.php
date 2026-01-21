@@ -39,19 +39,17 @@ class ValuesTab
 
         $values = $categoryId ? $this->dao->listValues($categoryId) : [];
 
-        start_table(TABLESTYLE2);
-        $th = array(_("Value"), _("Slug"), _("Sort"), _("Active"), "");
-        table_header($th);
+        $table = \Ksfraser\HTML\Elements\HtmlTable::createFaTable(2); // TABLESTYLE2
+        $table->addNested(TableBuilder::createHeaderRow(['Value', 'Slug', 'Sort', 'Active']));
         foreach ($values as $v) {
-            start_row();
-            label_cell($v['value'] ?? '');
-            label_cell($v['slug'] ?? '');
-            label_cell($v['sort_order'] ?? 0);
-            label_cell(($v['active'] ?? 0) ? _("Yes") : _("No"));
-            edit_button_cell("Edit" . $v['id'], _("Edit"));
-            end_row();
+            $table->addNested(TableBuilder::createDataRow([
+                (string)($v['value'] ?? ''),
+                (string)($v['slug'] ?? ''),
+                (string)($v['sort_order'] ?? 0),
+                (string)($v['active'] ?? 0 ? 'Yes' : 'No'),
+            ]));
         }
-        end_table();
+        $table->toHtml();
 
         echo '<br />';
 

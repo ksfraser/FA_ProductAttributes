@@ -43,49 +43,43 @@ class AssignmentsTab
 
         if ($stockId !== '') {
             $assignments = $this->dao->listAssignments($stockId);
-            start_table(TABLESTYLE2);
-            $th = array(_("Category"), _("Value"), _("Sort"), "");
-            table_header($th);
+
+            $table = \Ksfraser\HTML\Elements\HtmlTable::createFaTable(2); // TABLESTYLE2
+            $table->addNested(TableBuilder::createHeaderRow(['Category', 'Value', 'Slug', 'Sort']));
             foreach ($assignments as $a) {
-                start_row();
-                label_cell($a['category_code'] ?? '');
-                label_cell($a['value'] ?? '');
-                label_cell($a['sort_order'] ?? 0);
-                delete_button_cell("Delete" . $a['id'], _("Delete"));
-                end_row();
+                $table->addNested(TableBuilder::createDataRow([
+                    (string)($a['category_code'] ?? ''),
+                    (string)($a['value_label'] ?? ''),
+                    (string)($a['value_slug'] ?? ''),
+                    (string)($a['sort_order'] ?? 0),
+                ]));
             }
-            end_table();
-        }
+            $table->toHtml();
 
-        echo '<br />';
+            echo '<br />';
 
-        start_form(true);
-        start_table(TABLESTYLE2);
-        table_section_title(_("Add Assignment"));
-        hidden('action', 'add_assignment');
-        hidden('stock_id', $stockId);
-        echo '<tr><td>' . _("Category") . ':</td><td><select name="category_id">';
-        echo '<option value="0">' . _("Select category") . '</option>';
-        foreach ($cats as $c) {
-            $id = $c['id'] ?? 0;
-            $sel = $id == $categoryId ? ' selected' : '';
-            echo '<option value="' . htmlspecialchars((string)$id) . '"' . $sel . '>'
-                . htmlspecialchars((string)$c['code'])
-                . '</option>';
+            start_form(true);
+            start_table(TABLESTYLE2);
+            table_section_title(_("Add Assignment"));
+            hidden('action', 'add_assignment');
+            hidden('tab', 'assignments');
+            hidden('stock_id', $stockId);
+            hidden('category_id', (string)$categoryId);
+
+            echo '<tr><td>' . _("Value") . '</td><td><select name="value_id">';
+            foreach ($values as $v) {
+                $vid = (int)$v['id'];
+                echo '<option value="' . htmlspecialchars((string)$vid) . '">'
+                    . htmlspecialchars((string)$v['value'])
+                    . ' (' . htmlspecialchars((string)$v['slug']) . ')'
+                    . '</option>';
+            }
+            echo '</select></td></tr>';
+
+            small_amount_row(_("Sort order"), 'sort_order', 0);
+            end_table(1);
+            submit_center('add', _("Add"));
+            end_form();
         }
-        echo '</select></td></tr>';
-        echo '<tr><td>' . _("Value") . ':</td><td><select name="value_id">';
-        echo '<option value="0">' . _("Select value") . '</option>';
-        foreach ($values as $v) {
-            $id = $v['id'] ?? 0;
-            echo '<option value="' . htmlspecialchars((string)$id) . '">'
-                . htmlspecialchars((string)$v['value'])
-                . '</option>';
-        }
-        echo '</select></td></tr>';
-        small_amount_row(_("Sort order"), 'sort_order', 0);
-        end_table(1);
-        submit_center('save', _("Add"));
-        end_form();
     }
 }
