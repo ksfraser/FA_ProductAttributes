@@ -1,5 +1,4 @@
 <?php
-display_notification("DEBUG: CategoriesTab.php file loaded");
 
 namespace Ksfraser\FA_ProductAttributes\UI;
 
@@ -12,9 +11,7 @@ class CategoriesTab
 
     public function __construct(ProductAttributesDao $dao)
     {
-        display_notification("CategoriesTab constructor START");
         $this->dao = $dao;
-        display_notification("CategoriesTab constructor END");
     }
 
     public function render(): void
