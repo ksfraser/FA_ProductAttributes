@@ -51,20 +51,21 @@ class DeleteCategoryAction
             );
 
             if ($usage[0]['count'] > 0) {
-                throw new \Exception("Cannot delete category that is in use by products");
+                // Category is in use - soft delete by deactivating
+                $this->dao->upsertCategory(
+                    $categoryToDelete['code'],
+                    $categoryToDelete['label'],
+                    $categoryToDelete['description'],
+                    $categoryToDelete['sort_order'],
+                    false, // Deactivate
+                    $categoryId
+                );
+                return sprintf(_("Category '%s' deactivated successfully (in use by products)"), $categoryToDelete['label']);
+            } else {
+                // Category is not in use - hard delete
+                $this->dao->deleteCategory($categoryId);
+                return sprintf(_("Category '%s' and all its values deleted successfully"), $categoryToDelete['label']);
             }
-
-            // Soft delete by deactivating
-            $this->dao->upsertCategory(
-                $categoryToDelete['code'],
-                $categoryToDelete['label'],
-                $categoryToDelete['description'],
-                $categoryToDelete['sort_order'],
-                false, // Deactivate
-                $categoryId
-            );
-
-            return sprintf(_("Category '%s' deactivated successfully"), $categoryToDelete['label']);
         } catch (\Exception $e) {
             display_error("Error deleting category: " . $e->getMessage());
             throw $e; // Re-throw so ActionHandler catches it

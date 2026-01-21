@@ -35,7 +35,7 @@ class ActionHandler
                     return $handler->handle($postData);
 
                 case 'delete_value':
-                    $handler = new DeleteValueAction($this->dao);
+                    $handler = new DeleteValueAction($this->dao, $this->dbAdapter);
                     return $handler->handle($postData);
 
                 case 'add_assignment':

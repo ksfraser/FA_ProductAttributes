@@ -203,4 +203,30 @@ class ProductAttributesDao
             ['id' => $assignmentId]
         );
     }
+
+    public function deleteCategory(int $categoryId): void
+    {
+        $p = $this->db->getTablePrefix();
+        
+        // First delete all values for this category
+        $this->db->execute(
+            "DELETE FROM `{$p}product_attribute_values` WHERE category_id = :category_id",
+            ['category_id' => $categoryId]
+        );
+        
+        // Then delete the category itself
+        $this->db->execute(
+            "DELETE FROM `{$p}product_attribute_categories` WHERE id = :id",
+            ['id' => $categoryId]
+        );
+    }
+
+    public function deleteValue(int $valueId): void
+    {
+        $p = $this->db->getTablePrefix();
+        $this->db->execute(
+            "DELETE FROM `{$p}product_attribute_values` WHERE id = :id",
+            ['id' => $valueId]
+        );
+    }
 }
