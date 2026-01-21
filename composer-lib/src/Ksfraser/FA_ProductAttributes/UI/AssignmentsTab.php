@@ -16,8 +16,8 @@ class AssignmentsTab
 
     public function render(): void
     {
-        $stockId = trim((string)($_GET['stock_id'] ?? ''));
-        $categoryId = (int)($_GET['category_id'] ?? 0);
+        $stockId = trim((string)($_GET['stock_id'] ?? $_POST['stock_id'] ?? ''));
+        $categoryId = (int)($_GET['category_id'] ?? $_POST['category_id'] ?? 0);
         $cats = $this->dao->listCategories();
         if ($categoryId === 0 && count($cats) > 0) {
             $categoryId = (int)$cats[0]['id'];
