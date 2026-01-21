@@ -7,8 +7,10 @@ use Ksfraser\FA_ProductAttributes\Db\FrontAccountingDbAdapter;
 
 class UpsertCategoryAction
 {
-    private ProductAttributesDao $dao;
-    private FrontAccountingDbAdapter $dbAdapter;
+    /** @var ProductAttributesDao */
+    private $dao;
+    /** @var FrontAccountingDbAdapter */
+    private $dbAdapter;
 
     public function __construct(ProductAttributesDao $dao, FrontAccountingDbAdapter $dbAdapter)
     {

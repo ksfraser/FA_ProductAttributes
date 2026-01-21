@@ -6,7 +6,8 @@ use Ksfraser\FA_ProductAttributes\Dao\ProductAttributesDao;
 
 class AddAssignmentAction
 {
-    private ProductAttributesDao $dao;
+    /** @var ProductAttributesDao */
+    private $dao;
 
     public function __construct(ProductAttributesDao $dao)
     {
