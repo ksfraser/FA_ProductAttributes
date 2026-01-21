@@ -1,5 +1,24 @@
 # Requirements Review and Gaps Analysis
 
+## Recent Fixes and Resolutions
+
+### Edit Functionality Issue (Resolved)
+**Issue**: Edit operations were creating duplicate records instead of updating existing ones.
+**Root Cause**: DAO upsert methods lacked ID parameters for targeted updates.
+**Resolution**: Modified `upsertCategory()` and `upsertValue()` methods to accept optional ID parameters. When ID provided, performs update by ID; otherwise maintains existing upsert logic.
+**Impact**: Edit operations now properly update existing records, maintaining data integrity.
+
+### Delete Button UI Issue (Resolved)
+**Issue**: Delete buttons implemented as `<button>` elements were not clickable in FA environment.
+**Root Cause**: Button elements may not be styled properly in FA's theme/CSS.
+**Resolution**: Changed delete actions to use `href="javascript:void(0)"` links with onclick handlers, consistent with FA's standard UI patterns.
+**Impact**: Delete functionality now works reliably across all tabs (Categories, Values, Assignments).
+
+### Testing Coverage (Completed)
+**Status**: All CRUD operations now have comprehensive unit tests (32 tests passing).
+**Coverage**: API endpoints, DAO operations, action handlers, and UI validation.
+**Impact**: High confidence in code stability and regression prevention.
+
 ## Identified Gaps and Considerations
 Based on the module's purpose (product attributes and variations in FrontAccounting), the following gaps and enhancements have been identified for completeness:
 

@@ -24,6 +24,8 @@
 | BR4.1 | CRUD for categories, including Royal Order field | Create/edit/delete categories with ordering | Form and DB operations | TC20: Test CRUD operations | Completed |
 | BR4.1.1 | Royal Order column for sequencing, with editable UI and sort options | Define attribute order | Integer field in category table, sortable table UI | TC21: Test order sorting and editing | Completed |
 | BR4.2 | CRUD for variables | Add values to categories | Hierarchical UI | TC22: Test variable management | Completed |
+| BR4.2.1 | Edit operations update existing records | Prevent duplicate creation on edit | ID-based update logic in DAO | TC22a: Test edit updates vs inserts | Completed |
+| BR4.2.2 | Delete links use JavaScript onclick handlers | Consistent FA UI patterns | href="javascript:void(0)" with onclick | TC22b: Test delete link functionality | Completed |
 | BR4.3 | Validation for usage | Prevent deletion if in use | Check associations | TC23: Test deletion blocked if used | Completed |
 
 | BR6 | Custom pricing per variation | Individual prices | Price update sub-screen | TC24: Test pricing | Pending |

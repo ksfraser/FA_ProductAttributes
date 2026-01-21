@@ -293,3 +293,54 @@
 ### Business Rules
 - Patterns based on attribute abbreviations and Royal Order sequencing.
 - Sanity checks warn on root mismatches but allow force assignment.
+
+## Use Case: Manage Attribute Categories and Values (Admin)
+
+### Actors
+- Administrator (Primary Actor)
+
+### Preconditions
+- Administrator has access to FrontAccounting.
+- Admin permissions for attribute management.
+
+### Main Flow
+1. Administrator navigates to Inventory > Stock > Product Attributes.
+2. System displays three tabs: Categories, Values, Assignments.
+3. On Categories tab:
+   - Views sortable table of categories (columns: Name, Royal Order, Actions).
+   - Clicks "Add Category" to create new category with name and Royal Order.
+   - Clicks Edit link to modify existing category (form pre-fills with current data).
+   - Clicks Delete link to remove category (confirmation dialog, blocked if in use).
+   - Edits Royal Order values inline to change attribute sequencing.
+4. On Values tab:
+   - Selects category from dropdown to view its values.
+   - Views table of values (columns: Value, Slug, Sort Order, Active, Actions).
+   - Clicks "Add Value" to create new value for selected category.
+   - Clicks Edit link to modify existing value (form pre-fills, updates existing record).
+   - Clicks Delete link to deactivate value (confirmation dialog, blocked if in use by products).
+5. On Assignments tab:
+   - Selects product by stock_id to view its attribute assignments.
+   - Views table of assignments (columns: Category, Value, Slug, Sort Order, Actions).
+   - Clicks Delete link to remove assignment from product (confirmation dialog).
+6. System validates all operations and prevents invalid deletions.
+7. Success/error messages displayed for all operations.
+
+### Postconditions
+- Attribute structure updated according to admin actions.
+- Data integrity maintained (no orphaned references).
+
+### Alternative Flows
+- Edit without changes: Form saves unchanged data.
+- Delete blocked: Error message explains why deletion prevented.
+- No category selected for values: Prompt to select category.
+
+### Exceptions
+- Insufficient permissions: Access denied.
+- DB constraint violations: Rollback with error message.
+- Invalid data: Validation errors displayed.
+
+### Business Rules
+- Categories have unique codes, values unique within categories.
+- Royal Order determines attribute sequencing in stock_ids and descriptions.
+- Soft deletes (deactivation) preserve data integrity.
+- Edit operations update existing records, never create duplicates.

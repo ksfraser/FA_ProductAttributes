@@ -19,6 +19,8 @@ Maintain a canonical, ordered dictionary of product attributes (the “royal ord
 - **Table Actions**: Each table row includes Edit and Delete buttons with confirmation dialogs
 - **Validation**: Prevents deletion of items currently in use by products
 - **Form Pre-filling**: Edit buttons load existing data into forms for easy modification
+- **Data Integrity**: Edit operations properly update existing records instead of creating duplicates
+- **UI Consistency**: Delete actions use JavaScript links consistent with FrontAccounting patterns
 
 ### API
 RESTful API endpoints for external integration:
