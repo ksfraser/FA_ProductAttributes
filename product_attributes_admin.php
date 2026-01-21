@@ -20,9 +20,11 @@ mysql_select_db($db_connections[$company]['name'], $configured_db);
 $db = $configured_db;
 */
 
+/*
 // Debug: check path
 display_notification("path_to_root: " . $path_to_root);
 display_notification("session.inc exists: " . (file_exists($path_to_root . "/includes/session.inc") ? "yes" : "no"));
+*/
 
 // Manually define FA_ROOT if it's not set
 if (!defined('FA_ROOT')) {
@@ -60,14 +62,14 @@ try {
 }
 
 // Debug: show table prefix
-DebugTBPref::debug();
+DebugTBPref::debug(0);
 display_notification("Table prefix: " . $db_adapter->getTablePrefix());
 
 // Debug: check if tables exist
-DebugSchemaNames::debug($db_adapter);
+DebugSchemaNames::debug($db_adapter,0);
 
 // Debug: test db connection
-DebugConnection::debug($db_adapter);
+DebugConnection::debug($db_adapter,0);
 
 // Debug: current company
 DebugCompany::debug();
