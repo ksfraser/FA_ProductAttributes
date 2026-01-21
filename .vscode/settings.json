@@ -23,6 +23,26 @@
         "/^cd c:\\\\Users\\\\prote\\\\Documents\\\\FA_ProductAttributes\\\\composer-lib ; php phpunit\\.phar --version$/": {
             "approve": true,
             "matchCommandLine": true
+        },
+        "/^cd \"c:\\\\Users\\\\prote\\\\Documents\\\\FA_ProductAttributes\\\\composer-lib\" ; php phpunit\\.phar --list-tests$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^cd \"c:\\\\Users\\\\prote\\\\Documents\\\\FA_ProductAttributes\\\\composer-lib\" ; php phpunit\\.phar --version$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^php phpunit\\.phar tests/Db/$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^php phpunit\\.phar tests/Db/DatabaseAdapterFactoryTest\\.php$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^php phpunit\\.phar --verbose tests/Db/DatabaseAdapterFactoryTest\\.php$/": {
+            "approve": true,
+            "matchCommandLine": true
         }
     }
 }
