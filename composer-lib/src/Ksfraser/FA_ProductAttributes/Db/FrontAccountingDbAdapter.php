@@ -107,6 +107,11 @@ final class FrontAccountingDbAdapter implements DbAdapterInterface
             $sql = $this->bindParams($sql, $params);
             display_notification("Querying SQL: " . $sql);
             $res = db_query($sql);
+            if ($res === false) {
+                global $db_error;
+                $error_msg = isset($db_error) ? $db_error : 'Unknown database error';
+                throw new \Exception("Database query failed: " . $error_msg);
+            }
             $rows = [];
             while ($row = db_fetch_assoc($res)) {
                 $rows[] = $row;
@@ -142,7 +147,12 @@ final class FrontAccountingDbAdapter implements DbAdapterInterface
         if ($this->driver === 'fa') {
             $sql = $this->bindParams($sql, $params);
             display_notification("Executing SQL: " . $sql);
-            db_query($sql);
+            $result = db_query($sql);
+            if ($result === false) {
+                global $db_error;
+                $error_msg = isset($db_error) ? $db_error : 'Unknown database error';
+                throw new \Exception("Database execute failed: " . $error_msg);
+            }
         } elseif ($this->driver === 'pdo') {
             $stmt = $this->connection->prepare($sql);
             $stmt->execute($params);
@@ -164,6 +174,9 @@ final class FrontAccountingDbAdapter implements DbAdapterInterface
     {
         if ($this->driver === 'fa') {
             $res = db_query('SELECT LAST_INSERT_ID() AS id');
+            if ($res === false) {
+                return null;
+            }
             $row = db_fetch_assoc($res);
             if (!$row || !isset($row['id'])) {
                 return null;
