@@ -1,0 +1,3 @@
+[submodule "ksf_ModulesDAO"]
+	path = ksf_ModulesDAO
+	url = https://github.com/ksfraser/ksf_ModulesDAO

@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "899cd9ccd896d5a7a677e4e21ce9e1dd",
+    "content-hash": "4513688b5d38b5867638424622de3020",
     "packages": [
         {
             "name": "ksfraser/html",
@@ -38,6 +38,44 @@
                 "issues": "https://github.com/ksfraser/html/issues"
             },
             "time": "2025-12-25T17:45:35+00:00"
+        },
+        {
+            "name": "ksfraser/ksf-modules-dao",
+            "version": "0.1.0",
+            "dist": {
+                "type": "path",
+                "url": "../ksf_ModulesDAO",
+                "reference": "59a66648f3f524768edc0abc93894a42cb89bb7c"
+            },
+            "require": {
+                "php": ">=7.4"
+            },
+            "require-dev": {
+                "phpunit/phpunit": "^9.0"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Ksfraser\\ModulesDAO\\": "src/"
+                }
+            },
+            "autoload-dev": {
+                "psr-4": {
+                    "Ksfraser\\ModulesDAO\\Tests\\": "tests/"
+                }
+            },
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "KS Fraser"
+                }
+            ],
+            "description": "Cross-platform DAO abstraction (DB, WordPress, SuiteCRM, FrontAccounting, CSV, XML)",
+            "transport-options": {
+                "relative": true
+            }
         }
     ],
     "packages-dev": [

@@ -3,7 +3,7 @@
 namespace Ksfraser\FA_ProductAttributes\Test\Db;
 
 use Ksfraser\FA_ProductAttributes\Db\DatabaseAdapterFactory;
-use Ksfraser\FA_ProductAttributes\Db\DbAdapterInterface;
+use Ksfraser\ModulesDAO\Db\DbAdapterInterface;
 use PHPUnit\Framework\TestCase;
 
 class DatabaseAdapterFactoryTest extends TestCase

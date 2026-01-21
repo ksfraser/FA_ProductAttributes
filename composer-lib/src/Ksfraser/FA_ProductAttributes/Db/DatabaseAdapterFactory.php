@@ -2,6 +2,10 @@
 
 namespace Ksfraser\FA_ProductAttributes\Db;
 
+use Ksfraser\ModulesDAO\Db\DbAdapterInterface;
+use Ksfraser\ModulesDAO\Db\PdoDbAdapter;
+use Ksfraser\ModulesDAO\Db\MysqlDbAdapter;
+
 /**
  * Factory for creating database adapters based on driver type
  */

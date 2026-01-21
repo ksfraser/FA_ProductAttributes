@@ -2,6 +2,7 @@
 
 namespace Ksfraser\FA_ProductAttributes\Db;
 
+use Ksfraser\ModulesDAO\Db\DbAdapterInterface;
 use Ksfraser\FA_ProductAttributes\Debug\DisplaySql;
 
 final class FrontAccountingDbAdapter implements DbAdapterInterface
