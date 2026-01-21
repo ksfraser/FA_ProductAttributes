@@ -85,8 +85,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = $_POST['action'] ?? '';
     display_notification("POST data: " . json_encode($_POST));
 
-    if( $action !=== '')
-        {
     try {
         if ($action === 'upsert_category') {
             $dao->upsertCategory(
@@ -128,7 +126,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } catch (Exception $e) {
         display_error("Error saving: " . $e->getMessage());
     }
-        }
+        
 }
 
 
