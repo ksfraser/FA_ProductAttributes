@@ -17,7 +17,7 @@ class RetroactiveApplicationServiceTest extends TestCase
         // Mock stock IDs with a clear pattern
         $faDb->method('getTablePrefix')->willReturn('fa_');
         $faDb->expects($this->once())
-            ->method('selectAll')
+            ->method('query')
             ->with('SELECT stock_id FROM fa_stock_master ORDER BY stock_id')
             ->willReturn([
                 ['stock_id' => 'ABC-S'],
@@ -163,7 +163,7 @@ class RetroactiveApplicationServiceTest extends TestCase
 
         $faDb->method('getTablePrefix')->willReturn('fa_');
         $faDb->expects($this->once())
-            ->method('selectAll')
+            ->method('query')
             ->with('SELECT stock_id FROM fa_stock_master ORDER BY stock_id')
             ->willReturn([
                 ['stock_id' => 'ABC'],

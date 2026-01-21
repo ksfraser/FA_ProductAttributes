@@ -19,6 +19,10 @@
         "/^php test_module\\.php$/": {
             "approve": true,
             "matchCommandLine": true
+        },
+        "/^cd c:\\\\Users\\\\prote\\\\Documents\\\\FA_ProductAttributes\\\\composer-lib ; php phpunit\\.phar --version$/": {
+            "approve": true,
+            "matchCommandLine": true
         }
     }
 }

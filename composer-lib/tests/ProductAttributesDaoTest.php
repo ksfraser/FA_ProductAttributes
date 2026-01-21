@@ -13,7 +13,7 @@ class ProductAttributesDaoTest extends TestCase
         $db = $this->createMock(DbAdapterInterface::class);
         $db->method('getTablePrefix')->willReturn('fa_');
         $db->expects($this->once())
-            ->method('selectAll')
+            ->method('query')
             ->with('SELECT * FROM fa_product_attribute_categories ORDER BY sort_order, code')
             ->willReturn([
                 ['id' => 1, 'code' => 'color', 'label' => 'Color', 'sort_order' => 2],
@@ -32,7 +32,7 @@ class ProductAttributesDaoTest extends TestCase
         $db = $this->createMock(DbAdapterInterface::class);
         $db->method('getTablePrefix')->willReturn('fa_');
         $db->expects($this->once())
-            ->method('selectAll')
+            ->method('query')
             ->with('SELECT id FROM fa_product_attribute_categories WHERE code = :code', ['code' => 'color'])
             ->willReturn([]);
         $db->expects($this->once())
@@ -57,7 +57,7 @@ class ProductAttributesDaoTest extends TestCase
         $db = $this->createMock(DbAdapterInterface::class);
         $db->method('getTablePrefix')->willReturn('fa_');
         $db->expects($this->once())
-            ->method('selectAll')
+            ->method('query')
             ->with('SELECT id FROM fa_product_attribute_categories WHERE code = :code', ['code' => 'color'])
             ->willReturn([['id' => 1]]);
         $db->expects($this->once())
@@ -95,7 +95,7 @@ class ProductAttributesDaoTest extends TestCase
         $db = $this->createMock(DbAdapterInterface::class);
         $db->method('getTablePrefix')->willReturn('fa_');
         $db->expects($this->once())
-            ->method('selectAll')
+            ->method('query')
             ->with('SELECT * FROM fa_product_attribute_values WHERE category_id = :category_id ORDER BY sort_order, slug', ['category_id' => 1])
             ->willReturn([
                 ['id' => 1, 'category_id' => 1, 'value' => 'Red', 'slug' => 'red', 'sort_order' => 1],
@@ -113,7 +113,7 @@ class ProductAttributesDaoTest extends TestCase
         $db = $this->createMock(DbAdapterInterface::class);
         $db->method('getTablePrefix')->willReturn('fa_');
         $db->expects($this->once())
-            ->method('selectAll')
+            ->method('query')
             ->with('SELECT id FROM fa_product_attribute_values WHERE category_id = :category_id AND slug = :slug', ['category_id' => 1, 'slug' => 'red'])
             ->willReturn([]);
         $db->expects($this->once())
@@ -138,7 +138,7 @@ class ProductAttributesDaoTest extends TestCase
         $db = $this->createMock(DbAdapterInterface::class);
         $db->method('getTablePrefix')->willReturn('fa_');
         $db->expects($this->once())
-            ->method('selectAll')
+            ->method('query')
             ->with('SELECT id FROM fa_product_attribute_values WHERE category_id = :category_id AND slug = :slug', ['category_id' => 1, 'slug' => 'red'])
             ->willReturn([['id' => 1]]);
         $db->expects($this->once())
@@ -163,7 +163,7 @@ class ProductAttributesDaoTest extends TestCase
         $db = $this->createMock(DbAdapterInterface::class);
         $db->method('getTablePrefix')->willReturn('fa_');
         $db->expects($this->once())
-            ->method('selectAll')
+            ->method('query')
             ->with(
                 "SELECT a.*, c.code AS category_code, c.label AS category_label, c.sort_order AS category_sort_order, v.value AS value_label, v.slug AS value_slug\nFROM fa_product_attribute_assignments a\nJOIN fa_product_attribute_categories c ON c.id = a.category_id\nJOIN fa_product_attribute_values v ON v.id = a.value_id\nWHERE a.stock_id = :stock_id\nORDER BY a.sort_order, c.sort_order, c.code, v.sort_order, v.slug",
                 ['stock_id' => 'ABC123']

@@ -29,10 +29,12 @@ if (!defined('FA_ROOT')) {
     define('FA_ROOT', $path_to_root . '/');
 }
 
+/*
 // Fix TB_PREF if it's incorrectly set
 if (isset($_SESSION['wa_current_user']->company)) {
     define('TB_PREF', $_SESSION['wa_current_user']->company . '_');
 }
+    */
 
 $autoload = __DIR__ . "/composer-lib/vendor/autoload.php";
 if (is_file($autoload)) {
@@ -68,11 +70,11 @@ display_notification("Table prefix: " . $db->getTablePrefix());
 // Debug: check if tables exist
 $query = "SELECT TABLE_NAME FROM information_schema.tables WHERE LOWER(table_schema) = LOWER(DATABASE()) AND table_name LIKE '" . $db->getTablePrefix() . "product_attribute_%'";
 display_notification("Query: " . $query);
-$tables = $db->selectAll($query);
+$tables = $db->query($query);
 display_notification("Product attribute tables found: " . count($tables));
 
 // Debug: test db connection
-$test = $db->selectAll("SELECT 1 FROM " . $db->getTablePrefix() . "stock_master LIMIT 1");
+$test = $db->query("SELECT 1 FROM " . $db->getTablePrefix() . "stock_master LIMIT 1");
 display_notification("Test query on FA table result count: " . count($test));
 
 // Debug: current company
@@ -111,7 +113,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 isset($_POST['active'])
             );
             // Debug: check count after save
-            $check = $db->selectAll("SELECT COUNT(*) as cnt FROM " . $db->getTablePrefix() . "product_attribute_categories");
+            $check = $db->query("SELECT COUNT(*) as cnt FROM " . $db->getTablePrefix() . "product_attribute_categories");
             display_notification("Categories count after save: " . ($check[0]['cnt'] ?? 'error'));
             display_notification(_("Saved category"));
         }

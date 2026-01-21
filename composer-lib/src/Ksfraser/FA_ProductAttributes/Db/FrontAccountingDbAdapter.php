@@ -13,6 +13,12 @@ final class FrontAccountingDbAdapter implements DbAdapterInterface
     /** @var resource|\PDO|null */
     private $connection;
 
+    /**
+     * Constructor for FrontAccounting database adapter
+     *
+     * @param string|null $prefix Custom table prefix, or null to use company-based prefix
+     * @param string $driver Database driver: 'fa' (default, uses FA db functions), 'pdo', or 'mysql'
+     */
     public function __construct(?string $prefix = null, string $driver = 'fa')
     {
         $this->driver = $driver;
@@ -51,6 +57,11 @@ final class FrontAccountingDbAdapter implements DbAdapterInterface
             $this->prefix = $prefix;
             return;
         }
+        else
+        {
+            $this->prefix = TB_PREF;
+            return;
+        }
 
         // Use company-based prefix if session is available, otherwise default to '0_'
         if (isset($_SESSION['wa_current_user']->company)) {
@@ -60,18 +71,35 @@ final class FrontAccountingDbAdapter implements DbAdapterInterface
         }
     }
 
+    /**
+     * Get the table prefix used by this adapter
+     *
+     * @return string The table prefix (e.g., '0_')
+     */
     public function getTablePrefix(): string
     {
         return $this->prefix;
     }
 
+    /**
+     * Get the database dialect (SQL flavor) used by this adapter
+     *
+     * @return string The dialect name ('mysql' for MySQL/MariaDB)
+     */
     public function getDialect(): string
     {
         // FrontAccounting runs against MySQL/MariaDB.
         return 'mysql';
     }
 
-    public function selectAll(string $sql, array $params = []): array
+    /**
+     * Execute a query and return all results as an array of associative arrays
+     *
+     * @param string $sql The SQL query with optional named parameters (e.g., :param)
+     * @param array $params Associative array of parameter values
+     * @return array Array of result rows, each as an associative array
+     */
+    public function query(string $sql, array $params = []): array
     {
         if ($this->driver === 'fa') {
             $sql = $this->bindParams($sql, $params);
@@ -99,6 +127,13 @@ final class FrontAccountingDbAdapter implements DbAdapterInterface
         }
     }
 
+    /**
+     * Execute a write query (INSERT, UPDATE, DELETE) that doesn't return results
+     *
+     * @param string $sql The SQL query with optional named parameters (e.g., :param)
+     * @param array $params Associative array of parameter values
+     * @return void
+     */
     public function execute(string $sql, array $params = []): void
     {
         if ($this->driver === 'fa') {
@@ -116,6 +151,11 @@ final class FrontAccountingDbAdapter implements DbAdapterInterface
         }
     }
 
+    /**
+     * Get the ID of the last inserted row
+     *
+     * @return int|null The last insert ID, or null if not available
+     */
     public function lastInsertId(): ?int
     {
         if ($this->driver === 'fa') {

@@ -146,7 +146,7 @@ class VariationService
     {
         // Query FA's stock_master table for the product description
         $p = $this->db->getTablePrefix();
-        $results = $this->db->selectAll(
+        $results = $this->db->query(
             "SELECT description FROM {$p}stock_master WHERE stock_id = :stock_id",
             ['stock_id' => $stockId]
         );

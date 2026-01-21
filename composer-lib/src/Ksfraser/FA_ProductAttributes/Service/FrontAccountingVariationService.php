@@ -46,7 +46,7 @@ class FrontAccountingVariationService extends VariationService
         $p = $this->faDb->getTablePrefix();
 
         // Get parent product data
-        $parentData = $this->faDb->selectAll(
+        $parentData = $this->faDb->query(
             "SELECT * FROM {$p}stock_master WHERE stock_id = :stock_id",
             ['stock_id' => $parentStockId]
         );
@@ -117,7 +117,7 @@ class FrontAccountingVariationService extends VariationService
         $p = $this->faDb->getTablePrefix();
 
         // Get parent prices
-        $parentPrices = $this->faDb->selectAll(
+        $parentPrices = $this->faDb->query(
             "SELECT * FROM {$p}prices WHERE stock_id = :stock_id",
             ['stock_id' => $parentStockId]
         );
@@ -145,7 +145,7 @@ class FrontAccountingVariationService extends VariationService
     protected function getParentDescription(string $stockId): string
     {
         $p = $this->faDb->getTablePrefix();
-        $result = $this->faDb->selectAll(
+        $result = $this->faDb->query(
             "SELECT description FROM {$p}stock_master WHERE stock_id = :stock_id",
             ['stock_id' => $stockId]
         );

@@ -43,7 +43,7 @@ class FrontAccountingVariationServiceTest extends TestCase
         // Mock FA DB calls
         $faDb->method('getTablePrefix')->willReturn('fa_');
         $faDb->expects($this->exactly(2))
-            ->method('selectAll')
+            ->method('query')
             ->willReturnOnConsecutiveCalls(
                 [['description' => 'Test Product - ${SIZE} ${COLOR}']], // getParentDescription
                 [[ // get parent data
@@ -113,7 +113,7 @@ class FrontAccountingVariationServiceTest extends TestCase
         // Mock FA DB
         $faDb->method('getTablePrefix')->willReturn('fa_');
         $faDb->expects($this->exactly(3))
-            ->method('selectAll')
+            ->method('query')
             ->willReturnOnConsecutiveCalls(
                 [['description' => 'Test Product - ${SIZE}']], // getParentDescription
                 [[ // get parent data
@@ -173,7 +173,7 @@ class FrontAccountingVariationServiceTest extends TestCase
 
         $faDb->method('getTablePrefix')->willReturn('fa_');
         $faDb->expects($this->once())
-            ->method('selectAll')
+            ->method('query')
             ->with('SELECT description FROM fa_stock_master WHERE stock_id = :stock_id', ['stock_id' => 'ABC123'])
             ->willReturn([['description' => 'Test Description']]);
 
