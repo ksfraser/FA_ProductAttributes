@@ -128,8 +128,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } catch (Exception $e) {
         display_error("Error saving: " . $e->getMessage());
     }
+        }
 }
-}
+
 
 echo '<div style="margin:8px 0">'
     . '<a href="?tab=categories">Categories</a> | '
