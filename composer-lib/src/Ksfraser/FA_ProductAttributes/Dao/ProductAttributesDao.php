@@ -28,9 +28,12 @@ class ProductAttributesDao
     public function listCategories(): array
     {
         $p = $this->db->getTablePrefix();
-        return $this->db->query(
+        display_notification("DAO listCategories: table_prefix='$p'");
+        $result = $this->db->query(
             "SELECT * FROM `{$p}product_attribute_categories` ORDER BY sort_order, code"
         );
+        display_notification("Query result count: " . count($result));
+        return $result;
     }
 
     public function upsertCategory(string $code, string $label, string $description = '', int $sortOrder = 0, bool $active = true): void

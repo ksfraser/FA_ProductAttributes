@@ -105,6 +105,7 @@ final class FrontAccountingDbAdapter implements DbAdapterInterface
     {
         if ($this->driver === 'fa') {
             $sql = $this->bindParams($sql, $params);
+            display_notification("Querying SQL: " . $sql);
             $res = db_query($sql);
             $rows = [];
             while ($row = db_fetch_assoc($res)) {
