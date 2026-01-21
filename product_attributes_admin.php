@@ -82,7 +82,7 @@ DebugCompany::debug();
 }
     */
 
-$tab = $_GET['tab'] ?? 'categories';
+$tab = $_GET['tab'] ?? $_POST['tab'] ?? 'categories';
 display_notification("DEBUG: tab variable set to: '$tab'");
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -99,6 +99,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($message) {
         display_notification($message);
     }
+
+    // Redirect to preserve tab state after POST processing
+    header("Location: ?tab=" . urlencode($tab));
+    exit;
 } else {
     display_notification("DEBUG: Not a POST request");
 }
