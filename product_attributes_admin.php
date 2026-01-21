@@ -46,7 +46,7 @@ if (is_file($autoload)) {
 
 page(_("Product Attributes"));
 
-use Ksfraser\FA_ProductAttributes\Db\FrontAccountingDbAdapter;
+use Ksfraser\FA_ProductAttributes\Db\DatabaseAdapterFactory;
 use Ksfraser\FA_ProductAttributes\Dao\ProductAttributesDao;
 use Ksfraser\FA_ProductAttributes\UI\CategoriesTab;
 use Ksfraser\FA_ProductAttributes\UI\ValuesTab;
@@ -54,7 +54,7 @@ use Ksfraser\FA_ProductAttributes\UI\AssignmentsTab;
 use Ksfraser\FA_ProductAttributes\Actions\ActionHandler;
 
 try {
-    $db_adapter = new FrontAccountingDbAdapter();
+    $db_adapter = DatabaseAdapterFactory::create('fa'); // Use FA driver via factory
     $dao = new ProductAttributesDao($db_adapter);
     //$dao->ensureSchema(); // Tables already exist
 } catch (Exception $e) {
