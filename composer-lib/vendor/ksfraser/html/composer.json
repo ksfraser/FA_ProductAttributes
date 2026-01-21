@@ -1,0 +1,22 @@
+{
+    "name": "ksfraser/html",
+    "version": "1.0.0",
+    "description": "HTML project for Ksfraser",
+    "require": {
+        "php": ">=7.3"
+    },
+    "repositories": [
+        {
+            "type": "vcs",
+            "url": "https://github.com/ksfraser/origin"
+        }
+    ],
+    "autoload": {
+        "psr-4": {
+            "Ksfraser\\HTML\\": "src/Ksfraser/HTML/",
+            "Ksfraser\\HTML\\Elements\\": "src/Ksfraser/HTML/Elements/",
+            "Ksfraser\\HTML\\CSS\\": "src/Ksfraser/HTML/CSS/",
+            "Ksfraser\\HTML\\Composites\\": "src/Ksfraser/HTML/Composites/"
+        }
+    }
+}

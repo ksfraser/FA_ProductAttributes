@@ -15,7 +15,7 @@
     "ksfraser/ksf-modules-dao": "*"
   },
   "require-dev": {
-    "phpunit/phpunit": "9.5.*"
+    "phpunit/phpunit": "9.4.*"
   },
   "repositories": [
     {
