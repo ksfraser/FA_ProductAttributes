@@ -7,7 +7,8 @@ use Ksfraser\FA_ProductAttributes\Dao\ProductAttributesDao;
 
 class CategoriesTab
 {
-    private ProductAttributesDao $dao;
+    /** @var ProductAttributesDao */
+    private $dao;
 
     public function __construct(ProductAttributesDao $dao)
     {
