@@ -91,7 +91,7 @@ class hooks_FA_ProductAttributes extends hooks
     private function createDatabaseSchema($modulePath)
     {
         // Include the composer autoloader if available
-        $autoloader = $modulePath . '/composer-lib/vendor/autoload.php';
+        $autoloader = $modulePath . '/vendor/autoload.php';
         if (file_exists($autoloader)) {
             require_once $autoloader;
         }

@@ -4,7 +4,7 @@
 echo "Testing FA Product Attributes Module Components\n\n";
 
 // Test 1: Check autoload
-$autoload = __DIR__ . "/composer-lib/vendor/autoload.php";
+$autoload = __DIR__ . "/vendor/autoload.php";
 echo "1. Autoload file exists: " . (file_exists($autoload) ? "YES" : "NO") . "\n";
 echo "   Path: $autoload\n";
 

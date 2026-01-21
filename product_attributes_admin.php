@@ -39,7 +39,7 @@ if (isset($_SESSION['wa_current_user']->company)) {
     define('TB_PREF', $_SESSION['wa_current_user']->company . '_');
 }
 
-$autoload = __DIR__ . "/composer-lib/vendor/autoload.php";
+$autoload = __DIR__ . "/vendor/autoload.php";
 if (is_file($autoload)) {
     require_once $autoload;
 }
