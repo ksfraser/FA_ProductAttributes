@@ -10,11 +10,13 @@ class CategoriesTab
 
     public function __construct(ProductAttributesDao $dao)
     {
+        display_notification("CategoriesTab constructor called");
         $this->dao = $dao;
     }
 
     public function render(): void
     {
+        display_notification("CategoriesTab render() called");
         try {
             $cats = $this->dao->listCategories();
             display_notification("Categories found: " . count($cats));

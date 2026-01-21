@@ -101,13 +101,18 @@ echo '<div style="margin:8px 0">'
     . '<a href="?tab=assignments">Assignments</a>'
     . '</div>';
 
+display_notification("Current tab: '$tab'");
+
 if ($tab === 'categories') {
+    display_notification("Rendering categories tab");
     $categoriesTab = new CategoriesTab($dao);
     $categoriesTab->render();
 } else if ($tab === 'values') {
+    display_notification("Rendering values tab");
     $valuesTab = new ValuesTab($dao);
     $valuesTab->render();
 } else {
+    display_notification("Rendering assignments tab");
     $assignmentsTab = new AssignmentsTab($dao);
     $assignmentsTab->render();
 }
