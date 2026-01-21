@@ -1,7 +1,6 @@
 <?php
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
-display_notification("DEBUG: Error reporting enabled");
 
 // FrontAccounting wrapper admin page.
 // Place this repo under FA: modules/FA_ProductAttributes
