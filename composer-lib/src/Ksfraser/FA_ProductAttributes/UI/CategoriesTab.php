@@ -1,4 +1,5 @@
 <?php
+display_notification("DEBUG: CategoriesTab.php file loaded");
 
 namespace Ksfraser\FA_ProductAttributes\UI;
 

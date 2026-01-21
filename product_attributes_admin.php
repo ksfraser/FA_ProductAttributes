@@ -1,4 +1,7 @@
 <?php
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+display_notification("DEBUG: Error reporting enabled");
 
 // FrontAccounting wrapper admin page.
 // Place this repo under FA: modules/FA_ProductAttributes
@@ -133,8 +136,11 @@ display_notification("Current tab: '$tab'");
 
 if ($tab === 'categories') {
     display_notification("Rendering categories tab");
+    display_notification("DEBUG: About to instantiate CategoriesTab");
     $categoriesTab = new CategoriesTab($dao);
+    display_notification("DEBUG: CategoriesTab instantiated successfully");
     $categoriesTab->render();
+    display_notification("DEBUG: CategoriesTab render() completed");
 } else if ($tab === 'values') {
     display_notification("Rendering values tab");
     $valuesTab = new ValuesTab($dao);
