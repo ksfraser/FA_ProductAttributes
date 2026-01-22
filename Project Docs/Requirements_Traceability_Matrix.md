@@ -30,6 +30,11 @@
 | BR4.3.1 | Hard delete when safe | Permanently remove unused items | Delete from DB when not referenced | TC23a: Test hard delete for unused items | Completed |
 | BR4.3.2 | Soft delete when in use | Deactivate items referenced by products | Set active=false when in use | TC23b: Test soft delete for used items | Completed |
 | BR4.3.3 | Cascade delete for categories | Remove category and all values when safe | Delete category + values when not used | TC23c: Test cascade deletion | Completed |
+| BR4.4 | Royal Order Helper utility class | Centralized Royal Order management | RoyalOrderHelper class with SRP | TC47: Test utility functions | Completed |
+| BR4.4.1 | Royal Order dropdown with predefined options | Consistent UI for sort order selection | HTML generation with 9 standard options | TC48: Test dropdown generation | Completed |
+| BR4.4.2 | Sort order display formatting | Show descriptive labels in tables | "3 - Size" format in category table | TC49: Test label conversion | Completed |
+| BR4.4.3 | Description column in categories table | Enhanced category information display | Added Description column to UI | TC50: Test description display | Completed |
+| BR4.4.4 | Code (Slug) labeling | Clarify field purpose | Updated labels in UI and forms | TC51: Test label consistency | Completed |
 
 | BR6 | Custom pricing per variation | Individual prices | Price update sub-screen | TC24: Test pricing | Pending |
 | BR6.1 | Integrate with FA_BulkPriceUpdate module | Use external bulk pricing if available | Check for module and call its function | TC25: Test integration | Pending |
@@ -51,8 +56,8 @@
 | NFR5 | Data persistence | Extend DB schema with parent_stock_id | New tables in schema.sql | TC41: Verify DB schema | Completed |
 | NFR5.1 | Data integrity via Make Inactive | Prevent orphans | Deactivate with warnings | TC42: Test deactivation | Pending |
 | NFR6 | Compatibility | FA 2.3.22 and PHP 7.3 | Code compatibility | TC43: Test on specified versions | Pending |
-| NFR7 | Code Quality | SOLID principles, DI, SRP | Interfaces, traits, polymorphism | TC44: Test adherence | Pending |
-| NFR8 | Testing | Unit tests for all code, edge cases | PHPUnit framework | TC45: Test coverage metrics | Completed |
+| NFR7 | Code Quality | SOLID principles, DI, SRP | Interfaces, traits, polymorphism, RoyalOrderHelper | TC44: Test adherence | Completed |
+| NFR8 | Testing | Unit tests for all code, edge cases | PHPUnit framework, 73 tests, 241 assertions | TC45: Test coverage metrics | Completed |
 | NFR9 | Documentation | PHPDoc, UML diagrams | ERD, Message Flow, flowcharts | TC46: Verify completeness | Pending |
 
 ## Notes

@@ -19,6 +19,13 @@
 **Coverage**: API endpoints, DAO operations, action handlers, and UI validation.
 **Impact**: High confidence in code stability and regression prevention.
 
+### Royal Order Implementation (Completed)
+**Status**: RoyalOrderHelper utility class implemented following SRP principles.
+**Features**: Centralized Royal Order management, HTML dropdown generation, validation, and display formatting.
+**UI Improvements**: Added Description column to categories table, enhanced sort order display ("3 - Size" format), updated labels to "Code (Slug)".
+**Testing**: 12 additional unit tests added, total 73 tests passing with 241 assertions.
+**Impact**: Improved code maintainability, consistent UI, and better user experience.
+
 ## Identified Gaps and Considerations
 Based on the module's purpose (product attributes and variations in FrontAccounting), the following gaps and enhancements have been identified for completeness:
 

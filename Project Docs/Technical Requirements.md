@@ -64,6 +64,7 @@
 - **Validators**: Separate validation classes for different data types
 - **Processors**: SRP classes for CSV processing, price updates, etc.
 - **Factories**: For creating complex objects with dependencies
+- **Utility Classes**: RoyalOrderHelper for centralized Royal Order management
 - **Exceptions**: Custom exception hierarchy for error handling
 
 ## User Acceptance Testing (UAT)

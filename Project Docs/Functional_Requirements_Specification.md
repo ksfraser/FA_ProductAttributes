@@ -48,17 +48,29 @@ This document details the functional behavior of the Product Attributes module f
 - **Trigger**: User navigates to Inventory > Stock > Product Attributes.
 - **Process**:
   1. Display categories in a sortable table (by Name or Royal Order).
-  2. Table includes columns: Category Name, Royal Order (editable input), Actions (Edit/Delete).
-  3. Display values in a separate tab/table with columns: Value, Slug, Sort Order, Active, Actions (Edit/Delete).
-  4. Display assignments in a separate tab/table with columns: Category, Value, Slug, Sort Order, Actions (Delete).
-  5. Edit buttons pre-fill forms with existing data and change button text to "Update". Edit operations update existing records rather than creating duplicates.
-  6. Delete buttons show confirmation dialogs and perform different actions based on usage:
+  2. Table includes columns: Code (Slug), Label, Description, Sort (Royal Order), Active, Actions (Edit/Delete).
+  3. Sort order displays as "3 - Size" format using Royal Order text labels.
+  4. Display values in a separate tab/table with columns: Value, Slug, Sort Order, Active, Actions (Edit/Delete).
+  5. Display assignments in a separate tab/table with columns: Category, Value, Slug, Sort Order, Actions (Delete).
+  6. Edit buttons pre-fill forms with existing data and change button text to "Update". Edit operations update existing records rather than creating duplicates.
+  7. Delete buttons show confirmation dialogs and perform different actions based on usage:
      - If the item is NOT in use by products: Permanently delete from database
      - If the item IS in use by products: Deactivate (soft delete) to preserve data integrity
      - For categories: When hard deleting, all related values are also deleted
      - Delete links use GET requests with confirmation dialogs.
-  7. Provide CRUD forms for categories and variables with validation.
+  8. Provide CRUD forms for categories and variables with validation.
+  9. Royal Order dropdown provides predefined options (Quantity, Opinion, Size, Age, Shape, Color, Proper adjective, Material, Purpose).
 - **Output**: Updated categories and variables in DB.
+
+### FR4.1: Royal Order Helper Utility
+- **Trigger**: System needs to display or validate Royal Order information.
+- **Process**:
+  1. Provide centralized Royal Order options and labels.
+  2. Generate HTML dropdowns with proper formatting.
+  3. Validate sort order values (1-9 range).
+  4. Convert numeric sort orders to descriptive labels (e.g., 3 → "Size").
+  5. Follow Single Responsibility Principle with dedicated utility class.
+- **Output**: Consistent Royal Order handling across the application.
 
 ### FR5: Inventory and Stock Management (Already Supported by FA)
 - Variations, as individual products, have independent stock levels via FA's stock_id.
