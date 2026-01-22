@@ -69,7 +69,27 @@ class CategoriesTab
             text_row(_("Code"), 'code', $editCategory['code'] ?? '', 20, 64);
             text_row(_("Label"), 'label', $editCategory['label'] ?? '', 20, 64);
             text_row(_("Description"), 'description', $editCategory['description'] ?? '', 40, 255);
-            small_amount_row(_("Sort order"), 'sort_order', $editCategory['sort_order'] ?? 0);
+            
+            // Royal Order of Adjectives dropdown for sort order
+            $currentSortOrder = $editCategory['sort_order'] ?? 0;
+            echo '<tr><td>' . _("Sort order (Royal Order)") . ':</td><td><select name="sort_order">';
+            $royalOrderOptions = [
+                1 => _("Quantity"),
+                2 => _("Opinion"),
+                3 => _("Size"),
+                4 => _("Age"),
+                5 => _("Shape"),
+                6 => _("Color"),
+                7 => _("Proper adjective"),
+                8 => _("Material"),
+                9 => _("Purpose")
+            ];
+            foreach ($royalOrderOptions as $value => $label) {
+                $sel = $value == $currentSortOrder ? ' selected' : '';
+                echo '<option value="' . $value . '"' . $sel . '>' . $value . ' - ' . $label . '</option>';
+            }
+            echo '</select></td></tr>';
+            
             check_row(_("Active"), 'active', $editCategory ? (bool)$editCategory['active'] : true);
             hidden('action', 'upsert_category');
             hidden('tab', 'categories');

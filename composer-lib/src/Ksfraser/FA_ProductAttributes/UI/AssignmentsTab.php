@@ -94,7 +94,7 @@ class AssignmentsTab
 
             small_amount_row(_("Sort order"), 'sort_order', 0);
             end_table(1);
-            submit_center('add', _("Add"));
+            submit_center('save', _("Save"));
             end_form();
         }
     }

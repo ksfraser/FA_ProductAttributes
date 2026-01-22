@@ -48,6 +48,9 @@ page(_("Product Attributes"));
 
 use Ksfraser\FA_ProductAttributes\Db\DatabaseAdapterFactory;
 use Ksfraser\FA_ProductAttributes\Dao\ProductAttributesDao;
+use Ksfraser\FA_ProductAttributes\Services\CategoryService;
+use Ksfraser\FA_ProductAttributes\Services\ValueService;
+use Ksfraser\FA_ProductAttributes\Services\AssignmentService;
 use Ksfraser\FA_ProductAttributes\UI\CategoriesTab;
 use Ksfraser\FA_ProductAttributes\UI\ValuesTab;
 use Ksfraser\FA_ProductAttributes\UI\AssignmentsTab;
@@ -56,6 +59,9 @@ use Ksfraser\FA_ProductAttributes\Actions\ActionHandler;
 try {
     $db_adapter = DatabaseAdapterFactory::create('fa'); // Use FA driver via factory
     $dao = new ProductAttributesDao($db_adapter);
+    $categoryService = new CategoryService($dao, $db_adapter);
+    $valueService = new ValueService($dao, $db_adapter);
+    $assignmentService = new AssignmentService($dao, $db_adapter);
     //$dao->ensureSchema(); // Tables already exist
 } catch (Exception $e) {
     display_error("Database error: " . $e->getMessage());
@@ -100,7 +106,7 @@ if (!empty($action)) {
     display_notification("DEBUG: Action detected: '$action'");
     display_notification("Request data: " . json_encode($requestData));
 
-    $actionHandler = new ActionHandler($dao, $db_adapter);
+    $actionHandler = new ActionHandler($categoryService, $valueService, $assignmentService);
     display_notification("DEBUG: ActionHandler instantiated");
 
     $message = $actionHandler->handle($action, $requestData);
