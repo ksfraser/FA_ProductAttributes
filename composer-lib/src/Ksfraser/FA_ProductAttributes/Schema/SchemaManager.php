@@ -106,6 +106,20 @@ class SchemaManager
             . "  KEY idx_value (value_id)\n"             // Index for value filtering
             . ");"
         );
+
+        // Category Assignments table: Links products to their attribute categories
+        $db->execute(
+            "CREATE TABLE IF NOT EXISTS `{$p}product_attribute_category_assignments` (\n"
+            . "  id INT(11) NOT NULL AUTO_INCREMENT,\n"
+            . "  stock_id VARCHAR(32) NOT NULL,\n"       // FrontAccounting stock_id (SKU)
+            . "  category_id INT(11) NOT NULL,\n"        // Attribute category
+            . "  updated_ts TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,\n"
+            . "  PRIMARY KEY (id),\n"
+            . "  UNIQUE KEY uq_stock_category (stock_id, category_id),\n" // Prevent duplicate category assignments
+            . "  KEY idx_stock (stock_id),\n"            // Index for product lookups
+            . "  KEY idx_category (category_id)\n"       // Index for category filtering
+            . ");"
+        );
     }
 
     /**
@@ -161,5 +175,19 @@ class SchemaManager
         $db->execute("CREATE INDEX IF NOT EXISTS idx_paa_stock ON `{$p}product_attribute_assignments`(stock_id);");
         $db->execute("CREATE INDEX IF NOT EXISTS idx_paa_category ON `{$p}product_attribute_assignments`(category_id);");
         $db->execute("CREATE INDEX IF NOT EXISTS idx_paa_value ON `{$p}product_attribute_assignments`(value_id);");
+
+        // Category Assignments table for SQLite
+        $db->execute(
+            "CREATE TABLE IF NOT EXISTS `{$p}product_attribute_category_assignments` (\n"
+            . "  id INTEGER PRIMARY KEY AUTOINCREMENT,\n"
+            . "  stock_id TEXT NOT NULL,\n"
+            . "  category_id INTEGER NOT NULL,\n"
+            . "  updated_ts TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,\n"
+            . "  UNIQUE(stock_id, category_id)\n" // Prevent duplicate category assignments
+            . ");"
+        );
+        // Explicit indexes for performance
+        $db->execute("CREATE INDEX IF NOT EXISTS idx_paca_stock ON `{$p}product_attribute_category_assignments`(stock_id);");
+        $db->execute("CREATE INDEX IF NOT EXISTS idx_paca_category ON `{$p}product_attribute_category_assignments`(category_id);");
     }
 }

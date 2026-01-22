@@ -46,6 +46,18 @@ class ActionHandler
                     $handler = new DeleteAssignmentAction($this->dao);
                     return $handler->handle($postData);
 
+                case 'add_category_assignment':
+                    $handler = new AddCategoryAssignmentAction($this->dao);
+                    return $handler->handle($postData);
+
+                case 'remove_category_assignment':
+                    $handler = new RemoveCategoryAssignmentAction($this->dao);
+                    return $handler->handle($postData);
+
+                case 'generate_variations':
+                    $handler = new GenerateVariationsAction($this->dao, $this->dbAdapter);
+                    return $handler->handle($postData);
+
                 default:
                     return null;
             }

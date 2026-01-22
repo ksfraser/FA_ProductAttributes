@@ -19,6 +19,12 @@ $files = [
     __DIR__ . '/../src/Ksfraser/FA_ProductAttributes/Api/AssignmentsApiController.php',
     __DIR__ . '/../src/Ksfraser/FA_ProductAttributes/Api/ApiRouter.php',
     __DIR__ . '/../src/Ksfraser/FA_ProductAttributes/UI/RoyalOrderHelper.php',
+    __DIR__ . '/../src/Ksfraser/FA_ProductAttributes/Actions/ActionHandler.php',
+    __DIR__ . '/../src/Ksfraser/FA_ProductAttributes/Actions/AddAssignmentAction.php',
+    __DIR__ . '/../src/Ksfraser/FA_ProductAttributes/Actions/DeleteAssignmentAction.php',
+    __DIR__ . '/../src/Ksfraser/FA_ProductAttributes/Actions/AddCategoryAssignmentAction.php',
+    __DIR__ . '/../src/Ksfraser/FA_ProductAttributes/Actions/RemoveCategoryAssignmentAction.php',
+    __DIR__ . '/../src/Ksfraser/FA_ProductAttributes/Actions/GenerateVariationsAction.php',
     __DIR__ . '/../src/Ksfraser/FA_ProductAttributes/Install/ComposerInstaller.php',
 ];
 

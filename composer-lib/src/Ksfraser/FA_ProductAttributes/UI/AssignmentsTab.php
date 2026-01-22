@@ -3,6 +3,7 @@
 namespace Ksfraser\FA_ProductAttributes\UI;
 
 use Ksfraser\FA_ProductAttributes\Dao\ProductAttributesDao;
+use Ksfraser\FA_ProductAttributes\UI\RoyalOrderHelper;
 
 class AssignmentsTab
 {
@@ -17,84 +18,91 @@ class AssignmentsTab
     public function render(): void
     {
         $stockId = trim((string)($_GET['stock_id'] ?? $_POST['stock_id'] ?? ''));
-        $categoryId = (int)($_GET['category_id'] ?? $_POST['category_id'] ?? 0);
         $cats = $this->dao->listCategories();
-        if ($categoryId === 0 && count($cats) > 0) {
-            $categoryId = (int)$cats[0]['id'];
-        }
-        $values = $categoryId ? $this->dao->listValues($categoryId) : [];
 
         start_form(false);
         start_table(TABLESTYLE2);
-        table_section_title(_("Assignments"));
-        text_row(_("Stock ID"), 'stock_id', $stockId, 20, 32);
-        echo '<tr><td>' . _("Category") . ':</td><td><select name="category_id" onchange="this.form.submit()">';
-        echo '<option value="0">' . _("Select category") . '</option>';
-        foreach ($cats as $c) {
-            $id = $c['id'] ?? 0;
-            $sel = $id == $categoryId ? ' selected' : '';
-            echo '<option value="' . htmlspecialchars((string)$id) . '"' . $sel . '>'
-                . htmlspecialchars((string)$c['code'])
-                . '</option>';
-        }
-        echo '</select></td></tr>';
+        table_section_title(_("Product Category Assignments"));
+        text_row(_("Stock ID (Parent Product)"), 'stock_id', $stockId, 20, 32);
         hidden('tab', 'assignments');
         end_table(1);
+        submit_center('load', _("Load Product"));
         end_form();
 
         if ($stockId !== '') {
-            $assignments = $this->dao->listAssignments($stockId);
+            $assignments = $this->dao->listCategoryAssignments($stockId);
 
-            // Display assignments table
+            // Display current category assignments
             start_table(TABLESTYLE2);
-            $th = array(_("Category"), _("Value"), _("Slug"), _("Sort"), _("Actions"));
+            $th = array(_("Category"), _("Code"), _("Description"), _("Sort Order"), _("Actions"));
             table_header($th);
 
             if (count($assignments) > 0) {
                 foreach ($assignments as $a) {
                     start_row();
-                    label_cell($a['category_code'] ?? '');
-                    label_cell($a['value_label'] ?? '');
-                    label_cell($a['value_slug'] ?? '');
-                    label_cell($a['sort_order'] ?? 0);
-                    
+                    label_cell($a['label'] ?? '');
+                    label_cell($a['code'] ?? '');
+                    label_cell($a['description'] ?? '');
+                    $sortOrder = (int)($a['sort_order'] ?? 0);
+                    $sortLabel = $sortOrder > 0 ? $sortOrder . ' - ' . RoyalOrderHelper::getRoyalOrderLabel($sortOrder) : '0';
+                    label_cell($sortLabel);
+
                     // Actions column
                     echo '<td>';
-                    echo '<a href="?tab=assignments&action=delete_assignment&assignment_id=' . $a['id'] . '&stock_id=' . urlencode($stockId) . '" onclick="return confirm(\'' . sprintf(_("Remove assignment '%s - %s' from product?"), addslashes($a['category_code']), addslashes($a['value_label'])) . '\')">' . _("Delete") . '</a>';
+                    echo '<a href="?tab=assignments&action=remove_category_assignment&category_id=' . $a['id'] . '&stock_id=' . urlencode($stockId) . '" onclick="return confirm(\'' . sprintf(_("Remove category '%s' from product?"), addslashes($a['label'])) . '\')">' . _("Remove") . '</a>';
                     echo '</td>';
-                    
+
                     end_row();
                 }
             } else {
                 start_row();
-                label_cell(_("No assignments found"), '', 'colspan=5');
+                label_cell(_("No category assignments found"), '', 'colspan=5');
                 end_row();
             }
             end_table();
 
+            // Generate Variations button
             echo '<br />';
-
             start_form(true);
-            start_table(TABLESTYLE2);
-            table_section_title(_("Add Assignment"));
-            hidden('action', 'add_assignment');
+            hidden('action', 'generate_variations');
             hidden('tab', 'assignments');
             hidden('stock_id', $stockId);
-            hidden('category_id', (string)$categoryId);
+            submit_center('generate', _("Generate Variations"));
+            end_form();
 
-            echo '<tr><td>' . _("Value") . '</td><td><select name="value_id">';
-            foreach ($values as $v) {
-                $vid = (int)$v['id'];
-                echo '<option value="' . htmlspecialchars((string)$vid) . '">'
-                    . htmlspecialchars((string)$v['value'])
-                    . ' (' . htmlspecialchars((string)$v['slug']) . ')'
-                    . '</option>';
+            echo '<br />';
+
+            // Add Category Assignment form
+            start_form(true);
+            start_table(TABLESTYLE2);
+            table_section_title(_("Add Category Assignment"));
+            hidden('action', 'add_category_assignment');
+            hidden('tab', 'assignments');
+            hidden('stock_id', $stockId);
+
+            echo '<tr><td>' . _("Category") . '</td><td><select name="category_id">';
+            echo '<option value="">' . _("Select category to assign") . '</option>';
+            foreach ($cats as $c) {
+                $cid = (int)$c['id'];
+                // Check if category is already assigned
+                $alreadyAssigned = false;
+                foreach ($assignments as $a) {
+                    if ((int)$a['id'] === $cid) {
+                        $alreadyAssigned = true;
+                        break;
+                    }
+                }
+                if (!$alreadyAssigned) {
+                    echo '<option value="' . htmlspecialchars((string)$cid) . '">'
+                        . htmlspecialchars((string)$c['label'])
+                        . ' (' . htmlspecialchars((string)$c['code']) . ')'
+                        . '</option>';
+                }
             }
             echo '</select></td></tr>';
 
-            small_amount_row(_("Sort order"), 'sort_order', 0);
             end_table(1);
-            submit_center('save', _("Save"));
+            submit_center('add', _("Add Category"));
             end_form();
         }
     }

@@ -204,6 +204,39 @@ class ProductAttributesDao
         );
     }
 
+    /** @return array<int, array<string, mixed>> */
+    public function listCategoryAssignments(string $stockId): array
+    {
+        $p = $this->db->getTablePrefix();
+        return $this->db->query(
+            "SELECT c.* FROM `{$p}product_attribute_categories` c
+             INNER JOIN `{$p}product_attribute_category_assignments` pca ON c.id = pca.category_id
+             WHERE pca.stock_id = :stock_id
+             ORDER BY c.sort_order, c.code",
+            ['stock_id' => $stockId]
+        );
+    }
+
+    public function addCategoryAssignment(string $stockId, int $categoryId): void
+    {
+        $p = $this->db->getTablePrefix();
+        $this->db->execute(
+            "INSERT INTO `{$p}product_attribute_category_assignments` (stock_id, category_id)
+             VALUES (:stock_id, :category_id)",
+            ['stock_id' => $stockId, 'category_id' => $categoryId]
+        );
+    }
+
+    public function removeCategoryAssignment(string $stockId, int $categoryId): void
+    {
+        $p = $this->db->getTablePrefix();
+        $this->db->execute(
+            "DELETE FROM `{$p}product_attribute_category_assignments`
+             WHERE stock_id = :stock_id AND category_id = :category_id",
+            ['stock_id' => $stockId, 'category_id' => $categoryId]
+        );
+    }
+
     public function deleteCategory(int $categoryId): void
     {
         $p = $this->db->getTablePrefix();
