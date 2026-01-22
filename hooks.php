@@ -39,6 +39,72 @@ class hooks_FA_ProductAttributes extends hooks
         return true; // Standard FA install return
     }
 
+    /**
+     * Install composer dependencies for the module
+     *
+     * @param string $module_path The path to the module
+     * @return array Result with 'success' and 'message' keys
+     */
+    private function installComposerDependencies($module_path)
+    {
+        $composer_lib = $module_path . '/composer-lib';
+        if (!is_dir($composer_lib)) {
+            return ['success' => false, 'message' => 'composer-lib directory not found'];
+        }
+
+        $composer_json = $composer_lib . '/composer.json';
+        if (!file_exists($composer_json)) {
+            return ['success' => false, 'message' => 'composer.json not found'];
+        }
+
+        // Try to run composer install
+        $command = 'cd ' . escapeshellarg($composer_lib) . ' && composer install --no-dev --optimize-autoloader 2>&1';
+        $output = shell_exec($command);
+
+        if ($output === null) {
+            return ['success' => false, 'message' => 'Failed to execute composer command', 'output' => ''];
+        }
+
+        // Check if composer.lock was created or updated
+        $composer_lock = $composer_lib . '/composer.lock';
+        if (!file_exists($composer_lock)) {
+            return ['success' => false, 'message' => 'Composer installation failed', 'output' => $output];
+        }
+
+        return ['success' => true, 'message' => 'Composer dependencies installed successfully', 'output' => $output];
+    }
+
+    /**
+     * Create database schema programmatically
+     *
+     * @param string $module_path The path to the module
+     */
+    private function createDatabaseSchema($module_path)
+    {
+        $schema_file = $module_path . '/sql/schema.sql';
+        if (!file_exists($schema_file)) {
+            throw new Exception('Schema file not found: ' . $schema_file);
+        }
+
+        $sql = file_get_contents($schema_file);
+        if ($sql === false) {
+            throw new Exception('Failed to read schema file: ' . $schema_file);
+        }
+
+        // Split SQL into individual statements
+        $statements = array_filter(array_map('trim', explode(';', $sql)));
+
+        global $db;
+        foreach ($statements as $statement) {
+            if (!empty($statement)) {
+                $result = db_query($statement, 'Failed to execute schema statement');
+                if (!$result) {
+                    throw new Exception('Failed to execute schema statement: ' . $statement);
+                }
+            }
+        }
+    }
+
     function install_options($app)
     {
         global $path_to_root;
@@ -98,17 +164,68 @@ class hooks_FA_ProductAttributes extends hooks
         // Get the hook manager
         $hooks = fa_hooks();
 
-        // Get service instance
-        $service = $this->get_product_attributes_service();
-
-        // Create UI and Handler instances
-        $ui = new \Ksfraser\FA_ProductAttributes\UI\ProductAttributesUI($service);
-        $handler = new \Ksfraser\FA_ProductAttributes\Handler\ProductAttributesHandler($service);
-
         // Register Product Attributes hooks for items.php
-        $hooks->add_hook('item_display_tabs', [$ui, 'add_product_attributes_tab'], 10);
-        $hooks->add_hook('pre_item_write', [$handler, 'handle_product_attributes_save'], 10);
-        $hooks->add_hook('pre_item_delete', [$handler, 'handle_product_attributes_delete'], 10);
+        $hooks->add_hook('item_display_tabs', [__CLASS__, 'static_add_product_attributes_tab'], 10);
+        $hooks->add_hook('pre_item_write', [__CLASS__, 'static_handle_product_attributes_save'], 10);
+        $hooks->add_hook('pre_item_delete', [__CLASS__, 'static_handle_product_attributes_delete'], 10);
+    }
+
+    /**
+     * Static hook callback for adding product attributes tab
+     *
+     * @param array $tabs Current tabs array
+     * @param string $stock_id The item stock ID
+     * @return array Modified tabs array
+     */
+    public static function static_add_product_attributes_tab($tabs, $stock_id) {
+        $service = self::static_get_product_attributes_service();
+        $ui = new \Ksfraser\FA_ProductAttributes\UI\ProductAttributesUI($service);
+        return $ui->add_product_attributes_tab($tabs, $stock_id);
+    }
+
+    /**
+     * Static hook callback for handling product attributes save
+     *
+     * @param array $item_data The item data being saved
+     * @param string $stock_id The item stock ID
+     * @return array Modified item data
+     */
+    public static function static_handle_product_attributes_save($item_data, $stock_id) {
+        $service = self::static_get_product_attributes_service();
+        $handler = new \Ksfraser\FA_ProductAttributes\Handler\ProductAttributesHandler($service);
+        return $handler->handle_product_attributes_save($item_data, $stock_id);
+    }
+
+    /**
+     * Static hook callback for handling product attributes delete
+     *
+     * @param string $stock_id The item stock ID being deleted
+     */
+    public static function static_handle_product_attributes_delete($stock_id) {
+        $service = self::static_get_product_attributes_service();
+        $handler = new \Ksfraser\FA_ProductAttributes\Handler\ProductAttributesHandler($service);
+        $handler->handle_product_attributes_delete($stock_id);
+    }
+
+    /**
+     * Static method to get ProductAttributesService instance
+     *
+     * @return \Ksfraser\FA_ProductAttributes\Service\ProductAttributesService
+     */
+    private static function static_get_product_attributes_service() {
+        global $path_to_root;
+
+        // Include the composer autoloader
+        $autoloader = $path_to_root . '/modules/FA_ProductAttributes/composer-lib/vendor/autoload.php';
+        if (file_exists($autoloader)) {
+            require_once $autoloader;
+        }
+
+        // Create service instance
+        $db = new \Ksfraser\FA_ProductAttributes\Db\FrontAccountingDbAdapter();
+        $dao = new \Ksfraser\FA_ProductAttributes\Dao\ProductAttributesDao($db);
+
+        return new \Ksfraser\FA_ProductAttributes\Service\ProductAttributesService($dao, $db);
     }
 
     /**
@@ -131,5 +248,4 @@ class hooks_FA_ProductAttributes extends hooks
 
         return new \Ksfraser\FA_ProductAttributes\Service\ProductAttributesService($dao, $db);
     }
-}
 }
