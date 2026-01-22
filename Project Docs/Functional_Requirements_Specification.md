@@ -62,6 +62,39 @@ This document details the functional behavior of the Product Attributes module f
   9. Royal Order dropdown provides predefined options (Quantity, Opinion, Size, Age, Shape, Color, Proper adjective, Material, Purpose).
 - **Output**: Updated categories and variables in DB.
 
+### FR4.2: Product Category Assignments and Variation Generation
+- **Trigger**: User navigates to Inventory > Stock > Product Attributes > Assignments tab.
+- **Process**:
+  1. Enter parent product stock_id and click "Load Product".
+  2. View currently assigned categories in a table with columns: Category, Code, Description, Sort Order (Royal Order), Actions.
+  3. Add categories to the parent product using the "Add Category Assignment" form (only shows unassigned categories).
+  4. Remove category assignments using the "Remove" links with confirmation.
+  5. Click "Generate Variations" button to create all combinations of values from assigned categories.
+  6. System generates child products with:
+     - Stock_id: Parent + attribute slugs in Royal Order (e.g., TSHIRT-S-RED).
+     - Description: Parent description with attribute values appended.
+     - Parent relationship: Set parent_stock_id to parent product.
+     - All other fields copied from parent.
+  7. Skip creation if variation already exists.
+  8. Display count of created variations.
+- **Output**: Category assignments saved and/or child variation products created.
+- **Trigger**: User navigates to Inventory > Stock > Product Attributes.
+- **Process**:
+  1. Display categories in a sortable table (by Name or Royal Order).
+  2. Table includes columns: Code (Slug), Label, Description, Sort (Royal Order), Active, Actions (Edit/Delete).
+  3. Sort order displays as "3 - Size" format using Royal Order text labels.
+  4. Display values in a separate tab/table with columns: Value, Slug, Sort Order, Active, Actions (Edit/Delete).
+  5. Display assignments in a separate tab/table with columns: Category, Value, Slug, Sort Order, Actions (Delete).
+  6. Edit buttons pre-fill forms with existing data and change button text to "Update". Edit operations update existing records rather than creating duplicates.
+  7. Delete buttons show confirmation dialogs and perform different actions based on usage:
+     - If the item is NOT in use by products: Permanently delete from database
+     - If the item IS in use by products: Deactivate (soft delete) to preserve data integrity
+     - For categories: When hard deleting, all related values are also deleted
+     - Delete links use GET requests with confirmation dialogs.
+  8. Provide CRUD forms for categories and variables with validation.
+  9. Royal Order dropdown provides predefined options (Quantity, Opinion, Size, Age, Shape, Color, Proper adjective, Material, Purpose).
+- **Output**: Updated categories and variables in DB.
+
 ### FR4.1: Royal Order Helper Utility
 - **Trigger**: System needs to display or validate Royal Order information.
 - **Process**:

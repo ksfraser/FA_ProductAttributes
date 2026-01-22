@@ -35,6 +35,10 @@
 | BR4.4.2 | Sort order display formatting | Show descriptive labels in tables | "3 - Size" format in category table | TC49: Test label conversion | Completed |
 | BR4.4.3 | Description column in categories table | Enhanced category information display | Added Description column to UI | TC50: Test description display | Completed |
 | BR4.4.4 | Code (Slug) labeling | Clarify field purpose | Updated labels in UI and forms | TC51: Test label consistency | Completed |
+| BR4.5 | Product category assignments | Assign categories to parent products | New AssignmentsTab workflow | TC52: Test category assignment to products | Completed |
+| BR4.5.1 | Generate variations from category assignments | Create all value combinations as child products | GenerateVariationsAction | TC53: Test variation generation | Completed |
+| BR4.5.2 | Royal Order stock_id generation | Format variation stock_ids by Royal Order | Slug concatenation in order | TC54: Test Royal Order stock_id format | Completed |
+| BR4.5.3 | Parent-child product relationships | Set parent_stock_id for variations | Database relationship creation | TC55: Test parent-child linkage | Completed |
 
 | BR6 | Custom pricing per variation | Individual prices | Price update sub-screen | TC24: Test pricing | Pending |
 | BR6.1 | Integrate with FA_BulkPriceUpdate module | Use external bulk pricing if available | Check for module and call its function | TC25: Test integration | Pending |
