@@ -3,6 +3,7 @@
 namespace Ksfraser\FA_ProductAttributes\UI;
 
 use Ksfraser\FA_ProductAttributes\Dao\ProductAttributesDao;
+use Ksfraser\FA_ProductAttributes\UI\RoyalOrderHelper;
 
 class CategoriesTab
 {
@@ -72,23 +73,9 @@ class CategoriesTab
             
             // Royal Order of Adjectives dropdown for sort order
             $currentSortOrder = $editCategory['sort_order'] ?? 0;
-            echo '<tr><td>' . _("Sort order (Royal Order)") . ':</td><td><select name="sort_order">';
-            $royalOrderOptions = [
-                1 => _("Quantity"),
-                2 => _("Opinion"),
-                3 => _("Size"),
-                4 => _("Age"),
-                5 => _("Shape"),
-                6 => _("Color"),
-                7 => _("Proper adjective"),
-                8 => _("Material"),
-                9 => _("Purpose")
-            ];
-            foreach ($royalOrderOptions as $value => $label) {
-                $sel = $value == $currentSortOrder ? ' selected' : '';
-                echo '<option value="' . $value . '"' . $sel . '>' . $value . ' - ' . $label . '</option>';
-            }
-            echo '</select></td></tr>';
+            echo '<tr><td>' . _("Sort order (Royal Order)") . ':</td><td>';
+            echo RoyalOrderHelper::generateDropdownHtml('sort_order', $currentSortOrder);
+            echo '</td></tr>';
             
             check_row(_("Active"), 'active', $editCategory ? (bool)$editCategory['active'] : true);
             hidden('action', 'upsert_category');

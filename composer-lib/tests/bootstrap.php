@@ -18,6 +18,7 @@ $files = [
     __DIR__ . '/../src/Ksfraser/FA_ProductAttributes/Api/ValuesApiController.php',
     __DIR__ . '/../src/Ksfraser/FA_ProductAttributes/Api/AssignmentsApiController.php',
     __DIR__ . '/../src/Ksfraser/FA_ProductAttributes/Api/ApiRouter.php',
+    __DIR__ . '/../src/Ksfraser/FA_ProductAttributes/UI/RoyalOrderHelper.php',
     __DIR__ . '/../src/Ksfraser/FA_ProductAttributes/Install/ComposerInstaller.php',
 ];
 
