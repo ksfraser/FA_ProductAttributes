@@ -36,7 +36,7 @@ class CategoriesTab
 
             // Always show the table
             start_table(TABLESTYLE2);
-            $th = array(_("Code"), _("Label"), _("Sort"), _("Active"), _("Actions"));
+            $th = array(_("Code (Slug)"), _("Label"), _("Description"), _("Sort"), _("Active"), _("Actions"));
             table_header($th);
 
             if (count($cats) > 0) {
@@ -44,7 +44,10 @@ class CategoriesTab
                     start_row();
                     label_cell($c['code'] ?? '');
                     label_cell($c['label'] ?? '');
-                    label_cell($c['sort_order'] ?? 0);
+                    label_cell($c['description'] ?? '');
+                    $sortOrder = (int)($c['sort_order'] ?? 0);
+                    $sortLabel = $sortOrder > 0 ? $sortOrder . ' - ' . RoyalOrderHelper::getRoyalOrderLabel($sortOrder) : '0';
+                    label_cell($sortLabel);
                     label_cell($c['active'] ?? 0 ? _("Yes") : _("No"));
                     
                     // Actions column
@@ -57,7 +60,7 @@ class CategoriesTab
                 }
             } else {
                 start_row();
-                label_cell(_("No categories found"), '', 'colspan=5');
+                label_cell(_("No categories found"), '', 'colspan=6');
                 end_row();
             }
             end_table();
@@ -67,7 +70,7 @@ class CategoriesTab
             start_form(true);
             start_table(TABLESTYLE2);
             table_section_title($editCategory ? _("Edit Category") : _("Add / Update Category"));
-            text_row(_("Code"), 'code', $editCategory['code'] ?? '', 20, 64);
+            text_row(_("Code (Slug)"), 'code', $editCategory['code'] ?? '', 20, 64);
             text_row(_("Label"), 'label', $editCategory['label'] ?? '', 20, 64);
             text_row(_("Description"), 'description', $editCategory['description'] ?? '', 40, 255);
             
