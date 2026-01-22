@@ -169,45 +169,111 @@ class hooks_FA_ProductAttributes extends hooks
             // Get assigned categories for this product
             $assignedCategories = $dao->getAssignedCategoriesForProduct($stock_id);
 
+            // Get individual value assignments for this product
+            $individualAssignments = $dao->listAssignments($stock_id);
+
+            // Group individual assignments by category
+            $assignmentsByCategory = [];
+            foreach ($individualAssignments as $assignment) {
+                $catId = $assignment['category_id'];
+                if (!isset($assignmentsByCategory[$catId])) {
+                    $assignmentsByCategory[$catId] = [
+                        'category' => $assignment['category_label'],
+                        'values' => []
+                    ];
+                }
+                $assignmentsByCategory[$catId]['values'][] = $assignment['value_label'];
+            }
+
             // Render the tab content
             ob_start();
             ?>
             <div class="tab-content">
                 <h3><?php echo _('Product Attributes'); ?></h3>
 
-                <?php if (empty($assignedCategories)): ?>
+                <?php if (empty($assignedCategories) && empty($individualAssignments)): ?>
                     <p><?php echo _('No product attributes assigned to this item.'); ?></p>
-                    <p><?php echo _('Attributes are assigned at the category level in the Product Attributes admin.'); ?></p>
+                    <p><?php echo _('Attributes can be assigned at the category level in the Product Attributes admin, or individual values can be assigned here.'); ?></p>
                 <?php else: ?>
                     <table class="tablestyle">
                         <thead>
                             <tr>
                                 <th><?php echo _('Category'); ?></th>
-                                <th><?php echo _('Values'); ?></th>
+                                <th><?php echo _('Assigned Values'); ?></th>
+                                <th><?php echo _('Assignment Type'); ?></th>
                                 <th><?php echo _('Variations'); ?></th>
                             </tr>
                         </thead>
                         <tbody>
-                            <?php foreach ($assignedCategories as $category): ?>
+                            <?php
+                            // Show individual assignments first
+                            foreach ($assignmentsByCategory as $catId => $data): ?>
                                 <tr>
-                                    <td><?php echo htmlspecialchars($category['name']); ?></td>
-                                    <td>
-                                        <?php
-                                        $values = $dao->getValuesForCategory($category['id']);
-                                        echo implode(', ', array_column($values, 'value'));
-                                        ?>
-                                    </td>
-                                    <td>
-                                        <?php
-                                        $variationCount = $dao->getVariationCountForProductCategory($stock_id, $category['id']);
-                                        echo $variationCount;
-                                        ?>
-                                    </td>
+                                    <td><?php echo htmlspecialchars($data['category']); ?></td>
+                                    <td><?php echo htmlspecialchars(implode(', ', $data['values'])); ?></td>
+                                    <td><?php echo _('Individual Values'); ?></td>
+                                    <td><?php echo count($data['values']); ?></td>
                                 </tr>
-                            <?php endforeach; ?>
+                            <?php endforeach;
+
+                            // Show category assignments (excluding those with individual assignments)
+                            foreach ($assignedCategories as $category):
+                                if (!isset($assignmentsByCategory[$category['id']])):
+                                    $values = $dao->getValuesForCategory($category['id']);
+                                    $valueLabels = array_column($values, 'value');
+                            ?>
+                                <tr>
+                                    <td><?php echo htmlspecialchars($category['label']); ?></td>
+                                    <td><?php echo htmlspecialchars(implode(', ', $valueLabels)); ?></td>
+                                    <td><?php echo _('All Category Values'); ?></td>
+                                    <td><?php echo count($values); ?></td>
+                                </tr>
+                            <?php endif; endforeach; ?>
                         </tbody>
                     </table>
                 <?php endif; ?>
+
+                <h4><?php echo _('Manage Individual Value Assignments'); ?></h4>
+                <p><?php echo _('Select specific attribute values for this product. Individual assignments override category assignments.'); ?></p>
+
+                <form method="post" action="">
+                    <?php
+                    // Get all available categories
+                    $allCategories = $dao->listCategories();
+
+                    foreach ($allCategories as $category):
+                        $categoryValues = $dao->getValuesForCategory($category['id']);
+                        if (empty($categoryValues)) continue;
+
+                        // Get currently assigned values for this category
+                        $assignedValueIds = array_column(
+                            array_filter($individualAssignments, function($a) use ($category) {
+                                return $a['category_id'] == $category['id'];
+                            }),
+                            'value_id'
+                        );
+                    ?>
+                    <fieldset>
+                        <legend><?php echo htmlspecialchars($category['label']); ?> (<?php echo htmlspecialchars($category['code']); ?>)</legend>
+
+                        <?php foreach ($categoryValues as $value): ?>
+                            <label style="display: inline-block; margin-right: 15px;">
+                                <input type="checkbox"
+                                       name="attribute_values[<?php echo $category['id']; ?>][]"
+                                       value="<?php echo $value['id']; ?>"
+                                       <?php echo in_array($value['id'], $assignedValueIds) ? 'checked' : ''; ?>>
+                                <?php echo htmlspecialchars($value['value']); ?>
+                            </label>
+                        <?php endforeach; ?>
+                    </fieldset>
+                    <?php endforeach; ?>
+
+                    <div style="margin-top: 15px;">
+                        <button type="submit" name="save_product_attributes" value="1" class="btn btn-primary">
+                            <?php echo _('Save Attribute Assignments'); ?>
+                        </button>
+                    </div>
+                </form>
             </div>
             <?php
             return ob_get_clean();
@@ -224,9 +290,41 @@ class hooks_FA_ProductAttributes extends hooks
      * @param array $post_data The POST data
      */
     private function save_product_attributes($stock_id, $post_data) {
-        // Implementation for saving product attributes
-        // This would handle any product-specific attribute data
-        // For now, product attributes are managed at category level
+        global $path_to_root;
+
+        // Include the composer autoloader
+        $autoloader = $path_to_root . '/modules/FA_ProductAttributes/composer-lib/vendor/autoload.php';
+        if (file_exists($autoloader)) {
+            require_once $autoloader;
+        }
+
+        try {
+            // Create DAO
+            $db = new \Ksfraser\FA_ProductAttributes\Db\FrontAccountingDbAdapter();
+            $dao = new \Ksfraser\FA_ProductAttributes\Dao\ProductAttributesDao($db);
+
+            // Handle individual value assignments
+            if (isset($post_data['attribute_values']) && is_array($post_data['attribute_values'])) {
+                // First, remove all existing individual assignments for this product
+                $existingAssignments = $dao->listAssignments($stock_id);
+                foreach ($existingAssignments as $assignment) {
+                    $dao->deleteAssignment($assignment['id']);
+                }
+
+                // Add new assignments based on form data
+                foreach ($post_data['attribute_values'] as $categoryId => $valueIds) {
+                    if (is_array($valueIds)) {
+                        foreach ($valueIds as $valueId) {
+                            $dao->addAssignment($stock_id, (int)$categoryId, (int)$valueId);
+                        }
+                    }
+                }
+            }
+
+        } catch (Exception $e) {
+            error_log('FA_ProductAttributes: Error saving product attributes: ' . $e->getMessage());
+            // In a production environment, you might want to show an error message to the user
+        }
     }
 
     /**
@@ -248,8 +346,13 @@ class hooks_FA_ProductAttributes extends hooks
             $db = new \Ksfraser\FA_ProductAttributes\Db\FrontAccountingDbAdapter();
             $dao = new \Ksfraser\FA_ProductAttributes\Dao\ProductAttributesDao($db);
 
-            // Delete any product-specific attribute data
-            // Note: Category assignments are managed separately
+            // Delete individual value assignments
+            $existingAssignments = $dao->listAssignments($stock_id);
+            foreach ($existingAssignments as $assignment) {
+                $dao->deleteAssignment($assignment['id']);
+            }
+
+            // Note: Category assignments are managed separately and should be cleaned up by the admin interface
 
         } catch (Exception $e) {
             error_log('FA_ProductAttributes: Error deleting product attributes: ' . $e->getMessage());

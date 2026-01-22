@@ -262,4 +262,22 @@ class ProductAttributesDao
             ['id' => $valueId]
         );
     }
+
+    /** @return array<int, array<string, mixed>> */
+    public function getAssignedCategoriesForProduct(string $stockId): array
+    {
+        return $this->listCategoryAssignments($stockId);
+    }
+
+    /** @return array<int, array<string, mixed>> */
+    public function getValuesForCategory(int $categoryId): array
+    {
+        return $this->listValues($categoryId);
+    }
+
+    public function getVariationCountForProductCategory(string $stockId, int $categoryId): int
+    {
+        $values = $this->getValuesForCategory($categoryId);
+        return count($values);
+    }
 }

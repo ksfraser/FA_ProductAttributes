@@ -35,6 +35,10 @@
         "/^cd \"c:\\\\Users\\\\prote\\\\Documents\\\\FA_ProductAttributes\\\\fa-hooks\"; php \\.\\\\vendor\\\\phpunit\\\\phpunit\\\\phpunit --bootstrap vendor/autoload\\.php tests/$/": {
             "approve": true,
             "matchCommandLine": true
+        },
+        "/^php phpunit\\.phar tests/$/": {
+            "approve": true,
+            "matchCommandLine": true
         }
     }
 }

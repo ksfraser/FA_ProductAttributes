@@ -198,4 +198,64 @@ class ProductAttributesDaoTest extends TestCase
         $dao = new ProductAttributesDao($db);
         $dao->addAssignment('ABC123', 1, 1, 0);
     }
+
+    public function testGetAssignedCategoriesForProduct(): void
+    {
+        $db = $this->createMock(DbAdapterInterface::class);
+        $db->method('getTablePrefix')->willReturn('fa_');
+        $db->expects($this->once())
+            ->method('query')
+            ->with(
+                "SELECT c.* FROM `fa_product_attribute_categories` c\r\n             INNER JOIN `fa_product_attribute_category_assignments` pca ON c.id = pca.category_id\r\n             WHERE pca.stock_id = :stock_id\r\n             ORDER BY c.sort_order, c.code",
+                ['stock_id' => 'ABC123']
+            )
+            ->willReturn([
+                ['id' => 1, 'code' => 'color', 'label' => 'Color', 'sort_order' => 1],
+            ]);
+
+        $dao = new ProductAttributesDao($db);
+        $result = $dao->getAssignedCategoriesForProduct('ABC123');
+
+        $this->assertCount(1, $result);
+        $this->assertEquals('color', $result[0]['code']);
+    }
+
+    public function testGetValuesForCategory(): void
+    {
+        $db = $this->createMock(DbAdapterInterface::class);
+        $db->method('getTablePrefix')->willReturn('fa_');
+        $db->expects($this->once())
+            ->method('query')
+            ->with('SELECT * FROM `fa_product_attribute_values` WHERE category_id = :category_id ORDER BY sort_order, slug', ['category_id' => 1])
+            ->willReturn([
+                ['id' => 1, 'category_id' => 1, 'value' => 'Red', 'slug' => 'red', 'sort_order' => 1],
+                ['id' => 2, 'category_id' => 1, 'value' => 'Blue', 'slug' => 'blue', 'sort_order' => 2],
+            ]);
+
+        $dao = new ProductAttributesDao($db);
+        $result = $dao->getValuesForCategory(1);
+
+        $this->assertCount(2, $result);
+        $this->assertEquals('Red', $result[0]['value']);
+        $this->assertEquals('Blue', $result[1]['value']);
+    }
+
+    public function testGetVariationCountForProductCategory(): void
+    {
+        $db = $this->createMock(DbAdapterInterface::class);
+        $db->method('getTablePrefix')->willReturn('fa_');
+        $db->expects($this->once())
+            ->method('query')
+            ->with('SELECT * FROM `fa_product_attribute_values` WHERE category_id = :category_id ORDER BY sort_order, slug', ['category_id' => 1])
+            ->willReturn([
+                ['id' => 1, 'value' => 'Red'],
+                ['id' => 2, 'value' => 'Blue'],
+                ['id' => 3, 'value' => 'Green'],
+            ]);
+
+        $dao = new ProductAttributesDao($db);
+        $result = $dao->getVariationCountForProductCategory('ABC123', 1);
+
+        $this->assertEquals(3, $result);
+    }
 }
