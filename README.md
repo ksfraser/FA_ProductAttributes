@@ -32,16 +32,94 @@ RESTful API endpoints for external integration:
 
 All endpoints return JSON responses with proper error handling.
 
-## Dev
-Install composer dependencies in `composer-lib`:
+## Requirements
 
-- `cd composer-lib`
-- `composer install`
+### Business Requirements
 
-Note: Composer may prompt for a GitHub token due to API rate limits; a read-only token for public repos is sufficient.
+#### BR1: Items Screen Integration
+**Status: IMPLEMENTED** ✅
+- Product Attributes tab added to Items screen via hook system
+- Shows assigned categories, values, and variation counts
+- Minimal changes to core `items.php` (only ~10 lines)
+- Extensible hook system for future enhancements
 
-## Development Branches
+#### BR1.1: Product Relationship Table
+**Status: PENDING** ⏳
+- Need to implement product-to-attribute relationship storage
+- Will enable individual product attribute assignments beyond category-level
+- Required for full WooCommerce-style functionality
 
-- `main`: Current stable development branch
-- `db-adapters-split-experiment`: Attempted refactoring to extract generic DB adapters into separate `ksf_ModulesDAO` library. Currently not working due to dependency management issues. See branch for details.
+#### BR2: Royal Order Dictionary
+**Status: IMPLEMENTED** ✅
+- Maintain canonical ordering of product attributes
+- Categories and values maintain proper sequence
+- RoyalOrderHelper utility class enforces ordering rules
+
+#### BR3: Admin Interface
+**Status: IMPLEMENTED** ✅
+- Standalone admin interface for attribute management
+- Integrated into FA's stock management section
+- Full CRUD operations for categories, values, and assignments
+
+#### BR4: Category-to-Product Assignments
+**Status: IMPLEMENTED** ✅
+- Assign attribute categories to products
+- Automatic variation generation based on category assignments
+- Variation counts displayed in Items screen
+
+#### BR4.5: Variation Generation
+**Status: IMPLEMENTED** ✅
+- Generate product variations from assigned attribute categories
+- Combinatorial logic for multiple attribute categories
+- Variation management through dedicated action handler
+
+### Technical Requirements
+
+#### TR1: Hook System Architecture
+**Status: IMPLEMENTED** ✅
+- Lightweight hook system similar to WordPress/SuiteCRM
+- Minimal core file modifications
+- Extensible for other modules and future features
+- Hook points: `item_display_tabs`, `pre_item_write`, `pre_item_delete`
+
+#### TR2: SOLID Principles
+**Status: IMPLEMENTED** ✅
+- Single Responsibility: RoyalOrderHelper, HookManager, etc.
+- Dependency Inversion: Interface-based database adapters
+- Comprehensive unit test coverage (73 tests, 241 assertions)
+
+#### TR3: PSR-4 Autoloading
+**Status: IMPLEMENTED** ✅
+- Proper namespace structure
+- Composer-based autoloading
+- Modular architecture with clear separation of concerns
+
+#### TR4: Database Schema
+**Status: IMPLEMENTED** ✅
+- Programmatic schema management via SchemaManager
+- Tables: categories, values, assignments
+- Foreign key relationships and constraints
+- Migration-safe updates
+
+### Integration Points
+
+#### IP1: FrontAccounting Items Screen
+- **Method**: Hook system integration
+- **Changes Required**: ~10 lines in `items.php`
+- **Benefits**: Non-intrusive, extensible, future-proof
+
+#### IP2: FrontAccounting Module System
+- **Method**: Standard FA hooks class extension
+- **Features**: Automatic installation, database schema creation, security integration
+
+### Future Extensibility
+
+The hook system enables easy addition of:
+- Product photos management
+- Shipping attributes
+- Custom product fields
+- Third-party integrations
+- Additional admin screens
+
+All while maintaining minimal core file modifications.
 

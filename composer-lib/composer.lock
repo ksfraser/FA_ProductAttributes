@@ -4,8 +4,53 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "67186baa72aab382ac6c411d8b142e62",
+    "content-hash": "12da7ba4baebef60ca1a9eb869a50d9b",
     "packages": [
+        {
+            "name": "ksfraser/fa-hooks",
+            "version": "dev-main",
+            "dist": {
+                "type": "path",
+                "url": "../fa-hooks",
+                "reference": "7dde677b3373881bd069104665ae99373796476d"
+            },
+            "require": {
+                "php": ">=7.3"
+            },
+            "require-dev": {
+                "phpunit/phpunit": "^9.0"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Ksfraser\\FA_Hooks\\": "src/"
+                }
+            },
+            "autoload-dev": {
+                "psr-4": {
+                    "Ksfraser\\FA_Hooks\\Tests\\": "tests/"
+                }
+            },
+            "scripts": {
+                "test": [
+                    "phpunit"
+                ]
+            },
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Kevin Fraser",
+                    "email": "kevin@ksfraser.com"
+                }
+            ],
+            "description": "Lightweight hook system for FrontAccounting module extensions",
+            "transport-options": {
+                "symlink": false,
+                "relative": true
+            }
+        },
         {
             "name": "ksfraser/html",
             "version": "1.0.0",
@@ -1834,7 +1879,9 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {},
+    "stability-flags": {
+        "ksfraser/fa-hooks": 20
+    },
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {

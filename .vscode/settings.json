@@ -27,6 +27,14 @@
         "/^cd composer-lib ; php phpunit\\.phar$/": {
             "approve": true,
             "matchCommandLine": true
+        },
+        "/^cd c:\\\\Users\\\\prote\\\\Documents\\\\FA_ProductAttributes\\\\composer-lib ; php -l src/Ksfraser/FA_ProductAttributes/Services/CategoryService\\.php$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^cd \"c:\\\\Users\\\\prote\\\\Documents\\\\FA_ProductAttributes\\\\fa-hooks\"; php \\.\\\\vendor\\\\phpunit\\\\phpunit\\\\phpunit --bootstrap vendor/autoload\\.php tests/$/": {
+            "approve": true,
+            "matchCommandLine": true
         }
     }
 }

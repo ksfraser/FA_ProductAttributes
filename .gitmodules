@@ -1,0 +1,3 @@
+[submodule "fa-hooks"]
+	path = fa-hooks
+	url = https://github.com/ksfraser/FA_Hooks.git
