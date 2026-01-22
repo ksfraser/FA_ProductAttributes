@@ -58,6 +58,18 @@ class ActionHandler
                     $handler = new GenerateVariationsAction($this->dao, $this->dbAdapter);
                     return $handler->handle($postData);
 
+                case 'update_category_assignments':
+                    $handler = new UpdateCategoryAssignmentsAction($this->dao);
+                    return $handler->handle($postData);
+
+                case 'create_child':
+                    $handler = new CreateChildAction($this->dao);
+                    return $handler->handle($postData);
+
+                case 'update_product_types':
+                    $handler = new UpdateProductTypesAction($this->dao);
+                    return $handler->handle($postData);
+
                 default:
                     return null;
             }

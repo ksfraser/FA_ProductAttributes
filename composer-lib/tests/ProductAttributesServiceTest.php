@@ -50,7 +50,7 @@ class ProductAttributesServiceTest extends TestCase
                     'value_label' => 'Red'
                 ]
             ]);
-        $dao->expects($this->once())
+        $dao->expects($this->exactly(2))
             ->method('listCategories')
             ->willReturn([
                 ['id' => 1, 'code' => 'COLOR', 'label' => 'Color']

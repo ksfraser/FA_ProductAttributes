@@ -100,6 +100,34 @@ class ProductAttributesService
                     </table>
                 <?php endif; ?>
 
+                <h4><?php echo _('Manage Category Assignments'); ?></h4>
+                <p><?php echo _('Assign entire categories of attributes to this product.'); ?></p>
+
+                <form method="post" action="">
+                    <?php
+                    // Get all available categories
+                    $allCategories = $this->dao->listCategories();
+                    $assignedCategoryIds = array_column($assignedCategories, 'id');
+                    ?>
+
+                    <div style="max-height: 200px; overflow-y: auto; border: 1px solid #ccc; padding: 10px; margin-bottom: 10px;">
+                        <?php foreach ($allCategories as $category): ?>
+                            <label style="display: block; margin-bottom: 5px;">
+                                <input type="checkbox"
+                                       name="assigned_categories[]"
+                                       value="<?php echo $category['id']; ?>"
+                                       <?php echo in_array($category['id'], $assignedCategoryIds) ? 'checked' : ''; ?>>
+                                <?php echo htmlspecialchars($category['label'] . ' (' . $category['code'] . ')'); ?>
+                            </label>
+                        <?php endforeach; ?>
+                    </div>
+
+                    <div style="margin-bottom: 20px;">
+                        <button type="submit" name="update_category_assignments" value="1" class="btn">
+                            <?php echo _('Update Category Assignments'); ?>
+                        </button>
+                    </div>
+
                 <h4><?php echo _('Manage Individual Value Assignments'); ?></h4>
                 <p><?php echo _('Select specific attribute values for this product. Individual assignments override category assignments.'); ?></p>
 
@@ -159,6 +187,28 @@ class ProductAttributesService
     public function saveProductAttributes(string $stockId, array $postData): void
     {
         try {
+            // Handle category assignments
+            if (isset($postData['assigned_categories']) && is_array($postData['assigned_categories'])) {
+                // Get current assignments
+                $currentAssignments = $this->dao->getAssignedCategoriesForProduct($stockId);
+                $currentCategoryIds = array_column($currentAssignments, 'id');
+
+                // Convert to integers
+                $newCategoryIds = array_map('intval', $postData['assigned_categories']);
+
+                // Remove assignments that are no longer selected
+                $toRemove = array_diff($currentCategoryIds, $newCategoryIds);
+                foreach ($toRemove as $categoryId) {
+                    $this->dao->removeCategoryAssignment($stockId, $categoryId);
+                }
+
+                // Add new assignments
+                $toAdd = array_diff($newCategoryIds, $currentCategoryIds);
+                foreach ($toAdd as $categoryId) {
+                    $this->dao->addCategoryAssignment($stockId, $categoryId);
+                }
+            }
+
             // Handle individual value assignments
             if (isset($postData['attribute_values']) && is_array($postData['attribute_values'])) {
                 // First, remove all existing individual assignments for this product

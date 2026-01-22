@@ -280,4 +280,145 @@ class ProductAttributesDao
         $values = $this->getValuesForCategory($categoryId);
         return count($values);
     }
-}
+
+    /**
+     * Get products by their type (simple, variable, variation)
+     *
+     * @param array $types Array of types to filter by
+     * @return array List of products with stock_id, description, and type
+     */
+    public function getProductsByType(array $types): array
+    {
+        $placeholders = str_repeat('?,', count($types) - 1) . '?';
+        $sql = "SELECT stock_id, description, '' as type FROM " . $this->db->escapeTableName('stock_master') . "
+                WHERE stock_id NOT IN (
+                    SELECT DISTINCT parent_stock_id FROM " . $this->db->escapeTableName('product_attribute_assignments') . "
+                    WHERE parent_stock_id IS NOT NULL AND parent_stock_id != ''
+                )";
+
+        // For now, we'll return all products that are not variations (don't have parent_stock_id)
+        // In a real implementation, you'd need to determine the type from some field or logic
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([]);
+        return $stmt->fetchAll(\PDO::FETCH_ASSOC);
+    }
+
+    /**
+     * Get all products from the stock_master table
+     *
+     * @return array List of all products with stock_id and description
+     */
+    public function getAllProducts(): array
+    {
+        $sql = "SELECT stock_id, description FROM " . $this->db->escapeTableName('stock_master') . "
+                ORDER BY stock_id";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([]);
+        return $stmt->fetchAll(\PDO::FETCH_ASSOC);
+    }
+
+    /**
+     * Get the parent product for a variation
+     *
+     * @param string $stockId The variation product stock ID
+     * @return array|null Parent product data or null if not a variation
+     */
+    public function getProductParent(string $stockId): ?array
+    {
+        $sql = "SELECT parent_stock_id FROM " . $this->db->escapeTableName('product_attribute_assignments') . "
+                WHERE stock_id = ? AND parent_stock_id IS NOT NULL AND parent_stock_id != ''
+                LIMIT 1";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([$stockId]);
+        $result = $stmt->fetch(\PDO::FETCH_ASSOC);
+
+        if ($result && !empty($result['parent_stock_id'])) {
+            // Get parent product details
+            $parentSql = "SELECT stock_id, description FROM " . $this->db->escapeTableName('stock_master') . "
+                          WHERE stock_id = ?";
+            $parentStmt = $this->db->prepare($parentSql);
+            $parentStmt->execute([$result['parent_stock_id']]);
+            return $parentStmt->fetch(\PDO::FETCH_ASSOC);
+        }
+
+        return null;
+    }
+
+    /**
+     * Get the database adapter
+     */
+    public function getDbAdapter(): DbAdapterInterface
+    {
+        return $this->db;
+    }
+
+    /**
+     * Clear parent relationship for a product
+     */
+    public function clearParentRelationship(string $stockId): void
+    {
+        $sql = "UPDATE " . $this->db->escapeTableName('product_attribute_assignments') . "
+                SET parent_stock_id = NULL WHERE stock_id = ?";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([$stockId]);
+    }
+
+    /**
+     * Set parent relationship for a variation
+     */
+    public function setParentRelationship(string $stockId, string $parentStockId): void
+    {
+        $sql = "UPDATE " . $this->db->escapeTableName('product_attribute_assignments') . "
+                SET parent_stock_id = ? WHERE stock_id = ?";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([$parentStockId, $stockId]);
+    }
+
+    /**
+     * Get parent product data from stock_master
+     */
+    public function getParentProductData(string $stockId): ?array
+    {
+        $sql = "SELECT * FROM " . $this->db->escapeTableName('stock_master') . " WHERE stock_id = ?";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([$stockId]);
+        return $stmt->fetch(\PDO::FETCH_ASSOC);
+    }
+
+    /**
+     * Create child product in stock_master
+     */
+    public function createChildProduct(string $childStockId, array $parentData): void
+    {
+        // Copy most fields from parent, but modify description and set as service item (variation)
+        $childData = $parentData;
+        $childData['stock_id'] = $childStockId;
+        $childData['description'] = $parentData['description'] . ' (Variation)';
+        $childData['long_description'] = ($parentData['long_description'] ?? '') . ' - Variation of ' . $parentData['stock_id'];
+        $childData['mb_flag'] = 'D'; // Dimension/service item for variations
+
+        // Remove fields that shouldn't be copied
+        unset($childData['inactive']);
+
+        // Build insert query
+        $fields = array_keys($childData);
+        $placeholders = array_fill(0, count($fields), '?');
+
+        $sql = "INSERT INTO " . $this->db->escapeTableName('stock_master') . " (" . implode(', ', $fields) . ") VALUES (" . implode(', ', $placeholders) . ")";
+
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute(array_values($childData));
+    }
+
+    /**
+     * Copy parent's category assignments to child
+     */
+    public function copyParentCategoryAssignments(string $childStockId, string $parentStockId): void
+    {
+        $sql = "INSERT INTO " . $this->db->escapeTableName('product_attribute_category_assignments') . "
+                (stock_id, category_id)
+                SELECT ?, category_id FROM " . $this->db->escapeTableName('product_attribute_category_assignments') . "
+                WHERE stock_id = ?";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([$childStockId, $parentStockId]);
+    }

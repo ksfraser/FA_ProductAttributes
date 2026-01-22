@@ -39,6 +39,10 @@
         "/^php phpunit\\.phar tests/$/": {
             "approve": true,
             "matchCommandLine": true
+        },
+        "/^php test_instantiation\\.php$/": {
+            "approve": true,
+            "matchCommandLine": true
         }
     }
 }

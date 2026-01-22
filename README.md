@@ -7,9 +7,39 @@ A comprehensive Product Attributes module for FrontAccounting that enables WooCo
 - **Category-based Attributes**: Organize product attributes into logical categories (Color, Size, Material, etc.)
 - **Product Variations**: Automatically generate all possible product combinations
 - **Flexible Assignment**: Assign attributes at individual product level or category level
+- **Parent-Child Relationships**: Support for product variations with parent-child relationships
+- **Product Type Management**: Manual management of product types (Simple, Variable, Variation)
 - **Royal Order Sorting**: Maintain consistent attribute display order
 - **Hook-based Integration**: Minimal changes to core FrontAccounting files
-- **Admin Interface**: Complete web-based management interface
+- **Admin Interface**: Complete web-based management interface with 4 tabs
+- **RESTful API**: Full API for external integrations
+- **Comprehensive Testing**: 140+ unit tests ensuring reliability
+
+## Architecture Overview
+
+### Product Types
+
+The system supports three product types:
+
+- **Simple Products**: Standard products without variations
+- **Variable Products**: Parent products that can have variations
+- **Variation Products**: Child products that inherit attributes from parents
+
+### Parent-Child Relationships
+
+- Variations maintain parent relationships in the database
+- Category assignments are inherited from parent to child
+- Individual value assignments can be customized per variation
+- Parent relationships are managed through the Product Types admin tab
+
+### Database Schema
+
+The module uses 4 main tables:
+
+- `product_attribute_categories`: Attribute categories (Color, Size, etc.)
+- `product_attribute_values`: Values within categories (Red, Blue, XL, etc.)
+- `product_attribute_assignments`: Links products to specific attribute values
+- `product_attribute_category_assignments`: Links products to entire categories
 
 ## Installation
 
@@ -108,30 +138,47 @@ if (isset($hooks)) {
 
 ## Usage
 
-### Managing Categories
+### Admin Interface Tabs
 
+The Product Attributes module provides a comprehensive admin interface accessible via **Inventory → Product Attributes** with four main tabs:
+
+#### Categories Tab
 1. Go to **Inventory → Product Attributes → Categories**
 2. Create attribute categories (Color, Size, Material, etc.)
 3. Set display order and activation status
 
-### Managing Values
-
+#### Values Tab
 1. Go to **Inventory → Product Attributes → Values**
 2. Add values to categories (Red, Blue, Green for Color)
 3. Set sort order for consistent display
 
-### Assigning to Products
+#### Assignments Tab
+1. Go to **Inventory → Product Attributes → Assignments**
+2. Assign entire categories to products (all sizes, all colors)
+3. Create child products (variations) from parent products
+4. Individual assignments override category assignments
+
+#### Product Types Tab
+1. Go to **Inventory → Product Attributes → Product Types**
+2. Manage product type classifications (Simple, Variable, Variation)
+3. Set up parent-child relationships for variations
+4. Convert between product types while maintaining relationships
+
+### Product Integration
+
+#### Assigning to Products
 
 1. Open any item in **Inventory → Items**
 2. Click the **Product Attributes** tab
 3. Assign categories and specific values to the product
 4. The system will show possible variation counts
 
-### Category-Level Assignments
+#### Creating Variations
 
-1. Go to **Inventory → Product Attributes → Category Assignments**
-2. Assign entire categories to products (all sizes, all colors)
-3. Individual assignments override category assignments
+1. In the **Assignments** tab, select a Variable product
+2. Assign attribute categories to the product
+3. Click **"Create Child Product"** to generate variations
+4. Variations inherit category assignments from their parent
 
 ## API Reference
 
@@ -141,22 +188,72 @@ if (isset($hooks)) {
 - `pre_item_write`: Modify item data before saving
 - `pre_item_delete`: Handle cleanup before deletion
 
+### RESTful API Endpoints
+
+The module provides a complete RESTful API for external integrations:
+
+#### Categories API
+- `GET /api/categories` - List all categories
+- `POST /api/categories` - Create new category
+- `PUT /api/categories/{id}` - Update category
+- `DELETE /api/categories/{id}` - Delete category
+
+#### Values API
+- `GET /api/values` - List all values
+- `GET /api/values?category_id={id}` - List values for category
+- `POST /api/values` - Create new value
+- `PUT /api/values/{id}` - Update value
+- `DELETE /api/values/{id}` - Delete value
+
+#### Assignments API
+- `GET /api/assignments/{stock_id}` - Get assignments for product
+- `POST /api/assignments` - Create assignment
+- `DELETE /api/assignments/{id}` - Delete assignment
+
+#### Product Types API
+- `GET /api/product-types` - List all products with types
+- `POST /api/product-types/update` - Update product types
+
 ### Classes
 
-- `ProductAttributesDao`: Data access layer
-- `ActionHandler`: Business logic dispatcher
-- Various Action classes for specific operations
+- `ProductAttributesDao`: Data access layer with 20+ methods
+- `ActionHandler`: Business logic dispatcher for admin operations
+- `ProductAttributesService`: Main service for UI and data operations
+- Various Action classes: CreateChildAction, UpdateProductTypesAction, etc.
+- UI Tab classes: CategoriesTab, ValuesTab, AssignmentsTab, ProductTypesTab
 
 ## Development
 
+### Testing
+
+The module includes comprehensive test coverage with 140+ unit tests:
+
 ```bash
-# Run tests
+# Run all tests
 cd composer-lib
-php phpunit.phar
+php vendor/bin/phpunit tests/
 
 # Run specific test suite
-php phpunit.phar tests/ProductAttributesDaoTest.php
+php vendor/bin/phpunit tests/ProductAttributesDaoTest.php
+
+# Run with coverage report
+php vendor/bin/phpunit tests/ --coverage-html coverage/
 ```
+
+### Test Structure
+
+- **Unit Tests**: Individual class testing with mocks
+- **Integration Tests**: Database and service layer testing
+- **Action Tests**: Admin operation testing
+- **API Tests**: RESTful endpoint testing
+
+### Code Quality
+
+- **PSR-4 Autoloading**: Standard PHP namespace structure
+- **SOLID Principles**: Single Responsibility, Open/Closed, etc.
+- **Dependency Injection**: Clean architecture with DI container
+- **Comprehensive Error Handling**: Proper exception management
+- **Input Validation**: All user inputs validated and sanitized
 
 ## Troubleshooting
 

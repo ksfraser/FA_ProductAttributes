@@ -30,8 +30,12 @@ $files = [
     __DIR__ . '/../src/Ksfraser/FA_ProductAttributes/Actions/DeleteCategoryAction.php',
     __DIR__ . '/../src/Ksfraser/FA_ProductAttributes/Actions/DeleteValueAction.php',
     __DIR__ . '/../src/Ksfraser/FA_ProductAttributes/Actions/GenerateVariationsAction.php',
+    __DIR__ . '/../src/Ksfraser/FA_ProductAttributes/Actions/UpdateCategoryAssignmentsAction.php',
+    __DIR__ . '/../src/Ksfraser/FA_ProductAttributes/Actions/CreateChildAction.php',
+    __DIR__ . '/../src/Ksfraser/FA_ProductAttributes/Actions/UpdateProductTypesAction.php',
     __DIR__ . '/../src/Ksfraser/FA_ProductAttributes/Install/ComposerInstaller.php',
     __DIR__ . '/../src/Ksfraser/FA_ProductAttributes/UI/ProductAttributesUI.php',
+    __DIR__ . '/../src/Ksfraser/FA_ProductAttributes/UI/ProductTypesTab.php',
     __DIR__ . '/../src/Ksfraser/FA_ProductAttributes/Handler/ProductAttributesHandler.php',
 ];
 
