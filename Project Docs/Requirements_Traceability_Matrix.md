@@ -39,6 +39,9 @@
 | BR4.5.1 | Generate variations from category assignments | Create all value combinations as child products | GenerateVariationsAction | TC53: Test variation generation | Completed |
 | BR4.5.2 | Royal Order stock_id generation | Format variation stock_ids by Royal Order | Slug concatenation in order | TC54: Test Royal Order stock_id format | Completed |
 | BR4.5.3 | Parent-child product relationships | Set parent_stock_id for variations | Database relationship creation | TC55: Test parent-child linkage | Completed |
+| BR1.8 | Product relationship table | Show simple/variable/variation relationships | Table with Type, Parent, Status columns | TC56: Test relationship display | Pending |
+| BR1.9 | WooCommerce-style Items screen integration | Assign categories and generate variations from Items screen | UI modifications to items.php | TC57: Test Items screen functionality | Pending |
+| BR1.10 | Direct variation generation from Items | Create variations without admin screen | Items screen TAB with generation logic | TC58: Test direct generation | Pending |
 
 | BR6 | Custom pricing per variation | Individual prices | Price update sub-screen | TC24: Test pricing | Pending |
 | BR6.1 | Integrate with FA_BulkPriceUpdate module | Use external bulk pricing if available | Check for module and call its function | TC25: Test integration | Pending |

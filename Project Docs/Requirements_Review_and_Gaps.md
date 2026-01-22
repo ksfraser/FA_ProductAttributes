@@ -26,6 +26,29 @@
 **Testing**: 12 additional unit tests added, total 73 tests passing with 241 assertions.
 **Impact**: Improved code maintainability, consistent UI, and better user experience.
 
+## Major Gaps Identified
+
+### Items Screen Integration (CRITICAL - MISSING)
+**Issue**: Core functionality is only available in admin screen, not in the Items screen where users expect it.
+**Required**: 
+- "Product Attributes" TAB in items.php (Inventory > Items)
+- WooCommerce-style interface for managing variable products
+- Direct category assignment and variation generation from individual product screens
+- Parent designation and variation management
+
+### Product Relationship Table (MISSING)
+**Issue**: No way to see the relationships between simple products, parent products, and their variations.
+**Required**:
+- Table showing product hierarchy (Simple/Parent/Variation)
+- Visual representation of parent-child relationships
+- Filtering options for different product types
+- Quick navigation between related products
+
+### Core Workflow Inversion (ARCHITECTURAL ISSUE)
+**Current State**: Admin manages categories → Admin assigns categories to products → Admin generates variations
+**Required State**: Admin manages categories → User assigns categories in Items screen → User generates variations in Items screen
+**Impact**: Current implementation puts variation management in the wrong place
+
 ## Identified Gaps and Considerations
 Based on the module's purpose (product attributes and variations in FrontAccounting), the following gaps and enhancements have been identified for completeness:
 

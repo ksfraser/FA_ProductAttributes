@@ -10,15 +10,31 @@ This document details the functional behavior of the Product Attributes module f
 - **Process**:
   1. Display existing product details.
   2. Add "Product Attributes" TAB.
-  3. Check if product is parent (parent flag = true); if yes, show TAB with "Create Variations", "Make Inactive", "Reactivate Variations", "Create Missing Variations" buttons.
-  4. If not parent, show "Assign Parent" dropdown with sanity check and force option.
+  3. Check if product is parent (parent flag = true); if yes, show TAB with:
+     - Table showing all child variations with their attributes
+     - "Create Variations", "Make Inactive", "Reactivate Variations", "Create Missing Variations" buttons
+  4. If not parent, show:
+     - "Assign Parent" dropdown with sanity check and force option
+     - Table showing parent-child relationships if applicable
   5. "Make Inactive": Deactivate parent, default deactivate 0 stock variations, warn on stock >0.
   6. "Reactivate Variations": Rebuild combinations, activate inactive, prompt for missing.
   7. "Create Missing Variations": Generate missing combinations, create selected.
   8. On TAB click, load associated attributes from DB.
   9. Show list of attributes with add/remove options.
-  10. On save, update DB associations.
-- **Output**: Updated product with attributes saved.
+  10. Allow assignment of categories to the product (similar to WooCommerce variable products).
+  11. Generate variations directly from the Items screen.
+- **Output**: Updated product with attributes saved and variations created.
+
+### FR1.1: Product Relationship Table
+- **Trigger**: User views product lists or searches for products.
+- **Process**:
+  1. Display table showing product relationships with columns:
+     - Stock ID, Description, Type (Simple/Parent/Variation), Parent Stock ID, Status
+  2. Type indicators: Simple (no parent, no children), Parent (has children), Variation (has parent)
+  3. Filter options to show only parents, only variations, or all products
+  4. Quick actions: Navigate to parent, view all variations, etc.
+  5. Visual hierarchy showing parent-child relationships
+- **Output**: Clear view of product relationships and hierarchy.
 
 ### FR2: Attribute Association
 - **Trigger**: User on Product Attributes TAB.
