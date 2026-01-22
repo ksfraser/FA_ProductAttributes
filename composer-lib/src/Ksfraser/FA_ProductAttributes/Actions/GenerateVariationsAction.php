@@ -3,17 +3,17 @@
 namespace Ksfraser\FA_ProductAttributes\Actions;
 
 use Ksfraser\FA_ProductAttributes\Dao\ProductAttributesDao;
-use Ksfraser\FA_ProductAttributes\Db\FrontAccountingDbAdapter;
+use Ksfraser\FA_ProductAttributes\Db\DbAdapterInterface;
 use Ksfraser\FA_ProductAttributes\UI\RoyalOrderHelper;
 
 class GenerateVariationsAction
 {
     /** @var ProductAttributesDao */
     private $dao;
-    /** @var FrontAccountingDbAdapter */
+    /** @var DbAdapterInterface */
     private $dbAdapter;
 
-    public function __construct(ProductAttributesDao $dao, FrontAccountingDbAdapter $dbAdapter)
+    public function __construct(ProductAttributesDao $dao, DbAdapterInterface $dbAdapter)
     {
         $this->dao = $dao;
         $this->dbAdapter = $dbAdapter;
@@ -99,12 +99,12 @@ class GenerateVariationsAction
             $newCombinations = [];
             foreach ($combinations as $combination) {
                 foreach ($values as $value) {
-                    $newCombinations[] = array_merge($combination, [
+                    $newCombinations[] = array_merge($combination, [[
                         'category_id' => $categoryId,
                         'value_id' => $value['id'],
                         'value_slug' => $value['slug'],
                         'value_label' => $value['value']
-                    ]);
+                    ]]);
                 }
             }
             $combinations = $newCombinations;

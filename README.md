@@ -1,127 +1,183 @@
 # FA_ProductAttributes
 
-FrontAccounting-compatible Product Attributes module.
+A comprehensive Product Attributes module for FrontAccounting that enables WooCommerce-style product variations through category-based attribute assignments.
 
-## Goal
-Maintain a canonical, ordered dictionary of product attributes (the “royal order of adjectives”) and (optionally) attach them to products.
+## Features
 
-- Level 1: attribute categories (e.g. `color`, `size_alpha`, `size_numeric`)
-- Level 2: attribute values/adjectives (e.g. `red`, `xl`, `34`)
-## Status: **COMPLETE** ✅ (100%)
-All business and technical requirements implemented. Full WooCommerce-style product attribute management with individual product-to-attribute relationships, category-level assignments, and comprehensive admin interface.
-## Admin UI
-- Standalone: `public/index.php`
-- FrontAccounting wrapper: `product_attributes_admin.php`
+- **Category-based Attributes**: Organize product attributes into logical categories (Color, Size, Material, etc.)
+- **Product Variations**: Automatically generate all possible product combinations
+- **Flexible Assignment**: Assign attributes at individual product level or category level
+- **Royal Order Sorting**: Maintain consistent attribute display order
+- **Hook-based Integration**: Minimal changes to core FrontAccounting files
+- **Admin Interface**: Complete web-based management interface
 
-### Features
-- **Categories Management**: Create, edit, delete attribute categories with Royal Order sequencing
-- **Values Management**: Add, edit, delete attribute values within categories
-- **Assignments Management**: Associate attributes with products
-- **Table Actions**: Each table row includes Edit and Delete buttons with confirmation dialogs- **Intelligent Deletion**: 
-  - Permanently delete unused categories/values when safe
-  - Deactivate items in use to preserve data integrity
-  - Cascade delete removes categories and all related values- **Validation**: Prevents deletion of items currently in use by products
-- **Form Pre-filling**: Edit buttons load existing data into forms for easy modification
-- **Data Integrity**: Edit operations properly update existing records instead of creating duplicates
-- **UI Consistency**: Delete actions use JavaScript links consistent with FrontAccounting patterns
+## Installation
 
-### API
-RESTful API endpoints for external integration:
-- `GET/POST/PUT/DELETE /api/categories` - Manage categories
-- `GET/POST/PUT/DELETE /api/categories/{id}/values` - Manage values
-- `GET/POST/PUT/DELETE /api/products/{stockId}/assignments` - Manage product assignments
+### Prerequisites
 
-All endpoints return JSON responses with proper error handling.
+- FrontAccounting 2.3.22 or later
+- PHP 7.3+
+- MySQL 5.7+ or MariaDB 10.0+
+- Composer (for dependency management)
 
-## Requirements
+### Step 1: Download the Module
 
-### Business Requirements
+Since this is a GitHub repository (not available on Packagist), you need to download it manually:
 
-#### BR1: Items Screen Integration
-**Status: IMPLEMENTED** ✅
-- Product Attributes tab added to Items screen via hook system
-- Shows assigned categories, values, and variation counts
-- Minimal changes to core `items.php` (only ~10 lines)
-- Extensible hook system for future enhancements
+```bash
+# Clone the repository into your FA modules directory
+cd /path/to/frontaccounting/modules
+git clone https://github.com/yourusername/FA_ProductAttributes.git FA_ProductAttributes
 
-#### BR1.1: Product Relationship Table
-**Status: IMPLEMENTED** ✅
-- Individual product-to-attribute value relationship storage implemented
-- `assignments` table stores specific value assignments per product
-- Items screen now supports granular attribute assignment beyond category-level
-- Individual assignments override category assignments for full WooCommerce-style functionality
+# Or download the ZIP and extract to modules/FA_ProductAttributes
+```
 
-#### BR2: Royal Order Dictionary
-**Status: IMPLEMENTED** ✅
-- Maintain canonical ordering of product attributes
-- Categories and values maintain proper sequence
-- RoyalOrderHelper utility class enforces ordering rules
+### Step 2: Install Dependencies
 
-#### BR3: Admin Interface
-**Status: IMPLEMENTED** ✅
-- Standalone admin interface for attribute management
-- Integrated into FA's stock management section
-- Full CRUD operations for categories, values, and assignments
+```bash
+cd /path/to/frontaccounting/modules/FA_ProductAttributes
+composer install
+```
 
-#### BR4: Category-to-Product Assignments
-**Status: IMPLEMENTED** ✅
-- Assign attribute categories to products
-- Automatic variation generation based on category assignments
-- Variation counts displayed in Items screen
+### Step 3: Database Setup
 
-#### BR4.5: Variation Generation
-**Status: IMPLEMENTED** ✅
-- Generate product variations from assigned attribute categories
-- Combinatorial logic for multiple attribute categories
-- Variation management through dedicated action handler
+The module will automatically create its database schema during installation, but you can also run the SQL manually:
 
-### Technical Requirements
+```bash
+mysql -u your_username -p your_database < sql/schema.sql
+mysql -u your_username -p your_database < sql/seed.sql
+```
 
-#### TR1: Hook System Architecture
-**Status: IMPLEMENTED** ✅
-- Lightweight hook system similar to WordPress/SuiteCRM
-- Minimal core file modifications
-- Extensible for other modules and future features
-- Hook points: `item_display_tabs`, `pre_item_write`, `pre_item_delete`
+### Step 4: Activate the Module
 
-#### TR2: SOLID Principles
-**Status: IMPLEMENTED** ✅
-- Single Responsibility: RoyalOrderHelper, HookManager, etc.
-- Dependency Inversion: Interface-based database adapters
-- Comprehensive unit test coverage (73 tests, 241 assertions)
+1. Log into FrontAccounting as an administrator
+2. Go to **Setup → Install/Update Modules**
+3. Find "Product Attributes" in the module list
+4. Click **Activate**
 
-#### TR3: PSR-4 Autoloading
-**Status: IMPLEMENTED** ✅
-- Proper namespace structure
-- Composer-based autoloading
-- Modular architecture with clear separation of concerns
+### Step 5: Integrate with Items Screen
 
-#### TR4: Database Schema
-**Status: IMPLEMENTED** ✅
-- Programmatic schema management via SchemaManager
-- Tables: categories, values, assignments
-- Foreign key relationships and constraints
-- Migration-safe updates
+To enable product attributes in the Items screen, you need to make minimal changes to `inventory/items.php`. Add the following code:
 
-### Integration Points
+#### Add Hook System Include (near the top of items.php, after other includes)
 
-#### IP1: FrontAccounting Items Screen
-- **Method**: Hook system integration
-- **Changes Required**: ~10 lines in `items.php`
-- **Benefits**: Non-intrusive, extensible, future-proof
+```php
+// Include Product Attributes hook system
+$module_path = $path_to_root . '/modules/FA_ProductAttributes';
+if (file_exists($module_path . '/fa_hooks.php')) {
+    require_once $module_path . '/fa_hooks.php';
+    $hooks = fa_hooks();
+}
+```
 
-#### IP2: FrontAccounting Module System
-- **Method**: Standard FA hooks class extension
-- **Features**: Automatic installation, database schema creation, security integration
+#### Add Tab Display Support (in the item display section)
 
-### Future Extensibility
+Find where tabs are displayed and add:
 
-The hook system enables easy addition of:
-- Product photos management
-- Shipping attributes
-- Custom product fields
-- Third-party integrations
-- Additional admin screens
+```php
+// Get tabs from hooks
+$item_tabs = isset($hooks) ? $hooks->call_hook('item_display_tabs', [], $stock_id) : [];
 
-All while maintaining minimal core file modifications.
+// Display hooked tabs
+if (!empty($item_tabs)) {
+    foreach ($item_tabs as $tab_key => $tab_data) {
+        echo '<div id="' . $tab_key . '_tab" class="tab-content">';
+        echo $tab_data['content'];
+        echo '</div>';
+    }
+}
+```
 
+#### Add Save Operation Hooks (in the POST handling section)
+
+```php
+// Call pre-save hooks
+if (isset($hooks)) {
+    $item_data = $hooks->call_hook('pre_item_write', $item_data, $stock_id);
+}
+```
+
+#### Add Delete Operation Hooks (in the delete handling section)
+
+```php
+// Call pre-delete hooks
+if (isset($hooks)) {
+    $hooks->call_hook('pre_item_delete', $stock_id);
+}
+```
+
+## Usage
+
+### Managing Categories
+
+1. Go to **Inventory → Product Attributes → Categories**
+2. Create attribute categories (Color, Size, Material, etc.)
+3. Set display order and activation status
+
+### Managing Values
+
+1. Go to **Inventory → Product Attributes → Values**
+2. Add values to categories (Red, Blue, Green for Color)
+3. Set sort order for consistent display
+
+### Assigning to Products
+
+1. Open any item in **Inventory → Items**
+2. Click the **Product Attributes** tab
+3. Assign categories and specific values to the product
+4. The system will show possible variation counts
+
+### Category-Level Assignments
+
+1. Go to **Inventory → Product Attributes → Category Assignments**
+2. Assign entire categories to products (all sizes, all colors)
+3. Individual assignments override category assignments
+
+## API Reference
+
+### Hook Points
+
+- `item_display_tabs`: Add custom tabs to item display
+- `pre_item_write`: Modify item data before saving
+- `pre_item_delete`: Handle cleanup before deletion
+
+### Classes
+
+- `ProductAttributesDao`: Data access layer
+- `ActionHandler`: Business logic dispatcher
+- Various Action classes for specific operations
+
+## Development
+
+```bash
+# Run tests
+cd composer-lib
+php phpunit.phar
+
+# Run specific test suite
+php phpunit.phar tests/ProductAttributesDaoTest.php
+```
+
+## Troubleshooting
+
+### Module Not Appearing
+
+- Ensure the module directory is `modules/FA_ProductAttributes`
+- Check file permissions
+- Verify composer dependencies are installed
+
+### Database Errors
+
+- Check database connection settings
+- Ensure user has CREATE TABLE permissions
+- Run schema.sql manually if needed
+
+### Items Integration Not Working
+
+- Verify hooks.php changes are correct
+- Check that fa_hooks.php is included
+- Ensure $stock_id is available in the scope
+
+## License
+
+MIT License - see LICENSE file for details.

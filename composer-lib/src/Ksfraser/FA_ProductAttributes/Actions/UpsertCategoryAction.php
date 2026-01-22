@@ -3,16 +3,16 @@
 namespace Ksfraser\FA_ProductAttributes\Actions;
 
 use Ksfraser\FA_ProductAttributes\Dao\ProductAttributesDao;
-use Ksfraser\FA_ProductAttributes\Db\FrontAccountingDbAdapter;
+use Ksfraser\FA_ProductAttributes\Db\DbAdapterInterface;
 
 class UpsertCategoryAction
 {
     /** @var ProductAttributesDao */
     private $dao;
-    /** @var FrontAccountingDbAdapter */
+    /** @var DbAdapterInterface */
     private $dbAdapter;
 
-    public function __construct(ProductAttributesDao $dao, FrontAccountingDbAdapter $dbAdapter)
+    public function __construct(ProductAttributesDao $dao, DbAdapterInterface $dbAdapter)
     {
         $this->dao = $dao;
         $this->dbAdapter = $dbAdapter;

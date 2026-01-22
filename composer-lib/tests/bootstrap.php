@@ -13,6 +13,7 @@ $files = [
     __DIR__ . '/../src/Ksfraser/FA_ProductAttributes/Service/VariationService.php',
     __DIR__ . '/../src/Ksfraser/FA_ProductAttributes/Service/FrontAccountingVariationService.php',
     __DIR__ . '/../src/Ksfraser/FA_ProductAttributes/Service/RetroactiveApplicationService.php',
+    __DIR__ . '/../src/Ksfraser/FA_ProductAttributes/Service/ProductAttributesService.php',
     __DIR__ . '/../src/Ksfraser/FA_ProductAttributes/Api/BaseApiController.php',
     __DIR__ . '/../src/Ksfraser/FA_ProductAttributes/Api/CategoriesApiController.php',
     __DIR__ . '/../src/Ksfraser/FA_ProductAttributes/Api/ValuesApiController.php',
@@ -24,8 +25,14 @@ $files = [
     __DIR__ . '/../src/Ksfraser/FA_ProductAttributes/Actions/DeleteAssignmentAction.php',
     __DIR__ . '/../src/Ksfraser/FA_ProductAttributes/Actions/AddCategoryAssignmentAction.php',
     __DIR__ . '/../src/Ksfraser/FA_ProductAttributes/Actions/RemoveCategoryAssignmentAction.php',
+    __DIR__ . '/../src/Ksfraser/FA_ProductAttributes/Actions/UpsertCategoryAction.php',
+    __DIR__ . '/../src/Ksfraser/FA_ProductAttributes/Actions/UpsertValueAction.php',
+    __DIR__ . '/../src/Ksfraser/FA_ProductAttributes/Actions/DeleteCategoryAction.php',
+    __DIR__ . '/../src/Ksfraser/FA_ProductAttributes/Actions/DeleteValueAction.php',
     __DIR__ . '/../src/Ksfraser/FA_ProductAttributes/Actions/GenerateVariationsAction.php',
     __DIR__ . '/../src/Ksfraser/FA_ProductAttributes/Install/ComposerInstaller.php',
+    __DIR__ . '/../src/Ksfraser/FA_ProductAttributes/UI/ProductAttributesUI.php',
+    __DIR__ . '/../src/Ksfraser/FA_ProductAttributes/Handler/ProductAttributesHandler.php',
 ];
 
 foreach ($files as $file) {
