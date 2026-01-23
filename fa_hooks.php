@@ -4,9 +4,15 @@
 // This file should be included early in FA's bootstrap process
 
 // Load fa-hooks autoloader if available
-$faHooksAutoload = __DIR__ . '/fa-hooks/vendor/autoload.php';
+$faHooksAutoload = __DIR__ . '/0fa-hooks/vendor/autoload.php';
 if (file_exists($faHooksAutoload)) {
     require_once $faHooksAutoload;
+} else {
+    // Fallback to original name for development
+    $faHooksAutoload = __DIR__ . '/fa-hooks/vendor/autoload.php';
+    if (file_exists($faHooksAutoload)) {
+        require_once $faHooksAutoload;
+    }
 }
 
 // Initialize global hook manager if not already done

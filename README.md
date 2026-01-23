@@ -104,14 +104,14 @@ The Product Attributes module requires the FA-Hooks system for integration:
 ```bash
 # Install FA-Hooks as a separate module (provides generic hook system for all modules)
 cd /path/to/frontaccounting/modules
-git clone https://github.com/ksfraser/FA_Hooks.git fa-hooks
-cd fa-hooks
+git clone https://github.com/ksfraser/FA_Hooks.git 0fa-hooks
+cd 0fa-hooks
 composer install  # Compatible with PHP 7.3+
 
-# Activate FA-Hooks in FA (Setup → Install/Update Modules)
+# Activate 0FA-Hooks in FA (Setup → Install/Update Modules)
 ```
 
-**Note**: FA-Hooks should be installed once and provides the hook system for ALL your FA modules.
+**Note**: FA-Hooks should be installed once and provides the hook system for ALL your FA modules. The directory is named `0fa-hooks` to ensure it loads first alphabetically.
 
 **Production Deployment**: For production environments, install FA-Hooks as a separate module (not as a submodule). The Product Attributes module will automatically check for this dependency during installation.
 
