@@ -106,7 +106,7 @@ The Product Attributes module requires the FA-Hooks system for integration:
 cd /path/to/frontaccounting/modules
 git clone https://github.com/ksfraser/FA_Hooks.git 0fa-hooks
 cd 0fa-hooks
-composer install  # Compatible with PHP 7.3+
+composer install  # Run this BEFORE activating in FA
 
 # Activate 0FA-Hooks in FA (Setup → Install/Update Modules)
 ```
