@@ -13,9 +13,10 @@ class hooks_FA_ProductAttributes extends hooks
     {
         global $path_to_root;
 
-        // Install composer dependencies
+        // Install composer dependencies using dedicated installer class
         $module_path = $path_to_root . '/modules/FA_ProductAttributes';
-        $result = $this->installComposerDependencies($module_path);
+        $installer = new \Ksfraser\FA_ProductAttributes\Install\ComposerInstaller($module_path);
+        $result = $installer->install();
 
         if (!$result['success']) {
             // Log the error but don't fail the installation
@@ -37,41 +38,6 @@ class hooks_FA_ProductAttributes extends hooks
         $this->register_hooks();
 
         return true; // Standard FA install return
-    }
-
-    /**
-     * Install composer dependencies for the module
-     *
-     * @param string $module_path The path to the module
-     * @return array Result with 'success' and 'message' keys
-     */
-    private function installComposerDependencies($module_path)
-    {
-        $composer_lib = $module_path . '/composer-lib';
-        if (!is_dir($composer_lib)) {
-            return ['success' => false, 'message' => 'composer-lib directory not found'];
-        }
-
-        $composer_json = $composer_lib . '/composer.json';
-        if (!file_exists($composer_json)) {
-            return ['success' => false, 'message' => 'composer.json not found'];
-        }
-
-        // Try to run composer install
-        $command = 'cd ' . escapeshellarg($composer_lib) . ' && composer install --no-dev --optimize-autoloader 2>&1';
-        $output = shell_exec($command);
-
-        if ($output === null) {
-            return ['success' => false, 'message' => 'Failed to execute composer command', 'output' => ''];
-        }
-
-        // Check if composer.lock was created or updated
-        $composer_lock = $composer_lib . '/composer.lock';
-        if (!file_exists($composer_lock)) {
-            return ['success' => false, 'message' => 'Composer installation failed', 'output' => $output];
-        }
-
-        return ['success' => true, 'message' => 'Composer dependencies installed successfully', 'output' => $output];
     }
 
     /**
