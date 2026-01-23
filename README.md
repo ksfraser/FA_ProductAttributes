@@ -97,26 +97,40 @@ $hooks->registerExtension('supplier_tabs', 'product_attributes', function($tabs)
 - MySQL 5.7+ or MariaDB 10.0+
 - Composer (for dependency management)
 
-### Step 1: Download the Module
+### Step 1: Install FA-Hooks Module (Required)
 
-Since this is a GitHub repository (not available on Packagist), you need to download it manually:
+The Product Attributes module requires the FA-Hooks system for integration:
+
+```bash
+# Install FA-Hooks as a separate module (provides generic hook system for all modules)
+cd /path/to/frontaccounting/modules
+git clone https://github.com/ksfraser/FA_Hooks.git fa-hooks
+cd fa-hooks
+composer install  # Compatible with PHP 7.3+
+
+# Activate FA-Hooks in FA (Setup → Install/Update Modules)
+```
+
+**Note**: FA-Hooks should be installed once and provides the hook system for ALL your FA modules.
+
+### Step 2: Download the Product Attributes Module
 
 ```bash
 # Clone the repository into your FA modules directory
 cd /path/to/frontaccounting/modules
-git clone https://github.com/yourusername/FA_ProductAttributes.git FA_ProductAttributes
+git clone https://github.com/ksfraser/FA_ProductAttributes.git FA_ProductAttributes
 
 # Or download the ZIP and extract to modules/FA_ProductAttributes
 ```
 
-### Step 2: Install Dependencies
+### Step 3: Install Dependencies
 
 ```bash
 cd /path/to/frontaccounting/modules/FA_ProductAttributes
 composer install
 ```
 
-### Step 3: Database Setup
+### Step 4: Database Setup
 
 The module will automatically create its database schema during installation, but you can also run the SQL manually:
 
@@ -125,25 +139,36 @@ mysql -u your_username -p your_database < sql/schema.sql
 mysql -u your_username -p your_database < sql/seed.sql
 ```
 
-### Step 4: Activate the Module
+### Step 5: Activate the Module
 
 1. Log into FrontAccounting as an administrator
 2. Go to **Setup → Install/Update Modules**
 3. Find "Product Attributes" in the module list
 4. Click **Activate**
 
-### Step 5: Integrate with Items Screen
+### Step 6: Integrate with Items Screen
 
 To enable product attributes in the Items screen, you need to make minimal changes to `inventory/items.php`. Add the following code:
 
 #### Add Hook System Include (near the top of items.php, after other includes)
 
 ```php
-// Include Product Attributes hook system
-$module_path = $path_to_root . '/modules/FA_ProductAttributes';
-if (file_exists($module_path . '/hooks.php')) {
-    require_once $module_path . '/hooks.php';
+// Include generic FA-Hooks system (installed as separate module)
+$hooks_path = $path_to_root . '/modules/fa-hooks/src/Ksfraser/FA_Hooks/HookManager.php';
+if (file_exists($hooks_path)) {
+    require_once $hooks_path;
     $hooks = new Ksfraser\FA_Hooks\HookManager();
+}
+```
+
+**Alternative**: If you prefer to load hooks via the Product Attributes module:
+
+```php
+// Include via Product Attributes module (includes FA-Hooks as dependency)
+$module_path = $path_to_root . '/modules/FA_ProductAttributes';
+if (file_exists($module_path . '/fa_hooks.php')) {
+    require_once $module_path . '/fa_hooks.php';
+    $hooks = fa_hooks(); // Returns global hook manager instance
 }
 ```
 

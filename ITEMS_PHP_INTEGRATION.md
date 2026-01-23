@@ -2,16 +2,47 @@
 
 To integrate Product Attributes into the Items screen with minimal changes, add the following modifications to your FrontAccounting `inventory/items.php` file:
 
+## Prerequisites
+
+### Install FA-Hooks Module
+
+First, install the generic FA-Hooks module that provides the hook system:
+
+```bash
+# Install FA-Hooks as a separate module
+cd /path/to/frontaccounting/modules
+git clone https://github.com/ksfraser/FA_Hooks.git fa-hooks
+
+# Install dependencies (compatible with PHP 7.3+)
+cd fa-hooks
+composer install
+```
+
+This makes the hook system available to ALL modules in your FA installation.
+
 ## Required Changes
 
 ### 1. Include Hook System (Add near the top of the file, after includes)
 
 ```php
-// Include Product Attributes hook system
-$module_path = $path_to_root . '/modules/FA_ProductAttributes';
-if (file_exists($module_path . '/hooks.php')) {
-    require_once $module_path . '/hooks.php';
+// Include generic FA-Hooks system
+$hooks_path = $path_to_root . '/modules/fa-hooks/src/Ksfraser/FA_Hooks/HookManager.php';
+if (file_exists($hooks_path)) {
+    require_once $hooks_path;
     $hooks = new Ksfraser\FA_Hooks\HookManager();
+}
+```
+
+### Alternative: Load via Product Attributes Module
+
+If you prefer to keep the hook system bundled with Product Attributes:
+
+```php
+// Include Product Attributes hook system (includes FA-Hooks)
+$module_path = $path_to_root . '/modules/FA_ProductAttributes';
+if (file_exists($module_path . '/fa_hooks.php')) {
+    require_once $module_path . '/fa_hooks.php';
+    $hooks = fa_hooks(); // Returns global hook manager instance
 }
 ```
 
