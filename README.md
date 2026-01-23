@@ -113,6 +113,8 @@ composer install  # Compatible with PHP 7.3+
 
 **Note**: FA-Hooks should be installed once and provides the hook system for ALL your FA modules.
 
+**Production Deployment**: For production environments, install FA-Hooks as a separate module (not as a submodule). The Product Attributes module will automatically check for this dependency during installation.
+
 ### Step 2: Download the Product Attributes Module
 
 ```bash

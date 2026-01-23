@@ -13,6 +13,27 @@ class hooks_FA_ProductAttributes extends hooks
     {
         global $path_to_root;
 
+        // Check if fa-hooks dependency is installed
+        $faHooksPath = $path_to_root . '/modules/fa-hooks';
+        if (!file_exists($faHooksPath . '/hooks.php')) {
+            // Try alternative naming if renamed for loading order
+            $altPaths = [
+                $path_to_root . '/modules/00-fa-hooks/hooks.php',
+                $path_to_root . '/modules/aa-fa-hooks/hooks.php'
+            ];
+            $found = false;
+            foreach ($altPaths as $altPath) {
+                if (file_exists($altPath)) {
+                    $found = true;
+                    break;
+                }
+            }
+            if (!$found) {
+                display_error('FA-Hooks module must be installed before Product Attributes. Please install fa-hooks module first.');
+                return false;
+            }
+        }
+
         // Install composer dependencies using dedicated installer class
         $module_path = $path_to_root . '/modules/FA_ProductAttributes';
         $installer = new \Ksfraser\FA_ProductAttributes\Install\ComposerInstaller($module_path);
