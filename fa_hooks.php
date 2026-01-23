@@ -3,6 +3,12 @@
 // Global Hook Manager for FrontAccounting Module Extensions
 // This file should be included early in FA's bootstrap process
 
+// Load fa-hooks autoloader if available
+$faHooksAutoload = dirname(__DIR__) . '/modules/fa-hooks/vendor/autoload.php';
+if (file_exists($faHooksAutoload)) {
+    require_once $faHooksAutoload;
+}
+
 // Initialize global hook manager if not already done
 if (!isset($GLOBALS['fa_hooks'])) {
     // Try to load via composer autoloader first
