@@ -59,7 +59,7 @@
 | NFR1 | Seamless integration | No disruption to FA | Hooks-based implementation | TC37: Test core FA unchanged | Pending |
 | NFR2 | Security | Authorized access with greyed UI | Permission checks | TC38: Test unauthorized access denied | Pending |
 | NFR3 | Performance | Efficient loading/saving | Optimized queries | TC39: Test load times | Pending |
-| NFR4 | Usability | Intuitive UI with tooltips/confirmations | User-friendly elements | TC40: User acceptance testing | Pending |
+| NFR4 | Usability | Intuitive UI with tooltips/confirmations | User-friendly elements | TC40: User acceptance testing | Completed |
 | NFR5 | Data persistence | Extend DB schema with parent_stock_id | New tables in schema.sql | TC41: Verify DB schema | Completed |
 | NFR5.1 | Data integrity via Make Inactive | Prevent orphans | Deactivate with warnings | TC42: Test deactivation | Pending |
 | NFR6 | Compatibility | FA 2.3.22 and PHP 7.3 | Code compatibility | TC43: Test on specified versions | Pending |

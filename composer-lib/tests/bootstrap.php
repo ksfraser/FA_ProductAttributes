@@ -36,8 +36,7 @@ $files = [
     __DIR__ . '/../src/Ksfraser/FA_ProductAttributes/Install/ComposerInstaller.php',
     __DIR__ . '/../src/Ksfraser/FA_ProductAttributes/UI/ProductAttributesUI.php',
     __DIR__ . '/../src/Ksfraser/FA_ProductAttributes/UI/ProductTypesTab.php',
-    __DIR__ . '/../src/Ksfraser/FA_ProductAttributes/Handler/ProductAttributesHandler.php',
-];
+    __DIR__ . '/../src/Ksfraser/FA_ProductAttributes/Integration/ItemsIntegration.php',
 
 foreach ($files as $file) {
     if (file_exists($file)) {

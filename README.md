@@ -40,7 +40,54 @@ The module uses 4 main tables:
 - `product_attribute_values`: Values within categories (Red, Blue, XL, etc.)
 - `product_attribute_assignments`: Links products to specific attribute values
 - `product_attribute_category_assignments`: Links products to entire categories
+## Extended Hook System Architecture
 
+The Product Attributes module now includes an extended hook system that enables scalable module development and cross-module integration for FrontAccounting.
+
+### Key Components
+
+1. **Container Classes**: Generic containers for managing different types of FA data structures
+   - `ArrayContainer`: Abstract base for array-based data
+   - `TabContainer`: Specialized for tab management
+   - `MenuContainer`: Specialized for menu items
+
+2. **Hook Registry**: Dynamic hook point registration system
+   - Modules can register their own hook points
+   - Other modules can extend these hook points
+   - Priority-based execution control
+
+3. **Version Abstraction**: Automatic handling of FA version differences
+   - Transparent adaptation between FA 2.3.x and 2.4.x+
+   - Future-proof compatibility
+
+4. **Factory Pattern**: Centralized container creation
+   - `ContainerFactory` creates appropriate containers by context
+   - Type-safe object instantiation
+
+### Cross-Module Integration
+
+The extended architecture enables modules to integrate with each other:
+
+```php
+// Supplier module registers hook point
+$hooks->registerHookPoint('supplier_tabs', 'supplier_module', function($tabs) {
+    $tabs->createTab('general', 'General', 'suppliers.php');
+    return $tabs->toArray();
+});
+
+// Product Attributes extends supplier tabs
+$hooks->registerExtension('supplier_tabs', 'product_attributes', function($tabs) {
+    $tabs->createTab('attributes', 'Product Attributes', 'supplier_attributes.php');
+}, 10);
+```
+
+### Benefits
+
+- **Scalability**: Easy to add new modules and extensions
+- **Version Agnostic**: Automatic FA version compatibility
+- **Decoupling**: Modules don't need to know about each other
+- **Type Safety**: Object-oriented design with proper validation
+- **Extensible**: Supports any FA module (Suppliers, Customers, Inventory, etc.)
 ## Installation
 
 ### Prerequisites
@@ -94,26 +141,44 @@ To enable product attributes in the Items screen, you need to make minimal chang
 ```php
 // Include Product Attributes hook system
 $module_path = $path_to_root . '/modules/FA_ProductAttributes';
-if (file_exists($module_path . '/fa_hooks.php')) {
-    require_once $module_path . '/fa_hooks.php';
-    $hooks = fa_hooks();
+if (file_exists($module_path . '/hooks.php')) {
+    require_once $module_path . '/hooks.php';
+    $hooks = new Ksfraser\FA_Hooks\HookManager();
 }
 ```
 
-#### Add Tab Display Support (in the item display section)
+#### Replace Tab Display Logic (in the item display section)
 
-Find where tabs are displayed and add:
+Find where tabs are displayed and replace the tabs array definition with:
 
 ```php
-// Get tabs from hooks
-$item_tabs = isset($hooks) ? $hooks->call_hook('item_display_tabs', [], $stock_id) : [];
+// Use object-based tab management with hooks
+$tabCollection = $hooks->call_hook('item_display_tab_headers', null, $stock_id);
+$tabs = $tabCollection ? $tabCollection->toArray() : [];
+```
 
-// Display hooked tabs
-if (!empty($item_tabs)) {
-    foreach ($item_tabs as $tab_key => $tab_data) {
-        echo '<div id="' . $tab_key . '_tab" class="tab-content">';
-        echo $tab_data['content'];
-        echo '</div>';
+#### Replace Tab Content Switch (in the tab content display section)
+
+Replace the tab content switch statement with:
+
+```php
+// Generic hook-based tab content system
+$content = $hooks->call_hook('item_display_tab_content', '', $stock_id, $selected_tab);
+
+if (!empty($content)) {
+    echo $content;
+} else {
+    // Fallback to original FA tab handling
+    switch ($selected_tab) {
+        case 'general':
+            // Original general tab content
+            break;
+        case 'settings':
+            // Original settings tab content
+            break;
+        default:
+            // Default fallback
+            break;
     }
 }
 ```
@@ -123,7 +188,7 @@ if (!empty($item_tabs)) {
 ```php
 // Call pre-save hooks
 if (isset($hooks)) {
-    $item_data = $hooks->call_hook('pre_item_write', $item_data, $stock_id);
+    $hooks->call_hook('pre_item_write', $item_data, $stock_id);
 }
 ```
 
@@ -184,9 +249,43 @@ The Product Attributes module provides a comprehensive admin interface accessibl
 
 ### Hook Points
 
-- `item_display_tabs`: Add custom tabs to item display
-- `pre_item_write`: Modify item data before saving
-- `pre_item_delete`: Handle cleanup before deletion
+- `item_display_tab_headers`: Receives `TabCollection` object, returns modified `TabCollection`
+- `item_display_tab_content`: Provide content for specific tabs (receives $stock_id and $selected_tab parameters)
+- `pre_item_write`: Modify item data before saving to database
+- `pre_item_delete`: Handle cleanup before item deletion
+
+### Extended Hook System
+
+The module now supports the extended hook architecture for cross-module integration:
+
+#### Dynamic Hook Registration
+
+Modules can register their own hook points:
+
+```php
+// Register a hook point for other modules to extend
+$hooks->registerHookPoint('supplier_tabs', 'supplier_module', function($tabs) {
+    $tabs->createTab('general', 'General', 'suppliers.php');
+    return $tabs->toArray();
+}, ['description' => 'Supplier detail tabs']);
+```
+
+#### Hook Extensions
+
+Other modules can extend registered hook points:
+
+```php
+// Extend supplier tabs with product attributes
+$hooks->registerExtension('supplier_tabs', 'product_attributes', function($tabs) {
+    $tabs->createTab('attributes', 'Product Attributes', 'supplier_attributes.php');
+}, 10);
+```
+
+#### Container Classes
+
+- **TabContainer**: Manages tabs for items, suppliers, customers, etc.
+- **MenuContainer**: Manages menu items
+- **ArrayContainer**: Generic container for custom data structures
 
 ### RESTful API Endpoints
 
@@ -222,16 +321,32 @@ The module provides a complete RESTful API for external integrations:
 - Various Action classes: CreateChildAction, UpdateProductTypesAction, etc.
 - UI Tab classes: CategoriesTab, ValuesTab, AssignmentsTab, ProductTypesTab
 
+#### Extended Hook System Classes
+
+- `HookManager`: Main hook system manager with extended capabilities
+- `HookRegistry`: Dynamic hook point registration and extension management
+- `FAVersionAdapter`: Version abstraction for different FA versions
+- `TabDefinition`: Object representation of individual tabs
+- `TabCollection`: Collection of tabs with version-aware toArray()
+- `TabContainer`: Specialized container for tab management
+- `MenuContainer`: Specialized container for menu management
+- `ArrayContainer`: Abstract base class for array-based data structures
+- `ContainerFactory`: Factory for creating appropriate container instances
+
 ## Development
 
 ### Testing
 
-The module includes comprehensive test coverage with 140+ unit tests:
+The module includes comprehensive test coverage with 140+ unit tests for the main module and additional tests for the extended hook system:
 
 ```bash
-# Run all tests
+# Run main module tests
 cd composer-lib
 php vendor/bin/phpunit tests/
+
+# Run extended hook system tests
+cd ../fa-hooks
+php test_containers.php  # Manual validation tests
 
 # Run specific test suite
 php vendor/bin/phpunit tests/ProductAttributesDaoTest.php
@@ -246,6 +361,16 @@ php vendor/bin/phpunit tests/ --coverage-html coverage/
 - **Integration Tests**: Database and service layer testing
 - **Action Tests**: Admin operation testing
 - **API Tests**: RESTful endpoint testing
+- **Hook System Tests**: Extended architecture validation (ContainerTest.php)
+
+### Test Results
+
+✅ **All tests pass** - The extended hook system has been validated with:
+- Container class functionality (ArrayContainer, TabContainer, MenuContainer)
+- Hook registry dynamic registration and extensions
+- Version abstraction across FA versions
+- Object-based tab management
+- Cross-module integration patterns
 
 ### Code Quality
 
@@ -254,6 +379,7 @@ php vendor/bin/phpunit tests/ --coverage-html coverage/
 - **Dependency Injection**: Clean architecture with DI container
 - **Comprehensive Error Handling**: Proper exception management
 - **Input Validation**: All user inputs validated and sanitized
+- **Object-Oriented Design**: Type-safe containers and version abstraction
 
 ## Troubleshooting
 

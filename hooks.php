@@ -131,22 +131,37 @@ class hooks_FA_ProductAttributes extends hooks
         $hooks = fa_hooks();
 
         // Register Product Attributes hooks for items.php
-        $hooks->add_hook('item_display_tabs', [__CLASS__, 'static_add_product_attributes_tab'], 10);
+        $hooks->add_hook('item_display_tab_headers', [__CLASS__, 'static_add_tab_headers'], 10);
+        $hooks->add_hook('item_display_tab_content', [__CLASS__, 'static_get_tab_content'], 10);
         $hooks->add_hook('pre_item_write', [__CLASS__, 'static_handle_product_attributes_save'], 10);
         $hooks->add_hook('pre_item_delete', [__CLASS__, 'static_handle_product_attributes_delete'], 10);
     }
 
     /**
-     * Static hook callback for adding product attributes tab
+     * Static hook callback for adding tab headers
      *
-     * @param array $tabs Current tabs array
+     * @param \Ksfraser\FA_Hooks\TabCollection $collection Current tab collection
      * @param string $stock_id The item stock ID
-     * @return array Modified tabs array
+     * @return \Ksfraser\FA_Hooks\TabCollection Modified tab collection
      */
-    public static function static_add_product_attributes_tab($tabs, $stock_id) {
+    public static function static_add_tab_headers($collection, $stock_id) {
         $service = self::static_get_product_attributes_service();
-        $ui = new \Ksfraser\FA_ProductAttributes\UI\ProductAttributesUI($service);
-        return $ui->add_product_attributes_tab($tabs, $stock_id);
+        $integration = new \Ksfraser\FA_ProductAttributes\Integration\ItemsIntegration($service);
+        return $integration->addTabHeaders($collection, $stock_id);
+    }
+
+    /**
+     * Static hook callback for getting tab content
+     *
+     * @param string $content Current content
+     * @param string $stock_id The item stock ID
+     * @param string $selected_tab The selected tab
+     * @return string Tab content
+     */
+    public static function static_get_tab_content($content, $stock_id, $selected_tab) {
+        $service = self::static_get_product_attributes_service();
+        $integration = new \Ksfraser\FA_ProductAttributes\Integration\ItemsIntegration($service);
+        return $integration->getTabContent($content, $stock_id, $selected_tab);
     }
 
     /**
