@@ -3,7 +3,6 @@
 namespace Ksfraser\FA_ProductAttributes\UI;
 
 use Ksfraser\FA_ProductAttributes\Dao\ProductAttributesDao;
-use Ksfraser\FA_ProductAttributes\UI\RoyalOrderHelper;
 
 class AssignmentsTab
 {
@@ -107,7 +106,7 @@ class AssignmentsTab
                     label_cell($a['code'] ?? '');
                     label_cell($a['description'] ?? '');
                     $sortOrder = (int)($a['sort_order'] ?? 0);
-                    $sortLabel = $sortOrder > 0 ? $sortOrder . ' - ' . RoyalOrderHelper::getRoyalOrderLabel($sortOrder) : '0';
+                    $sortLabel = $sortOrder > 0 ? (string)$sortOrder : '0';
                     label_cell($sortLabel);
                     end_row();
                 }

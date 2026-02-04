@@ -3,7 +3,6 @@
 namespace Ksfraser\FA_ProductAttributes\UI;
 
 use Ksfraser\FA_ProductAttributes\Dao\ProductAttributesDao;
-use Ksfraser\FA_ProductAttributes\UI\RoyalOrderHelper;
 
 class CategoriesTab
 {
@@ -46,7 +45,7 @@ class CategoriesTab
                     label_cell($c['label'] ?? '');
                     label_cell($c['description'] ?? '');
                     $sortOrder = (int)($c['sort_order'] ?? 0);
-                    $sortLabel = $sortOrder > 0 ? $sortOrder . ' - ' . RoyalOrderHelper::getRoyalOrderLabel($sortOrder) : '0';
+                    $sortLabel = $sortOrder > 0 ? (string)$sortOrder : '0';
                     label_cell($sortLabel);
                     label_cell($c['active'] ?? 0 ? _("Yes") : _("No"));
                     
@@ -74,10 +73,15 @@ class CategoriesTab
             text_row(_("Label"), 'label', $editCategory['label'] ?? '', 20, 64);
             text_row(_("Description"), 'description', $editCategory['description'] ?? '', 40, 255);
             
-            // Royal Order of Adjectives dropdown for sort order
-            $currentSortOrder = $editCategory['sort_order'] ?? 0;
-            echo '<tr><td>' . _("Sort order (Royal Order)") . ':</td><td>';
-            echo RoyalOrderHelper::generateDropdownHtml('sort_order', $currentSortOrder);
+            // Sort order dropdown (simple numeric)
+            echo '<tr><td>' . _("Sort order") . ':</td><td>';
+            echo '<select name="sort_order">';
+            echo '<option value="0"' . ($currentSortOrder == 0 ? ' selected' : '') . '>' . _("None") . '</option>';
+            for ($i = 1; $i <= 9; $i++) {
+                $selected = $currentSortOrder == $i ? ' selected' : '';
+                echo '<option value="' . $i . '"' . $selected . '>' . $i . '</option>';
+            }
+            echo '</select>';
             echo '</td></tr>';
             
             check_row(_("Active"), 'active', $editCategory ? (bool)$editCategory['active'] : true);
