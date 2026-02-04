@@ -26,10 +26,7 @@ $files = [
     __DIR__ . '/composer-lib/src/Ksfraser/FA_ProductAttributes/Actions/UpsertValueAction.php',
     __DIR__ . '/composer-lib/src/Ksfraser/FA_ProductAttributes/Actions/DeleteCategoryAction.php',
     __DIR__ . '/composer-lib/src/Ksfraser/FA_ProductAttributes/Actions/DeleteValueAction.php',
-    __DIR__ . '/composer-lib/src/Ksfraser/FA_ProductAttributes/Actions/GenerateVariationsAction.php',
     __DIR__ . '/composer-lib/src/Ksfraser/FA_ProductAttributes/Actions/UpdateCategoryAssignmentsAction.php',
-    __DIR__ . '/composer-lib/src/Ksfraser/FA_ProductAttributes/Actions/CreateChildAction.php',
-    __DIR__ . '/composer-lib/src/Ksfraser/FA_ProductAttributes/Actions/UpdateProductTypesAction.php',
 ];
 
 foreach ($files as $file) {
@@ -79,13 +76,10 @@ $actionClasses = [
     \Ksfraser\FA_ProductAttributes\Actions\DeleteAssignmentAction::class,
     \Ksfraser\FA_ProductAttributes\Actions\DeleteCategoryAction::class,
     \Ksfraser\FA_ProductAttributes\Actions\DeleteValueAction::class,
-    \Ksfraser\FA_ProductAttributes\Actions\GenerateVariationsAction::class,
     \Ksfraser\FA_ProductAttributes\Actions\RemoveCategoryAssignmentAction::class,
     \Ksfraser\FA_ProductAttributes\Actions\UpsertCategoryAction::class,
     \Ksfraser\FA_ProductAttributes\Actions\UpsertValueAction::class,
     \Ksfraser\FA_ProductAttributes\Actions\UpdateCategoryAssignmentsAction::class,
-    \Ksfraser\FA_ProductAttributes\Actions\UpdateProductTypesAction::class,
-    \Ksfraser\FA_ProductAttributes\Actions\CreateChildAction::class,
 ];
 
 foreach ($actionClasses as $actionClass) {

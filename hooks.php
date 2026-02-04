@@ -160,6 +160,11 @@ class hooks_FA_ProductAttributes extends hooks
         $hooks->add_hook('item_display_tab_content', [__CLASS__, 'static_get_tab_content'], 10);
         $hooks->add_hook('pre_item_write', [__CLASS__, 'static_handle_product_attributes_save'], 10);
         $hooks->add_hook('pre_item_delete', [__CLASS__, 'static_handle_product_attributes_delete'], 10);
+
+        // Register extension points for plugins
+        $hooks->registerHookPoint('attributes_tab_content', 'product_attributes');
+        $hooks->registerHookPoint('attributes_save', 'product_attributes');
+        $hooks->registerHookPoint('attributes_delete', 'product_attributes');
     }
 
     /**

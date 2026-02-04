@@ -51,7 +51,6 @@ use Ksfraser\FA_ProductAttributes\Dao\ProductAttributesDao;
 use Ksfraser\FA_ProductAttributes\UI\CategoriesTab;
 use Ksfraser\FA_ProductAttributes\UI\ValuesTab;
 use Ksfraser\FA_ProductAttributes\UI\AssignmentsTab;
-use Ksfraser\FA_ProductAttributes\UI\ProductTypesTab;
 
 try {
     $db_adapter = DatabaseAdapterFactory::create('fa'); // Use FA driver via factory
@@ -114,8 +113,7 @@ if (!empty($action)) {
 echo '<div style="margin:8px 0">'
     . '<a href="?tab=categories">Categories</a> | '
     . '<a href="?tab=values">Values</a> | '
-    . '<a href="?tab=assignments">Assignments</a> | '
-    . '<a href="?tab=product_types">Product Types</a>'
+    . '<a href="?tab=assignments">Assignments</a>'
     . '</div>';
 display_notification("DEBUG: Tab navigation rendered");
 
@@ -148,16 +146,7 @@ if ($tab === 'categories') {
         display_error("ERROR file: " . $e->getFile() . ":" . $e->getLine());
     }
 } elseif ($tab === 'product_types') {
-    try {
-        $productTypesTab = new ProductTypesTab($dao);
-        display_notification("DEBUG: ProductTypesTab instantiated successfully");
-        $productTypesTab->render();
-        display_notification("DEBUG: ProductTypesTab render() completed");
-    } catch (Throwable $e) {
-        display_error("ERROR instantiating/rendering ProductTypesTab: " . $e->getMessage());
-        display_error("ERROR type: " . get_class($e));
-        display_error("ERROR file: " . $e->getFile() . ":" . $e->getLine());
-    }
+    display_error("Product Types management has been moved to the FA_ProductAttributes_Variations plugin. Please install and activate that plugin to manage product types.");
 } else {
     try {
         $assignmentsTab = new AssignmentsTab($dao);

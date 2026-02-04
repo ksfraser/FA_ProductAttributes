@@ -1,3 +1,6 @@
 [submodule "fa-hooks"]
 	path = fa-hooks
 	url = https://github.com/ksfraser/FA_Hooks.git
+[submodule "fa_product_attributes_variations"]
+	path = fa_product_attributes_variations
+	url = https://github.com/ksfraser/FA_ProductAttributes_Variations.git

@@ -48,7 +48,17 @@ class ItemsIntegration
     {
         // Only provide content for our tab
         if ($selected_tab === 'product_attributes') {
-            return $this->service->renderProductAttributesTab($stock_id);
+            $attributesContent = $this->service->renderProductAttributesTab($stock_id);
+
+            // Allow plugins to extend the attributes tab
+            global $path_to_root;
+            require_once $path_to_root . '/modules/FA_ProductAttributes/fa_hooks.php';
+            $hooks = fa_hooks();
+
+            // Apply extensions to the attributes tab content
+            $extendedContent = $hooks->apply_filters('attributes_tab_content', $attributesContent, $stock_id, $selected_tab);
+
+            return $extendedContent;
         }
 
         // Return unchanged content for other tabs
@@ -64,9 +74,18 @@ class ItemsIntegration
      */
     public function handlePreSave($item_data, $stock_id)
     {
-        // Handle any product attributes data that needs to be saved
-        // This could include processing POST data for attributes
-        return $item_data;
+        // Handle core product attributes data that needs to be saved
+        $this->service->saveProductAttributes($stock_id, $_POST);
+
+        // Allow plugins to extend the save functionality
+        global $path_to_root;
+        require_once $path_to_root . '/modules/FA_ProductAttributes/fa_hooks.php';
+        $hooks = fa_hooks();
+
+        // Apply extensions to the save process
+        $extendedItemData = $hooks->apply_filters('attributes_save', $item_data, $stock_id);
+
+        return $extendedItemData;
     }
 
     /**
@@ -77,8 +96,16 @@ class ItemsIntegration
      */
     public function handlePreDelete($stock_id)
     {
-        // Handle cleanup of product attributes data
-        // This could include removing attribute assignments
+        // Handle cleanup of core product attributes data
+        $this->service->deleteProductAttributes($stock_id);
+
+        // Allow plugins to extend the delete functionality
+        global $path_to_root;
+        require_once $path_to_root . '/modules/FA_ProductAttributes/fa_hooks.php';
+        $hooks = fa_hooks();
+
+        // Apply extensions to the delete process
+        $hooks->do_action('attributes_delete', $stock_id);
     }
 
     // Static methods for hook registration

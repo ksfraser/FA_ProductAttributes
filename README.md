@@ -1,40 +1,39 @@
 # FA_ProductAttributes
 
-A comprehensive Product Attributes module for FrontAccounting that enables WooCommerce-style product variations through category-based attribute assignments.
+A core Product Attributes module for FrontAccounting that provides generic attribute infrastructure and enables extensible attribute-based functionality through plugins.
 
 ## Features
 
-- **Category-based Attributes**: Organize product attributes into logical categories (Color, Size, Material, etc.)
-- **Product Variations**: Automatically generate all possible product combinations
+- **Generic Attribute System**: Core infrastructure for category-based attributes (Color, Size, Material, etc.)
 - **Flexible Assignment**: Assign attributes at individual product level or category level
-- **Parent-Child Relationships**: Support for product variations with parent-child relationships
-- **Product Type Management**: Manual management of product types (Simple, Variable, Variation)
 - **Royal Order Sorting**: Maintain consistent attribute display order
-- **Hook-based Integration**: Minimal changes to core FrontAccounting files
-- **Admin Interface**: Complete web-based management interface with 4 tabs
+- **Plugin Architecture**: Extensible system allowing plugins to add specific attribute types
+- **Hook-based Integration**: Minimal changes to core FrontAccounting files with extension points
+- **Admin Interface**: Web-based management interface for attributes
 - **RESTful API**: Full API for external integrations
-- **Comprehensive Testing**: 140+ unit tests ensuring reliability
+- **Comprehensive Testing**: Unit tests ensuring reliability
 
 ## Architecture Overview
 
-### Product Types
+### Core Module Responsibilities
 
-The system supports three product types:
+The FA_ProductAttributes core module provides:
 
-- **Simple Products**: Standard products without variations
-- **Variable Products**: Parent products that can have variations
-- **Variation Products**: Child products that inherit attributes from parents
+- **Attribute Categories & Values**: Generic management of attribute categories and their values
+- **Assignment System**: Linking products to attributes (both individual and category-level)
+- **STOCK Application Integration**: Hooks into FA's items.php to add attribute functionality
+- **Extension Points**: Hook system allowing plugins to extend functionality
 
-### Parent-Child Relationships
+### Plugin Architecture
 
-- Variations maintain parent relationships in the database
-- Category assignments are inherited from parent to child
-- Individual value assignments can be customized per variation
-- Parent relationships are managed through the Product Types admin tab
+The module supports plugins that can add specific attribute functionality:
+
+- **FA_ProductAttributes_Variations**: Adds WooCommerce-style product variations
+- **Future Plugins**: Product dimensions, tags, custom attributes, etc.
 
 ### Database Schema
 
-The module uses 4 main tables:
+The core module uses 4 main tables:
 
 - `product_attribute_categories`: Attribute categories (Color, Size, etc.)
 - `product_attribute_values`: Values within categories (Red, Blue, XL, etc.)
@@ -226,6 +225,38 @@ if (isset($hooks)) {
 if (isset($hooks)) {
     $hooks->call_hook('pre_item_delete', $stock_id);
 }
+```
+
+## Plugin Architecture
+
+The FA_ProductAttributes core module provides extension points for plugins to add specific attribute functionality:
+
+### Available Plugins
+
+- **FA_ProductAttributes_Variations**: Adds WooCommerce-style product variations with parent-child relationships
+- **Future Plugins**: Product dimensions, tags, custom attributes, etc.
+
+### Installing Plugins
+
+1. Install the FA_ProductAttributes core module first
+2. Install desired plugins as separate FA modules
+3. Plugins automatically extend the core functionality through hooks
+
+### Developing Plugins
+
+Plugins can extend the core module by:
+
+- Registering extensions to `attributes_tab_content` hook to add UI
+- Registering extensions to `attributes_save` hook to handle data saving
+- Registering extensions to `attributes_delete` hook to handle cleanup
+
+Example plugin structure:
+```
+FA_ProductAttributes_PluginName/
+├── composer.json (depends on FA_ProductAttributes)
+├── hooks.php (extends core hooks)
+├── src/Ksfraser/FA_ProductAttributes_PluginName/
+└── README.md
 ```
 
 ## Usage
