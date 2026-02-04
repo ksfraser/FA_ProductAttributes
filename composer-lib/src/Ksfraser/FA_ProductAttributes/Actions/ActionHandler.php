@@ -55,19 +55,20 @@ class ActionHandler
                     return $handler->handle($postData);
 
                 case 'generate_variations':
-                    $handler = new GenerateVariationsAction($this->dao, $this->dbAdapter);
-                    return $handler->handle($postData);
+                    // Delegate to variations plugin
+                    return $this->handlePluginAction('generate_variations', $postData);
 
                 case 'update_category_assignments':
                     $handler = new UpdateCategoryAssignmentsAction($this->dao);
                     return $handler->handle($postData);
 
                 case 'create_child':
-                    $handler = new CreateChildAction($this->dao);
-                    return $handler->handle($postData);
+                    // Delegate to variations plugin
+                    return $this->handlePluginAction('create_child', $postData);
 
                 case 'update_product_types':
-                    $handler = new UpdateProductTypesAction($this->dao);
+                    // Delegate to variations plugin
+                    return $this->handlePluginAction('update_product_types', $postData);
                     return $handler->handle($postData);
 
                 default:
@@ -77,5 +78,50 @@ class ActionHandler
             display_error("Error handling action '$action': " . $e->getMessage());
             return null;
         }
+    }
+
+    /**
+     * Handle actions that are delegated to plugins
+     */
+    private function handlePluginAction(string $action, array $postData): ?string
+    {
+        // Use hooks to allow plugins to handle this action
+        if (function_exists('fa_hooks')) {
+            $hooks = fa_hooks();
+            $result = $hooks->call_hook('fa_product_attributes_plugin_action', $action, $postData);
+            if ($result !== null) {
+                return $result;
+            }
+        }
+
+        // Fallback: try to load the plugin directly
+        return $this->loadPluginActionHandler($action, $postData);
+    }
+
+    /**
+     * Load plugin action handler directly (fallback)
+     */
+    private function loadPluginActionHandler(string $action, array $postData): ?string
+    {
+        global $path_to_root;
+
+        // Try to load variations plugin action handler
+        $pluginPath = $path_to_root . '/modules/FA_ProductAttributes_Variations';
+        if (file_exists($pluginPath . '/hooks.php')) {
+            // Include plugin autoloader
+            $autoloader = $pluginPath . '/composer-lib/vendor/autoload.php';
+            if (file_exists($autoloader)) {
+                require_once $autoloader;
+            }
+
+            // Try to instantiate the plugin's action handler
+            $pluginClass = 'hooks_FA_ProductAttributes_Variations';
+            if (class_exists($pluginClass) && method_exists($pluginClass, 'handlePluginAction')) {
+                $pluginInstance = new $pluginClass();
+                return $pluginInstance->handlePluginAction($action, $postData);
+            }
+        }
+
+        return null;
     }
 }

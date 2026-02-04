@@ -71,11 +71,24 @@ class AssignmentsTab
 
             end_table(1);
 
-            // Buttons
+            // Buttons - allow plugins to extend
             echo '<div style="text-align: center; margin: 10px;">';
             submit('update', _("Update Assignments"), true, '', 'default');
-            echo ' ';
-            submit('create_child', _("Create Child Product"), true, '', 'default');
+
+            // Hook: fa_product_attributes_assignments_buttons
+            // Allows plugins to add additional buttons after the Update Assignments button
+            if (function_exists('fa_hooks')) {
+                $hooks = fa_hooks();
+                $additionalButtons = $hooks->call_hook('fa_product_attributes_assignments_buttons', [
+                    'stock_id' => $stockId,
+                    'assignments' => $assignments
+                ]);
+                if (!empty($additionalButtons)) {
+                    echo ' ';
+                    echo implode(' ', $additionalButtons);
+                }
+            }
+
             echo '</div>';
 
             end_form();
@@ -101,14 +114,18 @@ class AssignmentsTab
                 end_table();
             }
 
-            // Generate Variations button
-            echo '<br />';
-            start_form(true);
-            hidden('action', 'generate_variations');
-            hidden('tab', 'assignments');
-            hidden('stock_id', $stockId);
-            submit_center('generate', _("Generate Variations"));
-            end_form();
+            // Hook: fa_product_attributes_assignments_after_table
+            // Allows plugins to add content after the assignments table
+            if (function_exists('fa_hooks')) {
+                $hooks = fa_hooks();
+                $additionalContent = $hooks->call_hook('fa_product_attributes_assignments_after_table', [
+                    'stock_id' => $stockId,
+                    'assignments' => $assignments
+                ]);
+                if (!empty($additionalContent)) {
+                    echo implode('', $additionalContent);
+                }
+            }
         }
     }
 }

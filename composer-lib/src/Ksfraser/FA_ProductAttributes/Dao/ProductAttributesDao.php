@@ -422,3 +422,4 @@ class ProductAttributesDao
         $stmt = $this->db->prepare($sql);
         $stmt->execute([$childStockId, $parentStockId]);
     }
+}
