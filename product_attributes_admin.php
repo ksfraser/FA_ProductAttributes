@@ -99,11 +99,20 @@ if (!empty($action)) {
     display_notification("DEBUG: Action detected: '$action'");
     display_notification("Request data: " . json_encode($requestData));
 
-    $actionHandler = new ActionHandler($dao, $db_adapter);
-    display_notification("DEBUG: ActionHandler instantiated");
+    // First try plugin action handlers via hooks
+    $message = null;
+    if (function_exists('fa_hooks')) {
+        $hooks = fa_hooks();
+        $message = $hooks->call_hook('fa_product_attributes_handle_action', $action, $requestData);
+    }
 
-    $message = $actionHandler->handle($action, $requestData);
-    display_notification("DEBUG: ActionHandler->handle() returned: '$message'");
+    // If no plugin handled it, use core action handler
+    if ($message === null) {
+        $actionHandler = new ActionHandler($dao, $db_adapter);
+        display_notification("DEBUG: ActionHandler instantiated");
+        $message = $actionHandler->handle($action, $requestData);
+        display_notification("DEBUG: ActionHandler->handle() returned: '$message'");
+    }
 
     if ($message) {
         display_notification($message);
