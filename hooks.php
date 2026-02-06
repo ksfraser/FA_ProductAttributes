@@ -271,9 +271,10 @@ class hooks_FA_ProductAttributes extends hooks
             echo "<div style='padding: 20px; border: 1px solid #ccc; margin: 10px;'>";
             echo "<h3>Product Attributes for: {$stock_id}</h3>";
 
-            // Get assignments
+            // Get assignments and categories
             $dao = $this->get_product_attributes_dao();
             $assignments = $dao->listAssignments($stock_id);
+            $categories = $dao->listCategories();
 
             // Display current assignments
             echo "<h4>Current Assignments:</h4>";
@@ -292,26 +293,66 @@ class hooks_FA_ProductAttributes extends hooks
                 echo "</table>";
             }
 
+            // Display available categories with variation counts
+            echo "<h4>Available Categories:</h4>";
+            if (empty($categories)) {
+                echo "<p>No attribute categories defined.</p>";
+            } else {
+                echo "<table border='1' cellpadding='5' cellspacing='0' style='margin-bottom: 20px;'>";
+                echo "<tr><th>Category</th><th>Description</th><th>Values Count</th><th>Assignment Type</th></tr>";
+                foreach ($categories as $category) {
+                    $values = $dao->listValues($category['id']);
+                    $valueCount = count($values);
+                    $isAssigned = !empty(array_filter($assignments, function($a) use ($category) {
+                        return $a['category_id'] == $category['id'];
+                    }));
+
+                    echo "<tr>";
+                    echo "<td>" . htmlspecialchars($category['label']) . "</td>";
+                    echo "<td>" . htmlspecialchars($category['description'] ?? '') . "</td>";
+                    echo "<td>{$valueCount}</td>";
+                    echo "<td>" . ($isAssigned ? 'Assigned' : 'Not Assigned') . "</td>";
+                    echo "</tr>";
+                }
+                echo "</table>";
+            }
+
             // Add assignment form
-            echo "<h4>Add New Attribute:</h4>";
+            echo "<h4>Assign Attributes:</h4>";
             echo "<form method='post' action=''>";
             echo "<input type='hidden' name='stock_id' value='" . htmlspecialchars($stock_id) . "'>";
 
-            // Get available categories
-            $categories = $dao->listCategories();
-            echo "<select name='category_id' required>";
+            // Category assignment
+            echo "<h5>Assign Entire Category:</h5>";
+            echo "<select name='assign_category_id'>";
+            echo "<option value=''>Select Category to Assign</option>";
+            foreach ($categories as $category) {
+                $isAssigned = !empty(array_filter($assignments, function($a) use ($category) {
+                    return $a['category_id'] == $category['id'];
+                }));
+                if (!$isAssigned) {
+                    echo "<option value='" . htmlspecialchars($category['id']) . "'>" . htmlspecialchars($category['label']) . "</option>";
+                }
+            }
+            echo "</select> ";
+            echo "<input type='submit' name='assign_category' value='Assign Category'>";
+
+            // Individual value assignment
+            echo "<h5>Assign Individual Values:</h5>";
+            echo "<select name='category_id' id='category_select'>";
             echo "<option value=''>Select Category</option>";
             foreach ($categories as $category) {
                 echo "<option value='" . htmlspecialchars($category['id']) . "'>" . htmlspecialchars($category['label']) . "</option>";
             }
             echo "</select> ";
 
-            // Value will be populated via AJAX when category is selected
-            echo "<select name='value_id' id='value_select' required disabled>";
+            // Get available categories
+            $categories = $dao->listCategories();
+            echo "<select name='value_id' id='value_select' disabled>";
             echo "<option value=''>Select Value</option>";
             echo "</select> ";
 
-            echo "<input type='submit' name='add_attribute' value='Add Attribute'>";
+            echo "<input type='submit' name='assign_value' value='Assign Value'>";
             echo "</form>";
 
             // JavaScript for dynamic value loading
