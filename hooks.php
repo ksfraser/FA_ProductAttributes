@@ -206,6 +206,13 @@ class hooks_FA_ProductAttributes extends hooks
             add_security_extensions();
         }
 
+        // Debug: Check if security area is registered
+        global $security_areas;
+        if (!isset($security_areas['SA_FA_ProductAttributes'])) {
+            // Manually register if not found
+            $security_areas['SA_FA_ProductAttributes'] = array(SS_FA_ProductAttributes | 101, _("Product Attributes"));
+        }
+
         // Add Product Attributes tab to the tabs array
         // FA expects tabs as arrays: array(title, stock_id_or_null)
         // Use null to disable tab if user lacks access
