@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "205c332e3413cd8b3670db1caa13f0cb",
+    "content-hash": "29934039711c62577dc16c5bc3e15b8b",
     "packages": [
         {
             "name": "ksfraser/fa-hooks",
@@ -122,54 +122,6 @@
                 }
             ],
             "time": "2022-12-30T00:15:36+00:00"
-        },
-        {
-            "name": "ksfraser/famock",
-            "version": "0.2.0",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/ksfraser/FAMock.git",
-                "reference": "b8f4d488edf3e70a2efdf88ac07179ed1b652cf6"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/ksfraser/FAMock/zipball/b8f4d488edf3e70a2efdf88ac07179ed1b652cf6",
-                "reference": "b8f4d488edf3e70a2efdf88ac07179ed1b652cf6",
-                "shasum": ""
-            },
-            "require": {
-                "php": ">=7.4"
-            },
-            "type": "library",
-            "extra": {
-                "branch-alias": {
-                    "dev-main": "0.2.x-dev"
-                }
-            },
-            "autoload": {
-                "files": [
-                    "php/FAMock.php"
-                ],
-                "psr-4": {
-                    "Ksfraser\\FAMock\\": "php/"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Kevin Fraser",
-                    "email": "kevin@ksfraser.com"
-                }
-            ],
-            "description": "FrontAccounting function mocks for unit testing",
-            "support": {
-                "issues": "https://github.com/ksfraser/FAMock/issues",
-                "source": "https://github.com/ksfraser/FAMock/tree/v0.2.0"
-            },
-            "time": "2026-02-06T02:03:33+00:00"
         },
         {
             "name": "myclabs/deep-copy",
