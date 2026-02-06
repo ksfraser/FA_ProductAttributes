@@ -269,19 +269,18 @@ class hooks_FA_ProductAttributes extends hooks
 
             // Temporarily use simple content without FA UI functions to test
             echo "<div style='padding: 20px; border: 1px solid #ccc; margin: 10px;'>";
-            echo "<h3>Product Attributes Tab</h3>";
-            echo "<p>Selected tab: {$selected_tab}</p>";
-            echo "<p>Stock ID: {$stock_id}</p>";
+            echo "<h3>Product Attributes for: {$stock_id}</h3>";
 
-            // Try to get assignments without using FA UI functions
+            // Get assignments
             $dao = $this->get_product_attributes_dao();
             $assignments = $dao->listAssignments($stock_id);
 
+            // Display current assignments
             echo "<h4>Current Assignments:</h4>";
             if (empty($assignments)) {
                 echo "<p>No attributes assigned to this item.</p>";
             } else {
-                echo "<table border='1' cellpadding='5' cellspacing='0'>";
+                echo "<table border='1' cellpadding='5' cellspacing='0' style='margin-bottom: 20px;'>";
                 echo "<tr><th>Category</th><th>Value</th><th>Actions</th></tr>";
                 foreach ($assignments as $assignment) {
                     echo "<tr>";
@@ -293,7 +292,57 @@ class hooks_FA_ProductAttributes extends hooks
                 echo "</table>";
             }
 
-            echo "<br><button onclick=\"window.open('" . $path_to_root . "/modules/FA_ProductAttributes/product_attributes_admin.php', '_blank');\">Manage Product Attributes</button>";
+            // Add assignment form
+            echo "<h4>Add New Attribute:</h4>";
+            echo "<form method='post' action=''>";
+            echo "<input type='hidden' name='stock_id' value='" . htmlspecialchars($stock_id) . "'>";
+
+            // Get available categories
+            $categories = $dao->listCategories();
+            echo "<select name='category_id' required>";
+            echo "<option value=''>Select Category</option>";
+            foreach ($categories as $category) {
+                echo "<option value='" . htmlspecialchars($category['id']) . "'>" . htmlspecialchars($category['label']) . "</option>";
+            }
+            echo "</select> ";
+
+            // Value will be populated via AJAX when category is selected
+            echo "<select name='value_id' id='value_select' required disabled>";
+            echo "<option value=''>Select Value</option>";
+            echo "</select> ";
+
+            echo "<input type='submit' name='add_attribute' value='Add Attribute'>";
+            echo "</form>";
+
+            // JavaScript for dynamic value loading
+            echo "<script>
+            document.querySelector('select[name=category_id]').addEventListener('change', function() {
+                var categoryId = this.value;
+                var valueSelect = document.getElementById('value_select');
+                valueSelect.innerHTML = '<option value=\"\">Loading...</option>';
+                valueSelect.disabled = true;
+
+                if (categoryId) {
+                    // Load values for this category
+                    fetch('{$path_to_root}/modules/FA_ProductAttributes/api.php?action=get_values&category_id=' + categoryId)
+                        .then(response => response.json())
+                        .then(data => {
+                            valueSelect.innerHTML = '<option value=\"\">Select Value</option>';
+                            data.forEach(function(value) {
+                                valueSelect.innerHTML += '<option value=\"' + value.id + '\">' + value.value + '</option>';
+                            });
+                            valueSelect.disabled = false;
+                        })
+                        .catch(error => {
+                            valueSelect.innerHTML = '<option value=\"\">Error loading values</option>';
+                        });
+                } else {
+                    valueSelect.innerHTML = '<option value=\"\">Select Value</option>';
+                    valueSelect.disabled = true;
+                }
+            });
+            </script>";
+
             echo "</div>";
             return true; // Successfully handled
         } catch (Exception $e) {
