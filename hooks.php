@@ -103,7 +103,7 @@ class hooks_FA_ProductAttributes extends hooks
                     2,
                     _('Product Attributes'),
                     $path_to_root . '/modules/FA_ProductAttributes/product_attributes_admin.php',
-                    'SA_PRODUCTATTRIBUTES'
+                    'SA_FA_ProductAttributes'
                 );
                 break;
         }
@@ -112,7 +112,7 @@ class hooks_FA_ProductAttributes extends hooks
     function install_access()
     {
         $security_sections[SS_FA_ProductAttributes] = _("Product Attributes");
-        $security_areas['SA_PRODUCTATTRIBUTES'] = array(SS_FA_ProductAttributes | 101, _("Product Attributes"));
+        $security_areas['SA_FA_ProductAttributes'] = array(SS_FA_ProductAttributes | 101, _("Product Attributes"));
         return array($security_areas, $security_sections);
     }
 
@@ -202,7 +202,7 @@ class hooks_FA_ProductAttributes extends hooks
         $stock_id = $_POST['stock_id'] ?? '';
         $tabs['product_attributes'] = array(
             _('Product Attributes'),
-            (user_check_access('SA_PRODUCTATTRIBUTES') ? $stock_id : null)
+            (user_check_access('SA_FA_ProductAttributes') ? $stock_id : null)
         );
 
         return $tabs;
@@ -225,7 +225,7 @@ class hooks_FA_ProductAttributes extends hooks
         }
 
         // Check access
-        if (!user_check_access('SA_PRODUCTATTRIBUTES')) {
+        if (!user_check_access('SA_FA_ProductAttributes')) {
             return false; // No access, don't handle
         }
 
@@ -250,7 +250,7 @@ class hooks_FA_ProductAttributes extends hooks
         self::load_plugins_on_demand();
 
         // Check user access before allowing attribute modifications
-        if (!user_check_access('SA_PRODUCTATTRIBUTES')) {
+        if (!user_check_access('SA_FA_ProductAttributes')) {
             return $item_data; // Return unchanged data if no access
         }
 
@@ -268,7 +268,7 @@ class hooks_FA_ProductAttributes extends hooks
         self::load_plugins_on_demand();
 
         // Check user access before allowing attribute deletions
-        if (!user_check_access('SA_PRODUCTATTRIBUTES')) {
+        if (!user_check_access('SA_FA_ProductAttributes')) {
             return null; // Allow deletion to proceed without touching attributes
         }
 

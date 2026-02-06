@@ -5,7 +5,7 @@ ini_set('display_errors', 1);
 // FrontAccounting wrapper admin page.
 // Place this repo under FA: modules/FA_ProductAttributes
 
-$page_security = 'SA_PRODUCTATTRIBUTES';
+$page_security = 'SA_FA_ProductAttributes';
 
 $path_to_root = '../..';
 

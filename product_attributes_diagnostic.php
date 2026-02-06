@@ -6,7 +6,7 @@
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
-$page_security = 'SA_PRODUCTATTRIBUTES';
+$page_security = 'SA_FA_ProductAttributes';
 
 $path_to_root = realpath(__DIR__ . '/../../');
 if ($path_to_root === false) {
