@@ -14,7 +14,7 @@ class DisplaySql
         }
 
         if ($show_sql > 0) {
-            $paramStr = empty($params) ? '' : ' [' . implode(', ', array_map(fn($k, $v) => "$k=$v", array_keys($params), array_values($params))) . ']';
+            $paramStr = empty($params) ? '' : ' [' . implode(', ', array_map(function($k, $v) { return "$k=$v"; }, array_keys($params), array_values($params))) . ']';
             display_notification("SQL: " . $sql . $paramStr);
         }
     }

@@ -415,7 +415,7 @@ class ProductAttributesDao
 
         $p = $this->db->getTablePrefix();
         $fields = array_keys($childData);
-        $placeholders = array_map(fn($field) => ':' . $field, $fields);
+        $placeholders = array_map(function($field) { return ':' . $field; }, $fields);
 
         $sql = "INSERT INTO `{$p}stock_master` (" . implode(', ', $fields) . ") VALUES (" . implode(', ', $placeholders) . ")";
 
