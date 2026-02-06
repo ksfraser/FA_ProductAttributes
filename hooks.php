@@ -324,7 +324,7 @@ class hooks_FA_ProductAttributes extends hooks
 
                 if (categoryId) {
                     // Load values for this category
-                    fetch('{$path_to_root}/modules/FA_ProductAttributes/api.php?action=get_values&category_id=' + categoryId)
+                    fetch('./modules/FA_ProductAttributes/api.php?action=get_values&category_id=' + categoryId)
                         .then(response => response.json())
                         .then(data => {
                             valueSelect.innerHTML = '<option value=\"\">Select Value</option>';
@@ -334,6 +334,7 @@ class hooks_FA_ProductAttributes extends hooks
                             valueSelect.disabled = false;
                         })
                         .catch(error => {
+                            console.error('Error:', error);
                             valueSelect.innerHTML = '<option value=\"\">Error loading values</option>';
                         });
                 } else {
