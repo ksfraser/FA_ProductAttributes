@@ -246,12 +246,33 @@ class hooks_FA_ProductAttributes extends hooks
 
         // Handle the tab content
         try {
-            // Temporarily use simple content to test tab switching
+            // Temporarily use simple content without FA UI functions to test
             echo "<div style='padding: 20px; border: 1px solid #ccc; margin: 10px;'>";
             echo "<h3>Product Attributes Tab</h3>";
             echo "<p>Selected tab: {$selected_tab}</p>";
             echo "<p>Stock ID: {$stock_id}</p>";
-            echo "<p>This is a test to see if tab switching works.</p>";
+
+            // Try to get assignments without using FA UI functions
+            $dao = $this->get_product_attributes_dao();
+            $assignments = $dao->getAssignmentsForStockId($stock_id);
+
+            echo "<h4>Current Assignments:</h4>";
+            if (empty($assignments)) {
+                echo "<p>No attributes assigned to this item.</p>";
+            } else {
+                echo "<table border='1' cellpadding='5' cellspacing='0'>";
+                echo "<tr><th>Category</th><th>Value</th><th>Actions</th></tr>";
+                foreach ($assignments as $assignment) {
+                    echo "<tr>";
+                    echo "<td>" . htmlspecialchars($assignment['category_label'] ?? '') . "</td>";
+                    echo "<td>" . htmlspecialchars($assignment['value_label'] ?? '') . "</td>";
+                    echo "<td><a href='#'>Edit</a> | <a href='#'>Remove</a></td>";
+                    echo "</tr>";
+                }
+                echo "</table>";
+            }
+
+            echo "<br><button onclick=\"window.open('" . $path_to_root . "/modules/FA_ProductAttributes/product_attributes_admin.php', '_blank');\">Manage Product Attributes</button>";
             echo "</div>";
             return true; // Successfully handled
         } catch (Exception $e) {
