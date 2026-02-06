@@ -111,7 +111,6 @@ class hooks_FA_ProductAttributes extends hooks
 
     function install_access()
     {
-        global $security_sections, $security_areas;
         $security_sections[SS_FA_ProductAttributes] = _("Product Attributes");
         $security_areas['SA_PRODUCTATTRIBUTES'] = array(SS_FA_ProductAttributes | 101, _("Product Attributes"));
         return array($security_areas, $security_sections);
