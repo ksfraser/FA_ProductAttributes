@@ -301,8 +301,8 @@ if (!function_exists('db_insert_id')) {
 
 if (!function_exists('db_escape')) {
     function db_escape($value) {
-        // Simple mock escaping - just return the value
-        // In real FA this would use mysqli_real_escape_string or similar
-        return addslashes($value);
+        // Mock FA db_escape - adds quotes and escapes
+        // In real FA this would properly escape and quote the value
+        return "'" . addslashes($value) . "'";
     }
 }
