@@ -201,6 +201,11 @@ class hooks_FA_ProductAttributes extends hooks
      * Called by FA to add tab headers to the items page
      */
     function item_display_tab_headers($tabs) {
+        // Ensure security extensions are registered for this module
+        if (function_exists('add_security_extensions')) {
+            add_security_extensions();
+        }
+
         // Add Product Attributes tab to the tabs array
         // FA expects tabs as arrays: array(title, stock_id_or_null)
         // Use null to disable tab if user lacks access
