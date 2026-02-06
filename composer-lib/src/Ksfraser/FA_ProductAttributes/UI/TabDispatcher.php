@@ -140,7 +140,7 @@ class TabDispatcher
         }
 
         // Show current assignments for this item
-        $assignments = $this->dao->getAssignmentsForStockId($stockId);
+        $assignments = $this->dao->listAssignments($stockId);
 
         start_table(TABLESTYLE2);
         table_header(array(_("Category"), _("Value"), _("Actions")));
