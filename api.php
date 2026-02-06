@@ -16,7 +16,7 @@ include($path_to_root . "/includes/session.inc");
 add_security_extensions();
 add_access_extensions();
 
-use Ksfraser\FA_ProductAttributes\Db\DatabaseAdapterFactory;
+use Ksfraser\ModulesDAO\Factory\DatabaseAdapterFactory;
 use Ksfraser\FA_ProductAttributes\Dao\ProductAttributesDao;
 
 header('Content-Type: application/json');

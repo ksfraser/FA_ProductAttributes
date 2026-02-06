@@ -592,6 +592,122 @@ INSERT INTO stock_master (stock_id, description, category_id, taxable, mb_flag, 
 
 ---
 
+## Categories Plugin Test Cases
+
+### TC-UAT-CAT-001: Create Product Category Hierarchy
+**Priority**: Critical  
+**Preconditions**: Admin user logged in, Categories plugin active  
+
+**Test Steps**:
+1. Navigate to Inventory → Stock → Product Categories
+2. Click "Add Category" button
+3. Enter "Electronics" as category name
+4. Leave parent category empty (top-level)
+5. Click "Create Category"
+6. Create subcategory "Smartphones" under "Electronics"
+7. Create subcategory "Laptops" under "Electronics"
+
+**Expected Results**:
+- Top-level "Electronics" category created
+- "Smartphones" and "Laptops" appear as subcategories
+- Hierarchical tree displays correctly
+
+**Pass/Fail Criteria**:
+- PASS: Category hierarchy created and displayed properly
+- FAIL: Hierarchy not maintained or display issues
+
+**Test Data**: Electronics > Smartphones, Electronics > Laptops
+
+---
+
+### TC-UAT-CAT-002: Assign Product to Categories
+**Priority**: Critical  
+**Preconditions**: Product exists, categories created, Categories plugin active  
+
+**Test Steps**:
+1. Navigate to Inventory → Items and select a product
+2. Click "Product Categories" TAB
+3. Expand category tree and select "Electronics > Smartphones"
+4. Also select "Electronics > Laptops"
+5. Click "Save Categories"
+
+**Expected Results**:
+- Success message: "Categories assigned successfully"
+- Product shows assigned categories in details
+- Categories appear in product listings
+
+**Pass/Fail Criteria**:
+- PASS: Product assigned to multiple categories
+- FAIL: Assignment fails or not saved
+
+**Test Data**: Product: TEST-PHONE, Categories: Smartphones, Laptops
+
+---
+
+### TC-UAT-CAT-003: Filter Products by Category
+**Priority**: High  
+**Preconditions**: Products assigned to categories, Categories plugin active  
+
+**Test Steps**:
+1. Navigate to Inventory → Items
+2. Click category filter dropdown
+3. Select "Electronics" category
+4. Check "Include subcategories"
+5. Apply filter
+
+**Expected Results**:
+- Product list shows only items in Electronics category
+- Subcategories (Smartphones, Laptops) included
+- Filter can be cleared
+
+**Pass/Fail Criteria**:
+- PASS: Correct products displayed based on category filter
+- FAIL: Wrong products shown or filter not working
+
+---
+
+### TC-UAT-CAT-004: Bulk Category Assignment
+**Priority**: Medium  
+**Preconditions**: Multiple products exist, categories created  
+
+**Test Steps**:
+1. Navigate to Inventory → Stock → Product Categories
+2. Click "Bulk Assign" button
+3. Select multiple products from list
+4. Choose "Electronics > Smartphones" category
+5. Click "Assign to Selected"
+
+**Expected Results**:
+- Success message with count of assignments
+- All selected products assigned to category
+- Assignments visible in individual product details
+
+**Pass/Fail Criteria**:
+- PASS: Bulk assignment completes successfully
+- FAIL: Partial failures or errors
+
+---
+
+### TC-UAT-CAT-005: Category-Based Reporting
+**Priority**: Medium  
+**Preconditions**: Products assigned to categories, reporting enabled  
+
+**Test Steps**:
+1. Navigate to Reports → Inventory → Category Report
+2. Select "Electronics" from category filter
+3. Generate report
+
+**Expected Results**:
+- Report shows products grouped by category
+- Subtotals for each category level
+- Export options available
+
+**Pass/Fail Criteria**:
+- PASS: Report generates with correct category groupings
+- FAIL: Incorrect groupings or missing data
+
+---
+
 ## Test Execution Summary Template
 
 | Test Case ID | Status | Tester | Date | Notes |

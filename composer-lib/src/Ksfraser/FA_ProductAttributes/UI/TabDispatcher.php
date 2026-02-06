@@ -171,7 +171,7 @@ class TabDispatcher
         start_row();
         label_cell(
             '<input type="button" value="' . _("Manage Product Attributes") . '" onclick="window.open(\'' .
-            $path_to_root . '/modules/FA_ProductAttributes/product_attributes_admin.php\', \'_blank\');">'
+            ($path_to_root ?? '/fa') . '/modules/FA_ProductAttributes/product_attributes_admin.php\', \'_blank\');">'
         );
         end_row();
         end_table();

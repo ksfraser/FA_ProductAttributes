@@ -46,7 +46,7 @@ if (is_file($autoload)) {
 
 page(_("Product Attributes"));
 
-use Ksfraser\FA_ProductAttributes\Db\DatabaseAdapterFactory;
+use Ksfraser\ModulesDAO\Factory\DatabaseAdapterFactory;
 use Ksfraser\FA_ProductAttributes\Dao\ProductAttributesDao;
 use Ksfraser\FA_ProductAttributes\UI\TabDispatcher;
 

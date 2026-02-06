@@ -44,6 +44,11 @@ The FA_ProductAttributes system consists of a core module providing generic attr
   - Automatic variation generation
   - Royal Order attribute sequencing
   - Retroactive pattern analysis for existing products
+- **FA_ProductAttributes_Categories**: Adds product categorization functionality
+  - Hierarchical category structures
+  - Product-to-category assignments
+  - Category-based organization and filtering
+  - Bulk category operations
 
 ## Functional Requirements
 

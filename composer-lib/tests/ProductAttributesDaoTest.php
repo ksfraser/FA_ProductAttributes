@@ -3,7 +3,7 @@
 namespace Ksfraser\FA_ProductAttributes\Test\Dao;
 
 use Ksfraser\FA_ProductAttributes\Dao\ProductAttributesDao;
-use Ksfraser\FA_ProductAttributes\Db\DbAdapterInterface;
+use Ksfraser\ModulesDAO\Db\DbAdapterInterface;
 use PHPUnit\Framework\TestCase;
 
 class ProductAttributesDaoTest extends TestCase

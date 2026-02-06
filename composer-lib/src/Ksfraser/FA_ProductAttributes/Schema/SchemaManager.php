@@ -2,7 +2,7 @@
 
 namespace Ksfraser\FA_ProductAttributes\Schema;
 
-use Ksfraser\FA_ProductAttributes\Db\DbAdapterInterface;
+use Ksfraser\ModulesDAO\Db\DbAdapterInterface;
 
 /**
  * Schema Manager for Product Attributes Database Tables

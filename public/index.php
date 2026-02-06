@@ -12,7 +12,7 @@ if (!is_file($autoload)) {
 }
 require_once $autoload;
 
-use Ksfraser\FA_ProductAttributes\Db\PdoDbAdapter;
+use Ksfraser\ModulesDAO\Db\PdoDbAdapter;
 use Ksfraser\FA_ProductAttributes\Dao\ProductAttributesDao;
 use Ksfraser\HTML\Elements\HtmlTable;
 use Ksfraser\HTML\Elements\TableBuilder;

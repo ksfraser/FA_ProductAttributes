@@ -2,3 +2,6 @@
 /data/
 /public/.phpunit.result.cache
 fa_product_attributes_variations/
+fa_product_attributes_categories
+plugins/
+ksf-modules-dao/

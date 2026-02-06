@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "29934039711c62577dc16c5bc3e15b8b",
+    "content-hash": "666e83f76c90617714f84007f00552d5",
     "packages": [
         {
             "name": "ksfraser/fa-hooks",
@@ -46,6 +46,45 @@
                 }
             ],
             "description": "Lightweight hook system for FrontAccounting module extensions",
+            "transport-options": {
+                "symlink": false,
+                "relative": true
+            }
+        },
+        {
+            "name": "ksfraser/ksf-modules-dao",
+            "version": "0.1.1",
+            "dist": {
+                "type": "path",
+                "url": "../ksf-modules-dao",
+                "reference": "e17ddbbb6c33cbc0d48d4af887109ff54078022e"
+            },
+            "require": {
+                "php": ">=7.3"
+            },
+            "require-dev": {
+                "phpunit/phpunit": "^9.0"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Ksfraser\\ModulesDAO\\": "src/"
+                }
+            },
+            "autoload-dev": {
+                "psr-4": {
+                    "Ksfraser\\ModulesDAO\\Tests\\": "tests/"
+                }
+            },
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "KS Fraser"
+                }
+            ],
+            "description": "Cross-platform DAO abstraction (DB, WordPress, SuiteCRM, FrontAccounting, CSV, XML)",
             "transport-options": {
                 "symlink": false,
                 "relative": true

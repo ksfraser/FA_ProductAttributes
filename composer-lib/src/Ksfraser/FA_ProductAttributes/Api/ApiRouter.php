@@ -3,7 +3,7 @@
 namespace Ksfraser\FA_ProductAttributes\Api;
 
 use Ksfraser\FA_ProductAttributes\Dao\ProductAttributesDao;
-use Ksfraser\FA_ProductAttributes\Db\DbAdapterInterface;
+use Ksfraser\ModulesDAO\Db\DbAdapterInterface;
 
 /**
  * API Router for handling REST requests

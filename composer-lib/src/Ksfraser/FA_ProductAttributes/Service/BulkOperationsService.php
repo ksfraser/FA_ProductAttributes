@@ -3,7 +3,7 @@
 namespace Ksfraser\FA_ProductAttributes\Service;
 
 use Ksfraser\FA_ProductAttributes\Dao\ProductAttributesDao;
-use Ksfraser\FA_ProductAttributes\Db\DbAdapterInterface;
+use Ksfraser\ModulesDAO\Db\DbAdapterInterface;
 
 class BulkOperationsService
 {

@@ -314,6 +314,81 @@ This document describes use cases for the FA_ProductAttributes core module, whic
 - Patterns based on attribute abbreviations and Royal Order sequencing.
 - Sanity checks warn on root mismatches but allow force assignment.
 
+## Use Case: Create and Manage Product Categories
+
+### Actors
+- Product Manager (Primary Actor)
+
+### Preconditions
+- Product Manager has access to FrontAccounting.
+- FA_ProductAttributes_Categories plugin is installed and active.
+
+### Main Flow
+1. Product Manager navigates to Inventory > Stock > Product Categories.
+2. Views hierarchical category tree.
+3. Creates new top-level category (e.g., "Clothing").
+4. Creates subcategories under parent categories (e.g., "Shirts" under "Clothing").
+5. Sets category properties (name, description, sort order).
+6. Activates or deactivates categories as needed.
+
+### Postconditions
+- Category hierarchy is established and available for product assignments.
+
+### Alternative Flows
+- Edit existing category: Update properties or move in hierarchy.
+- Delete category: Confirm no products assigned, then remove.
+- Bulk operations: Import/export category structures.
+
+## Use Case: Assign Products to Categories
+
+### Actors
+- Product Manager (Primary Actor)
+
+### Preconditions
+- Product Manager has access to FrontAccounting Items screen.
+- FA_ProductAttributes_Categories plugin is installed.
+- Product categories exist in the system.
+
+### Main Flow
+1. Product Manager navigates to Inventory > Items and selects a product.
+2. Clicks on "Product Categories" TAB (provided by categories plugin).
+3. Views available categories in hierarchical tree.
+4. Selects one or multiple categories for the product.
+5. Saves category assignments.
+6. Views assigned categories in product details.
+
+### Postconditions
+- Product is linked to selected categories.
+- Category data is available for filtering and reporting.
+
+### Alternative Flows
+- Remove assignments: Unassign categories from product.
+- Bulk assignment: Assign multiple products to categories simultaneously.
+
+## Use Case: Filter Products by Category
+
+### Actors
+- Product Manager (Primary Actor)
+- Sales Representative (Secondary Actor)
+
+### Preconditions
+- Products are assigned to categories.
+- FA_ProductAttributes_Categories plugin is active.
+
+### Main Flow
+1. User navigates to product listing or search screen.
+2. Selects category filter from hierarchical tree.
+3. Chooses to include or exclude subcategories.
+4. Applies filter to view products in selected categories.
+5. Refines filter with additional criteria.
+
+### Postconditions
+- Product list shows only items in selected categories.
+
+### Alternative Flows
+- Multiple category selection: Combine categories with AND/OR logic.
+- Save filter: Store filter preferences for future use.
+
 ## Use Case: Manage Attribute Categories and Values (Admin)
 
 ### Actors

@@ -132,6 +132,48 @@ This document details the functional behavior of the FA_ProductAttributes system
   7. Skip creation if variation already exists.
   8. Display count of created variations.
 - **Output**: Category assignments saved and/or child variation products created.
+
+### FR4: Product Category Management
+- **Trigger**: User needs to organize products into hierarchical categories.
+- **Process**:
+  1. Create and manage category hierarchies (parent-child relationships).
+  2. Assign products to one or multiple categories.
+  3. Support category-based filtering and organization.
+  4. Provide bulk category assignment operations.
+  5. Display category assignments in product listings.
+  6. Allow category-based reporting and analytics.
+- **Output**: Products organized by categories with hierarchical structure.
+
+### FR4.1: Category Hierarchy Management
+- **Trigger**: Administrator needs to define product categories.
+- **Process**:
+  1. Create top-level categories (e.g., Clothing, Electronics).
+  2. Create subcategories under parent categories (e.g., Shirts under Clothing).
+  3. Support unlimited nesting levels.
+  4. Maintain category sort order and display preferences.
+  5. Provide category activation/deactivation.
+- **Output**: Hierarchical category structure for product organization.
+
+### FR4.2: Product Category Assignments
+- **Trigger**: User assigns categories to products.
+- **Process**:
+  1. Display available categories in hierarchical tree view.
+  2. Allow multiple category selection per product.
+  3. Support drag-and-drop category assignment.
+  4. Validate category assignments against business rules.
+  5. Display assigned categories in product details.
+- **Output**: Products linked to appropriate categories.
+
+### FR4.3: Category-Based Filtering
+- **Trigger**: User needs to filter products by category.
+- **Process**:
+  1. Display category tree for filtering.
+  2. Support single or multiple category selection.
+  3. Include subcategories in parent category filters.
+  4. Apply filters to product listings and reports.
+  5. Maintain filter state across sessions.
+- **Output**: Filtered product views based on category selection.
+
 - **Trigger**: User navigates to Inventory > Stock > Product Attributes.
 - **Process**:
   1. Display categories in a sortable table (by Name or Royal Order).

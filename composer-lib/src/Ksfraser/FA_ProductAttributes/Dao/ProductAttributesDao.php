@@ -2,7 +2,7 @@
 
 namespace Ksfraser\FA_ProductAttributes\Dao;
 
-use Ksfraser\FA_ProductAttributes\Db\DbAdapterInterface;
+use Ksfraser\ModulesDAO\Db\DbAdapterInterface;
 use Ksfraser\FA_ProductAttributes\Schema\SchemaManager;
 
 class ProductAttributesDao

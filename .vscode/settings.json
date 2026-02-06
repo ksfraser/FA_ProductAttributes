@@ -43,6 +43,46 @@
         "/^php test_instantiation\\.php$/": {
             "approve": true,
             "matchCommandLine": true
+        },
+        "/^cd c:\\\\Users\\\\prote\\\\Documents\\\\software-devel\\\\FA_ProductAttributes\\\\composer-lib ; php vendor/bin/phpunit tests/Service/ProductAttributesServiceTest\\.php$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^cd c:\\\\Users\\\\prote\\\\Documents\\\\software-devel\\\\FA_ProductAttributes\\\\composer-lib ; php vendor/bin/phpunit --coverage-text 2>&1 \\| Select-String \"Summary:\" -Context 0,5$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^cd c:\\\\Users\\\\prote\\\\Documents\\\\software-devel\\\\FA_ProductAttributes\\\\composer-lib ; php vendor/bin/phpunit tests/ProductAttributesServiceTest\\.php --coverage-text$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^cd c:\\\\Users\\\\prote\\\\Documents\\\\software-devel\\\\FA_ProductAttributes\\\\composer-lib ; php vendor/bin/phpunit --coverage-text \\| tail -10$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^cd c:\\\\Users\\\\prote\\\\Documents\\\\software-devel\\\\FA_ProductAttributes\\\\composer-lib ; php vendor/bin/phpunit tests/Api/BaseApiControllerTest\\.php$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^cd c:\\\\Users\\\\prote\\\\Documents\\\\software-devel\\\\FA_ProductAttributes\\\\composer-lib ; php vendor/bin/phpunit --coverage-text 2>&1 \\| Select-String -Pattern \"Summary:\" \\| Select-Object -Last 1$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^cd c:\\\\Users\\\\prote\\\\Documents\\\\software-devel\\\\FA_ProductAttributes\\\\composer-lib ; php vendor/bin/phpunit --coverage-text \\| findstr /C:\"Summary:\"$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^cd \"c:\\\\Users\\\\prote\\\\Documents\\\\software-devel\\\\FA_ProductAttributes\\\\composer-lib\"; php vendor/phpunit/phpunit/phpunit --bootstrap tests/bootstrap\\.php tests/SchemaManagerTest\\.php$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^cd \"c:\\\\Users\\\\prote\\\\Documents\\\\software-devel\\\\FA_ProductAttributes\\\\ksf-modules-dao\"; php \\.\\./composer-lib/vendor/phpunit/phpunit/phpunit tests/Db/$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^cd \"c:\\\\Users\\\\prote\\\\Documents\\\\software-devel\\\\FA_ProductAttributes\\\\ksf-modules-dao\"; php \\.\\./composer-lib/vendor/phpunit/phpunit/phpunit --bootstrap tests/bootstrap\\.php tests/Db/$/": {
+            "approve": true,
+            "matchCommandLine": true
         }
     }
 }
