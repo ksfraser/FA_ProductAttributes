@@ -147,6 +147,11 @@ class hooks_FA_ProductAttributes extends hooks
     function register_hooks() {
         global $path_to_root;
 
+        // Register security extensions for this module
+        if (function_exists('add_security_extensions')) {
+            add_security_extensions();
+        }
+
         // FA automatically calls hook methods on this class:
         // - item_display_tab_headers()
         // - item_display_tab_content()
