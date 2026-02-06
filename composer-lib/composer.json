@@ -13,7 +13,7 @@
   ],
   "require": {
     "php": ">=7.3",
-    "ksfraser/fa-hooks": "^1.0",
+    "ksfraser/fa-hooks": "^1.0 || dev-main",
     "ksfraser/ksf-modules-dao": "^0.3"
   },
   "require-dev": {
