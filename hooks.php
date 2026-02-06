@@ -227,7 +227,7 @@ class hooks_FA_ProductAttributes extends hooks
      */
     function item_display_tab_content($stock_id, $selected_tab) {
         // Load plugins when core functionality is accessed
-        self::load_plugins_on_demand();
+        // self::load_plugins_on_demand();  // Temporarily disabled for debugging
 
         // Only handle tabs that start with 'product_attributes'
         if (!preg_match('/^product_attributes/', $selected_tab)) {
