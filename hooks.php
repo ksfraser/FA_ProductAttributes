@@ -276,84 +276,142 @@ class hooks_FA_ProductAttributes extends hooks
             $assignments = $dao->listAssignments($stock_id);
             $categories = $dao->listCategories();
 
-            // Display current assignments
-            echo "<h4>Current Assignments:</h4>";
-            if (empty($assignments)) {
-                echo "<p>No attributes assigned to this item.</p>";
-            } else {
-                echo "<table border='1' cellpadding='5' cellspacing='0' style='margin-bottom: 20px;'>";
-                echo "<tr><th>Category</th><th>Value</th><th>Actions</th></tr>";
-                foreach ($assignments as $assignment) {
-                    echo "<tr>";
-                    echo "<td>" . htmlspecialchars($assignment['category_label'] ?? '') . "</td>";
-                    echo "<td>" . htmlspecialchars($assignment['value_label'] ?? '') . "</td>";
-                    echo "<td><a href='#'>Edit</a> | <a href='#'>Remove</a></td>";
-                    echo "</tr>";
-                }
-                echo "</table>";
-            }
+            // Check if this item is a parent (has variations)
+            $isParent = $dao->getProductParent($stock_id) === null && !empty($dao->getVariationCountForProductCategory($stock_id, 0)); // Simple check
 
-            // Display available categories with variation counts
-            echo "<h4>Available Categories:</h4>";
-            if (empty($categories)) {
-                echo "<p>No attribute categories defined.</p>";
-            } else {
-                echo "<table border='1' cellpadding='5' cellspacing='0' style='margin-bottom: 20px;'>";
-                echo "<tr><th>Category</th><th>Description</th><th>Values Count</th><th>Assignment Type</th></tr>";
-                foreach ($categories as $category) {
-                    $values = $dao->listValues($category['id']);
-                    $valueCount = count($values);
-                    $isAssigned = !empty(array_filter($assignments, function($a) use ($category) {
-                        return $a['category_id'] == $category['id'];
-                    }));
-
-                    echo "<tr>";
-                    echo "<td>" . htmlspecialchars($category['label']) . "</td>";
-                    echo "<td>" . htmlspecialchars($category['description'] ?? '') . "</td>";
-                    echo "<td>{$valueCount}</td>";
-                    echo "<td>" . ($isAssigned ? 'Assigned' : 'Not Assigned') . "</td>";
-                    echo "</tr>";
-                }
-                echo "</table>";
-            }
-
-            // Add assignment form
-            echo "<h4>Assign Attributes:</h4>";
-            echo "<form method='post' action=''>";
+            // Product Attributes Controls
+            echo "<div style='margin-bottom: 20px; padding: 10px; background-color: #f0f0f0; border-radius: 5px;'>";
+            echo "<h4>Product Configuration:</h4>";
+            echo "<form method='post' action='' style='display: inline;'>";
             echo "<input type='hidden' name='stock_id' value='" . htmlspecialchars($stock_id) . "'>";
-
-            // Category assignment
-            echo "<h5>Assign Entire Category:</h5>";
-            echo "<select name='assign_category_id'>";
-            echo "<option value=''>Select Category to Assign</option>";
-            foreach ($categories as $category) {
-                $isAssigned = !empty(array_filter($assignments, function($a) use ($category) {
-                    return $a['category_id'] == $category['id'];
-                }));
-                if (!$isAssigned) {
-                    echo "<option value='" . htmlspecialchars($category['id']) . "'>" . htmlspecialchars($category['label']) . "</option>";
-                }
-            }
-            echo "</select> ";
-            echo "<input type='submit' name='assign_category' value='Assign Category'>";
-
-            // Individual value assignment
-            echo "<h5>Assign Individual Values:</h5>";
-            echo "<select name='category_id' id='category_select'>";
-            echo "<option value=''>Select Category</option>";
-            foreach ($categories as $category) {
-                echo "<option value='" . htmlspecialchars($category['id']) . "'>" . htmlspecialchars($category['label']) . "</option>";
-            }
-            echo "</select> ";
-
-            // Get available categories
-            $categories = $dao->listCategories();
-            echo "<select name='value_id' id='value_select' disabled>";
-            echo "<option value=''>Select Value</option>";
-            echo "</select> ";
-
-            echo "<input type='submit' name='assign_value' value='Assign Value'>";
+            echo "<label><input type='checkbox' name='is_parent' value='1' " . ($isParent ? 'checked' : '') . "> This is a parent product (can have variations)</label> ";
+            echo "<input type='submit' name='update_product_config' value='Update'>";
             echo "</form>";
+            echo "</div>";
+
+            // Plugin Admin Links
+            echo "<div style='margin-bottom: 20px; padding: 10px; background-color: #e8f4f8; border-radius: 5px;'>";
+            echo "<h4>Plugin Administration:</h4>";
+            echo "<p><a href='./modules/FA_ProductAttributes/product_attributes_admin.php' target='_blank'>Product Attributes Admin</a></p>";
+            // Plugin links will be added here dynamically when plugins are loaded
+            echo "<p><em>Plugin admin links will appear here when plugins are activated.</em></p>";
+            echo "</div>";
+
+            // Sub-tabs for different functions
+            $current_subtab = $_GET['subtab'] ?? 'assignments';
+            echo "<div style='margin-bottom: 20px;'>";
+            echo "<a href='?tab=product_attributes&subtab=assignments' style='padding: 8px 12px; margin-right: 5px; text-decoration: none; " . ($current_subtab == 'assignments' ? 'background-color: #007cba; color: white;' : 'background-color: #f0f0f0;') . "'>Assignments</a>";
+            echo "<a href='?tab=product_attributes&subtab=categories' style='padding: 8px 12px; margin-right: 5px; text-decoration: none; " . ($current_subtab == 'categories' ? 'background-color: #007cba; color: white;' : 'background-color: #f0f0f0;') . "'>Categories</a>";
+            echo "<a href='?tab=product_attributes&subtab=variations' style='padding: 8px 12px; margin-right: 5px; text-decoration: none; " . ($current_subtab == 'variations' ? 'background-color: #007cba; color: white;' : 'background-color: #f0f0f0;') . "'>Variations</a>";
+            // Plugin sub-tabs will be added here
+            echo "</div>";
+
+            // Display content based on sub-tab
+            switch ($current_subtab) {
+                case 'assignments':
+
+            // Display content based on sub-tab
+            switch ($current_subtab) {
+                case 'assignments':
+                    // Display current assignments
+                    echo "<h4>Current Assignments:</h4>";
+                    if (empty($assignments)) {
+                        echo "<p>No attributes assigned to this item.</p>";
+                    } else {
+                        echo "<table border='1' cellpadding='5' cellspacing='0' style='margin-bottom: 20px;'>";
+                        echo "<tr><th>Category</th><th>Value</th><th>Actions</th></tr>";
+                        foreach ($assignments as $assignment) {
+                            echo "<tr>";
+                            echo "<td>" . htmlspecialchars($assignment['category_label'] ?? '') . "</td>";
+                            echo "<td>" . htmlspecialchars($assignment['value_label'] ?? '') . "</td>";
+                            echo "<td><a href='#'>Edit</a> | <a href='#'>Remove</a></td>";
+                            echo "</tr>";
+                        }
+                        echo "</table>";
+                    }
+
+                    // Add assignment form
+                    echo "<h4>Assign Attributes:</h4>";
+                    echo "<form method='post' action=''>";
+                    echo "<input type='hidden' name='stock_id' value='" . htmlspecialchars($stock_id) . "'>";
+
+                    // Category assignment
+                    echo "<h5>Assign Entire Category:</h5>";
+                    echo "<select name='assign_category_id'>";
+                    echo "<option value=''>Select Category to Assign</option>";
+                    foreach ($categories as $category) {
+                        $isAssigned = !empty(array_filter($assignments, function($a) use ($category) {
+                            return $a['category_id'] == $category['id'];
+                        }));
+                        if (!$isAssigned) {
+                            echo "<option value='" . htmlspecialchars($category['id']) . "'>" . htmlspecialchars($category['label']) . "</option>";
+                        }
+                    }
+                    echo "</select> ";
+                    echo "<input type='submit' name='assign_category' value='Assign Category'>";
+
+                    // Individual value assignment
+                    echo "<h5>Assign Individual Values:</h5>";
+                    echo "<select name='category_id' id='category_select'>";
+                    echo "<option value=''>Select Category</option>";
+                    foreach ($categories as $category) {
+                        echo "<option value='" . htmlspecialchars($category['id']) . "'>" . htmlspecialchars($category['label']) . "</option>";
+                    }
+                    echo "</select> ";
+
+                    echo "<select name='value_id' id='value_select' disabled>";
+                    echo "<option value=''>Select Value</option>";
+                    echo "</select> ";
+
+                    echo "<input type='submit' name='assign_value' value='Assign Value'>";
+                    echo "</form>";
+                    break;
+
+                case 'categories':
+                    // Display available categories with variation counts
+                    echo "<h4>Available Categories:</h4>";
+                    if (empty($categories)) {
+                        echo "<p>No attribute categories defined.</p>";
+                    } else {
+                        echo "<table border='1' cellpadding='5' cellspacing='0' style='margin-bottom: 20px;'>";
+                        echo "<tr><th>Category</th><th>Description</th><th>Values Count</th><th>Assignment Type</th></tr>";
+                        foreach ($categories as $category) {
+                            $values = $dao->listValues($category['id']);
+                            $valueCount = count($values);
+                            $isAssigned = !empty(array_filter($assignments, function($a) use ($category) {
+                                return $a['category_id'] == $category['id'];
+                            }));
+
+                            echo "<tr>";
+                            echo "<td>" . htmlspecialchars($category['label']) . "</td>";
+                            echo "<td>" . htmlspecialchars($category['description'] ?? '') . "</td>";
+                            echo "<td>{$valueCount}</td>";
+                            echo "<td>" . ($isAssigned ? 'Assigned' : 'Not Assigned') . "</td>";
+                            echo "</tr>";
+                        }
+                        echo "</table>";
+                    }
+                    break;
+
+                case 'variations':
+                    echo "<h4>Variations:</h4>";
+                    if ($isParent) {
+                        echo "<p>This is a parent product. Variations functionality will be implemented here.</p>";
+                        // TODO: Show child variations when implemented
+                    } else {
+                        $parent = $dao->getProductParent($stock_id);
+                        if ($parent) {
+                            echo "<p>This is a variation of: " . htmlspecialchars($parent['stock_id']) . "</p>";
+                        } else {
+                            echo "<p>This product has no variations configured.</p>";
+                        }
+                    }
+                    break;
+
+                default:
+                    echo "<p>Unknown sub-tab: {$current_subtab}</p>";
+                    break;
+            }
 
             // JavaScript for dynamic value loading
             echo "<script>
@@ -364,7 +422,6 @@ class hooks_FA_ProductAttributes extends hooks
                 valueSelect.disabled = true;
 
                 if (categoryId) {
-                    // Load values for this category
                     fetch('./modules/FA_ProductAttributes/api.php?action=get_values&category_id=' + categoryId)
                         .then(response => response.json())
                         .then(data => {
@@ -382,6 +439,13 @@ class hooks_FA_ProductAttributes extends hooks
                     valueSelect.innerHTML = '<option value=\"\">Select Value</option>';
                     valueSelect.disabled = true;
                 }
+            });
+
+            // Handle sub-tab navigation to maintain state
+            document.querySelectorAll('a[href*=\"subtab=\"]').forEach(function(link) {
+                link.addEventListener('click', function(e) {
+                    // Could add loading indicator here
+                });
             });
             </script>";
 
