@@ -24,10 +24,7 @@
   ],
   "autoload": {
     "psr-4": {
-      "Ksfraser\\FA_ProductAttributes\\": "src/Ksfraser/FA_ProductAttributes/",
-      "Ksfraser\\FA_ProductAttributes_Variations\\": "../fa_product_attributes_variations/src/Ksfraser/FA_ProductAttributes_Variations/",
-      "Ksfraser\\FA_Hooks\\": "../fa-hooks/src/Ksfraser/FA_Hooks/",
-      "Ksfraser\\ModulesDAO\\": "../ksf-modules-dao/src/"
+      "Ksfraser\\FA_ProductAttributes\\": "src/Ksfraser/FA_ProductAttributes/"
     }
   },
   "autoload-dev": {

@@ -241,14 +241,14 @@ class hooks_FA_ProductAttributes extends hooks
             self::ensure_autoloader_loaded();
 
             // Debug: Check if class exists
-            if (!class_exists('\Ksfraser\ModulesDAO\DatabaseAdapterFactory')) {
+            if (!class_exists('\Ksfraser\ModulesDAO\Factory\DatabaseAdapterFactory')) {
                 $autoloader_path = __DIR__ . '/composer-lib/vendor/autoload.php';
                 error_log("FA_ProductAttributes: DatabaseAdapterFactory class not found after autoloader");
                 throw new \Exception("DatabaseAdapterFactory class not found. Check autoloader path: " . $autoloader_path);
             }
 
             // Create database adapter
-            $db_adapter = \Ksfraser\ModulesDAO\DatabaseAdapterFactory::create('fa');
+            $db_adapter = \Ksfraser\ModulesDAO\Factory\DatabaseAdapterFactory::create('fa');
 
             // Create DAO
             $dao = new \Ksfraser\FA_ProductAttributes\Dao\ProductAttributesDao($db_adapter);
