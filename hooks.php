@@ -187,16 +187,15 @@ class hooks_FA_ProductAttributes extends hooks
     private static function ensure_autoloader_loaded() {
         global $path_to_root;
 
-        // Only load composer autoloader in testing/development environments
-        // In production, we don't need it for core functionality
-        if (defined('FA_TESTING') || getenv('FA_TESTING') || isset($_SERVER['FA_TESTING'])) {
-            $autoloader = $path_to_root . '/modules/FA_ProductAttributes/composer-lib/vendor/autoload.php';
-            if (file_exists($autoloader)) {
-                require_once $autoloader;
-            }
+        // Load composer autoloader (needed for core classes in all environments)
+        $autoloader = $path_to_root . '/modules/FA_ProductAttributes/composer-lib/vendor/autoload.php';
+        if (file_exists($autoloader)) {
+            require_once $autoloader;
+        }
 
-            // Only load FA function mocks in testing/development environments
-            // In production, FA provides the real functions
+        // Only load FA function mocks in testing/development environments
+        // In production, FA provides the real functions
+        if (defined('FA_TESTING') || getenv('FA_TESTING') || isset($_SERVER['FA_TESTING'])) {
             $famock = $path_to_root . '/modules/FA_ProductAttributes/composer-lib/vendor/ksfraser/famock/php/FAMock.php';
             if (file_exists($famock)) {
                 require_once $famock;
