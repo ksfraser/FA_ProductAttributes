@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "86ef1f858725e12a0add7b9e619de73c",
+    "content-hash": "210e7b060387bc8fdd9ca5f239e29311",
     "packages": [
         {
             "name": "ksfraser/fa-hooks",
@@ -52,11 +52,17 @@
         },
         {
             "name": "ksfraser/ksf-modules-dao",
-            "version": "dev-main",
-            "dist": {
-                "type": "path",
-                "url": "../ksf-modules-dao",
+            "version": "v0.3.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/ksfraser/ksf_ModulesDAO.git",
                 "reference": "68e1813a2034aa4e19515b2161172ec111387446"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/ksfraser/ksf_ModulesDAO/zipball/68e1813a2034aa4e19515b2161172ec111387446",
+                "reference": "68e1813a2034aa4e19515b2161172ec111387446",
+                "shasum": ""
             },
             "require": {
                 "php": ">=7.3"
@@ -84,10 +90,11 @@
                 }
             ],
             "description": "Cross-platform DAO abstraction (DB, WordPress, SuiteCRM, FrontAccounting, CSV, XML)",
-            "transport-options": {
-                "symlink": false,
-                "relative": true
-            }
+            "support": {
+                "source": "https://github.com/ksfraser/ksf_ModulesDAO/tree/v0.3.1",
+                "issues": "https://github.com/ksfraser/ksf_ModulesDAO/issues"
+            },
+            "time": "2026-02-06T22:30:33+00:00"
         }
     ],
     "packages-dev": [

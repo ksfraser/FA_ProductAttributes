@@ -21,13 +21,6 @@
     "nikic/php-parser": "^4.0"
   },
   "repositories": [
-    {
-      "type": "path",
-      "url": "../ksf-modules-dao",
-      "options": {
-        "symlink": false
-      }
-    }
   ],
   "autoload": {
     "psr-4": {
