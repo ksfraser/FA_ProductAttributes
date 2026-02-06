@@ -229,7 +229,7 @@ class hooks_FA_ProductAttributes extends hooks
             self::ensure_autoloader_loaded();
 
             // Create database adapter
-            $db_adapter = \Ksfraser\FA_ProductAttributes\Db\DatabaseAdapterFactory::create('fa');
+            $db_adapter = \Ksfraser\ModulesDAO\DatabaseAdapterFactory::create('fa');
 
             // Create DAO
             $dao = new \Ksfraser\FA_ProductAttributes\Dao\ProductAttributesDao($db_adapter);
