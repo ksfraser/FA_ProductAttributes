@@ -74,6 +74,7 @@ class CategoriesTab
             text_row(_("Description"), 'description', $editCategory['description'] ?? '', 40, 255);
             
             // Sort order dropdown (simple numeric)
+            $currentSortOrder = $editCategory ? (int)($editCategory['sort_order'] ?? 0) : 0;
             echo '<tr><td>' . _("Sort order") . ':</td><td>';
             echo '<select name="sort_order">';
             echo '<option value="0"' . ($currentSortOrder == 0 ? ' selected' : '') . '>' . _("None") . '</option>';

@@ -106,9 +106,10 @@ if (!empty($action)) {
 
     // First try plugin action handlers via hooks
     $message = null;
-    if (function_exists('fa_hooks')) {
-        $hooks = fa_hooks();
-        $message = $hooks->call_hook('fa_product_attributes_handle_action', $action, $requestData);
+    if (function_exists('hook_invoke_all')) {
+        $message = hook_invoke_all('fa_product_attributes_handle_action', [$action, $requestData]);
+        // hook_invoke_all returns an array, so get the first result if any
+        $message = is_array($message) && !empty($message) ? $message[0] : null;
     }
 
     // If no plugin handled it, use core action handler

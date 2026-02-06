@@ -76,12 +76,8 @@ class AssignmentsTab
 
             // Hook: fa_product_attributes_assignments_buttons
             // Allows plugins to add additional buttons after the Update Assignments button
-            if (function_exists('fa_hooks')) {
-                $hooks = fa_hooks();
-                $additionalButtons = $hooks->call_hook('fa_product_attributes_assignments_buttons', [
-                    'stock_id' => $stockId,
-                    'assignments' => $assignments
-                ]);
+            if (function_exists('hook_invoke_all')) {
+                $additionalButtons = hook_invoke_all('fa_product_attributes_assignments_buttons', [$stockId, $assignments]);
                 if (!empty($additionalButtons)) {
                     echo ' ';
                     echo implode(' ', $additionalButtons);
@@ -115,12 +111,8 @@ class AssignmentsTab
 
             // Hook: fa_product_attributes_assignments_after_table
             // Allows plugins to add content after the assignments table
-            if (function_exists('fa_hooks')) {
-                $hooks = fa_hooks();
-                $additionalContent = $hooks->call_hook('fa_product_attributes_assignments_after_table', [
-                    'stock_id' => $stockId,
-                    'assignments' => $assignments
-                ]);
+            if (function_exists('hook_invoke_all')) {
+                $additionalContent = hook_invoke_all('fa_product_attributes_assignments_after_table', [$stockId, $assignments]);
                 if (!empty($additionalContent)) {
                     echo implode('', $additionalContent);
                 }

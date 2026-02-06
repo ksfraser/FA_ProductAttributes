@@ -92,13 +92,18 @@ class ItemsIntegration
 
         // Allow plugins to extend the save functionality
         global $path_to_root;
-        require_once $path_to_root . '/modules/FA_ProductAttributes/fa_hooks.php';
-        $hooks = fa_hooks();
+        $hooksFile = $path_to_root . '/modules/FA_ProductAttributes/fa_hooks.php';
+        if (file_exists($hooksFile)) {
+            require_once $hooksFile;
+            $hooks = fa_hooks();
 
-        // Apply extensions to the save process
-        $extendedItemData = $hooks->apply_filters('attributes_save', $item_data, $stock_id);
+            // Apply extensions to the save process
+            $extendedItemData = $hooks->apply_filters('attributes_save', $item_data, $stock_id);
 
-        return $extendedItemData;
+            return $extendedItemData;
+        }
+
+        return $item_data;
     }
 
     /**
@@ -114,11 +119,14 @@ class ItemsIntegration
 
         // Allow plugins to extend the delete functionality
         global $path_to_root;
-        require_once $path_to_root . '/modules/FA_ProductAttributes/fa_hooks.php';
-        $hooks = fa_hooks();
+        $hooksFile = $path_to_root . '/modules/FA_ProductAttributes/fa_hooks.php';
+        if (file_exists($hooksFile)) {
+            require_once $hooksFile;
+            $hooks = fa_hooks();
 
-        // Apply extensions to the delete process
-        $hooks->do_action('attributes_delete', $stock_id);
+            // Apply extensions to the delete process
+            $hooks->do_action('attributes_delete', $stock_id);
+        }
     }
 
     // Static methods for hook registration

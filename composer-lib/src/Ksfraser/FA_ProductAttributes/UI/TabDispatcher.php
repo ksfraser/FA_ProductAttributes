@@ -64,17 +64,20 @@ class TabDispatcher
 
         // Allow plugins to handle their own tab content via hooks
         global $path_to_root;
-        require_once $path_to_root . '/modules/FA_ProductAttributes/fa_hooks.php';
+        $hooksFile = $path_to_root . '/modules/FA_ProductAttributes/fa_hooks.php';
+        if (file_exists($hooksFile)) {
+            require_once $hooksFile;
 
-        if (function_exists('fa_hooks')) {
-            $hooks = fa_hooks();
+            if (function_exists('fa_hooks')) {
+                $hooks = fa_hooks();
 
-            // Apply filter for plugin tab content
-            $content = $hooks->apply_filters('attributes_tab_content', '', $_GET['stock_id'] ?? '', $this->selectedTab);
+                // Apply filter for plugin tab content
+                $content = $hooks->apply_filters('attributes_tab_content', '', $_GET['stock_id'] ?? '', $this->selectedTab);
 
-            if (!empty($content)) {
-                echo $content;
-                return;
+                if (!empty($content)) {
+                    echo $content;
+                    return;
+                }
             }
         }
 

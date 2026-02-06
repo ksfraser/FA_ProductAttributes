@@ -3,8 +3,13 @@
 // Load Composer autoloader first
 require_once __DIR__ . '/../vendor/autoload.php';
 
-// Load FA function mocks
-require_once __DIR__ . '/FAMock.php';
+// Load FA function mocks from FAMock library
+if (file_exists(__DIR__ . '/../vendor/ksfraser/famock/php/FAMock.php')) {
+    require_once __DIR__ . '/../vendor/ksfraser/famock/php/FAMock.php';
+} else {
+    // Fallback to local FAMock for development
+    require_once __DIR__ . '/FAMock.php';
+}
 
 // Simple autoload for testing
 $files = [

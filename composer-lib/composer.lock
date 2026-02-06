@@ -4,83 +4,8 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "12da7ba4baebef60ca1a9eb869a50d9b",
-    "packages": [
-        {
-            "name": "ksfraser/fa-hooks",
-            "version": "dev-main",
-            "dist": {
-                "type": "path",
-                "url": "../fa-hooks",
-                "reference": "32842b4e7e1538bea050094caf683516c9b41553"
-            },
-            "require": {
-                "php": ">=7.3"
-            },
-            "require-dev": {
-                "phpunit/phpunit": "^9.0"
-            },
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "Ksfraser\\FA_Hooks\\": "src/Ksfraser/FA_Hooks/"
-                }
-            },
-            "autoload-dev": {
-                "psr-4": {
-                    "Ksfraser\\FA_Hooks\\Tests\\": "tests/"
-                }
-            },
-            "scripts": {
-                "test": [
-                    "phpunit"
-                ]
-            },
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Kevin Fraser",
-                    "email": "kevin@ksfraser.com"
-                }
-            ],
-            "description": "Lightweight hook system for FrontAccounting module extensions",
-            "transport-options": {
-                "symlink": false,
-                "relative": true
-            }
-        },
-        {
-            "name": "ksfraser/html",
-            "version": "1.0.0",
-            "source": {
-                "type": "git",
-                "url": "git@github.com:ksfraser/html.git",
-                "reference": "6c005ee0c7a423eaeaaffca05d8e1280058b7900"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/ksfraser/html/zipball/6c005ee0c7a423eaeaaffca05d8e1280058b7900",
-                "reference": "6c005ee0c7a423eaeaaffca05d8e1280058b7900",
-                "shasum": ""
-            },
-            "require": {
-                "php": ">=7.3"
-            },
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "Ksfraser\\HTML\\": "src/Ksfraser/HTML/",
-                    "Ksfraser\\HTML\\Elements\\": "src/Ksfraser/HTML/Elements/",
-                    "Ksfraser\\HTML\\CSS\\": "src/Ksfraser/HTML/CSS/",
-                    "Ksfraser\\HTML\\Composites\\": "src/Ksfraser/HTML/Composites/"
-                }
-            },
-            "description": "HTML project for Ksfraser",
-            "time": "2025-12-25T11:55:49+00:00"
-        }
-    ],
+    "content-hash": "ef846c7396ab59f24b54bbbe6910f9ab",
+    "packages": [],
     "packages-dev": [
         {
             "name": "doctrine/instantiator",
@@ -151,6 +76,54 @@
                 }
             ],
             "time": "2022-12-30T00:15:36+00:00"
+        },
+        {
+            "name": "ksfraser/famock",
+            "version": "0.2.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/ksfraser/FAMock.git",
+                "reference": "b8f4d488edf3e70a2efdf88ac07179ed1b652cf6"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/ksfraser/FAMock/zipball/b8f4d488edf3e70a2efdf88ac07179ed1b652cf6",
+                "reference": "b8f4d488edf3e70a2efdf88ac07179ed1b652cf6",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=7.4"
+            },
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-main": "0.2.x-dev"
+                }
+            },
+            "autoload": {
+                "files": [
+                    "php/FAMock.php"
+                ],
+                "psr-4": {
+                    "Ksfraser\\FAMock\\": "php/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Kevin Fraser",
+                    "email": "kevin@ksfraser.com"
+                }
+            ],
+            "description": "FrontAccounting function mocks for unit testing",
+            "support": {
+                "issues": "https://github.com/ksfraser/FAMock/issues",
+                "source": "https://github.com/ksfraser/FAMock/tree/v0.2.0"
+            },
+            "time": "2026-02-06T02:03:33+00:00"
         },
         {
             "name": "myclabs/deep-copy",
@@ -1875,9 +1848,7 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {
-        "ksfraser/fa-hooks": 20
-    },
+    "stability-flags": {},
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
@@ -1885,7 +1856,7 @@
     },
     "platform-dev": {},
     "platform-overrides": {
-        "php": "7.3.21"
+        "php": "7.4.0"
     },
     "plugin-api-version": "2.6.0"
 }

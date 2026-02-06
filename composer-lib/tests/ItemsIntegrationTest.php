@@ -5,7 +5,6 @@ namespace Ksfraser\FA_ProductAttributes\Test\Integration;
 use PHPUnit\Framework\TestCase;
 use Ksfraser\FA_ProductAttributes\Integration\ItemsIntegration;
 use Ksfraser\FA_ProductAttributes\Service\ProductAttributesService;
-use Ksfraser\FA_Hooks\TabCollection;
 
 /**
  * Test ItemsIntegration class
@@ -26,7 +25,10 @@ class ItemsIntegrationTest extends TestCase
 
     public function testAddTabHeadersAddsProductAttributesTab()
     {
-        $tabCollection = $this->createMock(TabCollection::class);
+        // Create a mock TabCollection class since fa-hooks may not be available in test environment
+        $tabCollection = $this->getMockBuilder('stdClass')
+            ->addMethods(['createTab'])
+            ->getMock();
         $tabCollection->expects($this->once())
             ->method('createTab')
             ->with('product_attributes', 'Product Attributes')
@@ -62,11 +64,28 @@ class ItemsIntegrationTest extends TestCase
 
     public function testHandlePreSaveReturnsUnchangedData()
     {
-        $this->markTestSkipped('Requires FA environment with fa_hooks.php');
+        $this->service->expects($this->once())
+            ->method('saveProductAttributes')
+            ->with('TEST001', $_POST);
+
+        $itemData = ['field1' => 'value1'];
+
+        // Skip the complex FA hooks part for now - focus on core functionality
+        // The FA hooks require full FA environment which is not available in unit tests
+        $result = $this->integration->handlePreSave($itemData, 'TEST001');
+
+        $this->assertEquals($itemData, $result);
     }
 
     public function testHandlePreDeleteDoesNotThrowException()
     {
-        $this->markTestSkipped('Requires FA environment with fa_hooks.php');
+        $this->service->expects($this->once())
+            ->method('deleteProductAttributes')
+            ->with('TEST001');
+
+        // Skip the complex FA hooks part for now - focus on core functionality
+        $this->integration->handlePreDelete('TEST001');
+
+        $this->assertTrue(true);
     }
 }

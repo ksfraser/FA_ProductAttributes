@@ -6,6 +6,8 @@
  * This file provides mock implementations of FrontAccounting functions
  * that are used in the Product Attributes module but not available
  * during unit testing.
+ *
+ * Following SRP principles with separate stub files for different categories.
  */
 
 // UI Functions
@@ -102,6 +104,24 @@ if (!function_exists('submit_center')) {
     }
 }
 
+if (!function_exists('submit')) {
+    function submit($name, $value, $echo_on_click = true) {
+        echo '<input type="submit" name="' . $name . '" value="' . $value . '">';
+    }
+}
+
+if (!function_exists('edit_button_cell')) {
+    function edit_button_cell($name, $value) {
+        echo '<td><input type="submit" name="' . $name . '" value="' . $value . '"></td>';
+    }
+}
+
+if (!function_exists('delete_button_cell')) {
+    function delete_button_cell($name, $value) {
+        echo '<td><input type="submit" name="' . $name . '" value="' . $value . '"></td>';
+    }
+}
+
 // Notification Functions
 if (!function_exists('display_notification')) {
     function display_notification($message) {
@@ -152,9 +172,30 @@ if (!function_exists('end_page')) {
 }
 
 // Security Functions
-if (!function_exists('add_access_extensions')) {
-    function add_access_extensions() {
-        // Mock - do nothing in tests
+if (!function_exists('user_check_access')) {
+    function user_check_access($access) {
+        // Mock - always return true for testing
+        return true;
+    }
+}
+
+// Database Functions
+if (!function_exists('db_query')) {
+    function db_query($sql, $error_msg = null) {
+        // Mock - return a mock result for testing
+        return new class {
+            public function fetch_assoc() { return null; }
+            public function fetch_all($mode = MYSQLI_ASSOC) { return []; }
+            public function num_rows() { return 0; }
+            public function free() {}
+        };
+    }
+}
+
+if (!function_exists('db_escape')) {
+    function db_escape($string) {
+        // Mock - return as-is for testing (in real FA this would escape)
+        return $string;
     }
 }
 
@@ -166,7 +207,65 @@ if (!function_exists('get_company_pref')) {
     }
 }
 
+// Mock session for testing
+if (!isset($_SESSION)) {
+    $_SESSION = [];
+}
+if (!isset($_SESSION['wa_current_user'])) {
+    $_SESSION['wa_current_user'] = new class {
+        public $company = 0;
+        public $user = 1;
+        public $loginname = 'test_user';
+    };
+}
+
 // Database Constants
 if (!defined('TB_PREF')) {
     define('TB_PREF', 'fa_');
+}
+
+// Hook System Functions
+if (!function_exists('fa_hooks')) {
+    function fa_hooks() {
+        // Mock hook manager for testing
+        if (!isset($GLOBALS['mock_fa_hooks'])) {
+            $GLOBALS['mock_fa_hooks'] = new class {
+                public function apply_filters($filter, $value, ...$args) {
+                    return $value; // Return unchanged for testing
+                }
+                public function do_action($action, ...$args) {
+                    // Do nothing for testing
+                }
+                public function add_filter($filter, $callback, $priority = 10) {
+                    // Do nothing for testing
+                }
+                public function add_action($action, $callback, $priority = 10) {
+                    // Do nothing for testing
+                }
+                public function call_hook($hook_name, ...$args) {
+                    // Return the first argument (value) unchanged, or null if no args
+                    return isset($args[0]) ? $args[0] : null;
+                }
+            };
+        }
+        return $GLOBALS['mock_fa_hooks'];
+    }
+}
+
+// FA Native Hook Functions
+if (!function_exists('hook_invoke_all')) {
+    function hook_invoke_all($hook_name, $args = []) {
+        // Mock FA's hook_invoke_all function
+        // For filter hooks, return the first arg (value to filter)
+        // For action hooks, return empty array
+        // This is a simplified mock - in real FA, this would call registered hook functions
+
+        // For button/content hooks, return empty array (no additional content in tests)
+        return [];
+    }
+}
+
+// Global Variables
+if (!isset($GLOBALS['path_to_root'])) {
+    $GLOBALS['path_to_root'] = '/mock/fa/root'; // Mock path for testing
 }

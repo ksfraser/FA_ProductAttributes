@@ -91,6 +91,21 @@ class ComposerInstallerTest extends TestCase
         $this->assertStringEndsWith('vendor', $status['vendor_path']);
     }
 
+    public function testInstallMethodReturnsExpectedStructure(): void
+    {
+        $installer = new ComposerInstaller($this->tempDir);
+
+        $result = $installer->install();
+
+        $this->assertIsArray($result);
+        $this->assertArrayHasKey('success', $result);
+        $this->assertArrayHasKey('message', $result);
+        $this->assertArrayHasKey('output', $result);
+        $this->assertIsBool($result['success']);
+        $this->assertIsString($result['message']);
+        $this->assertIsString($result['output']);
+    }
+
     /**
      * Recursively remove a directory
      */
