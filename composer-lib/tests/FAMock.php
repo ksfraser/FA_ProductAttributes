@@ -179,26 +179,6 @@ if (!function_exists('user_check_access')) {
     }
 }
 
-// Database Functions
-if (!function_exists('db_query')) {
-    function db_query($sql, $error_msg = null) {
-        // Mock - return a mock result for testing
-        return new class {
-            public function fetch_assoc() { return null; }
-            public function fetch_all($mode = MYSQLI_ASSOC) { return []; }
-            public function num_rows() { return 0; }
-            public function free() {}
-        };
-    }
-}
-
-if (!function_exists('db_escape')) {
-    function db_escape($string) {
-        // Mock - return as-is for testing (in real FA this would escape)
-        return $string;
-    }
-}
-
 // Session/Company Functions
 if (!function_exists('get_company_pref')) {
     function get_company_pref($name) {
@@ -268,4 +248,61 @@ if (!function_exists('hook_invoke_all')) {
 // Global Variables
 if (!isset($GLOBALS['path_to_root'])) {
     $GLOBALS['path_to_root'] = '/mock/fa/root'; // Mock path for testing
+}
+
+// Database Functions
+if (!function_exists('db_query')) {
+    // Mock database result resource
+    class MockDbResult {
+        private $data;
+        private $position = 0;
+
+        public function __construct($data) {
+            $this->data = $data;
+        }
+
+        public function fetch_assoc() {
+            if ($this->position < count($this->data)) {
+                return $this->data[$this->position++];
+            }
+            return false;
+        }
+    }
+
+    function db_query($sql, $error_msg = 'Database error') {
+        // Simple mock - return mock result for SELECT, success for others
+        if (stripos(trim($sql), 'SELECT') === 0) {
+            // Mock some sample data for SELECT queries
+            return new MockDbResult([
+                ['id' => 1, 'name' => 'Test Item'],
+                ['id' => 2, 'name' => 'Another Item']
+            ]);
+        }
+        // For INSERT/UPDATE/DELETE, just return true (success)
+        return true;
+    }
+}
+
+if (!function_exists('db_fetch_assoc')) {
+    function db_fetch_assoc($result) {
+        if ($result instanceof MockDbResult) {
+            return $result->fetch_assoc();
+        }
+        return false;
+    }
+}
+
+if (!function_exists('db_insert_id')) {
+    function db_insert_id() {
+        // Mock last insert ID
+        return 123;
+    }
+}
+
+if (!function_exists('db_escape')) {
+    function db_escape($value) {
+        // Simple mock escaping - just return the value
+        // In real FA this would use mysqli_real_escape_string or similar
+        return addslashes($value);
+    }
 }
