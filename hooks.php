@@ -7,7 +7,7 @@ define('SS_FA_ProductAttributes', 112 << 8);
 
 class hooks_FA_ProductAttributes extends hooks
 {
-    var $module_name = 'Product Attributes';
+    var $module_name = 'FA_ProductAttributes';
 
     function install()
     {
@@ -118,9 +118,6 @@ class hooks_FA_ProductAttributes extends hooks
 
     function activate_extension($company, $check_only=true) {
         global $db_connections, $path_to_root;
-
-        // Set TB_PREF for correct table prefix
-        define('TB_PREF', $company . '_');
 
         // Ensure database schema exists (programmatic creation as backup)
         if (!$check_only) {
