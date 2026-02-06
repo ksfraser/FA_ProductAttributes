@@ -4,15 +4,21 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "666e83f76c90617714f84007f00552d5",
+    "content-hash": "86ef1f858725e12a0add7b9e619de73c",
     "packages": [
         {
             "name": "ksfraser/fa-hooks",
             "version": "dev-main",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/ksfraser/FA_Hooks.git",
+                "reference": "874d086deaa87ae2aaf8c63f37869c44e1ef9d3c"
+            },
             "dist": {
-                "type": "path",
-                "url": "../fa-hooks",
-                "reference": "32842b4e7e1538bea050094caf683516c9b41553"
+                "type": "zip",
+                "url": "https://api.github.com/repos/ksfraser/FA_Hooks/zipball/874d086deaa87ae2aaf8c63f37869c44e1ef9d3c",
+                "reference": "874d086deaa87ae2aaf8c63f37869c44e1ef9d3c",
+                "shasum": ""
             },
             "require": {
                 "php": ">=7.3"
@@ -20,22 +26,14 @@
             "require-dev": {
                 "phpunit/phpunit": "^9.0"
             },
+            "default-branch": true,
             "type": "library",
             "autoload": {
                 "psr-4": {
                     "Ksfraser\\FA_Hooks\\": "src/Ksfraser/FA_Hooks/"
                 }
             },
-            "autoload-dev": {
-                "psr-4": {
-                    "Ksfraser\\FA_Hooks\\Tests\\": "tests/"
-                }
-            },
-            "scripts": {
-                "test": [
-                    "phpunit"
-                ]
-            },
+            "notification-url": "https://packagist.org/downloads/",
             "license": [
                 "MIT"
             ],
@@ -46,18 +44,19 @@
                 }
             ],
             "description": "Lightweight hook system for FrontAccounting module extensions",
-            "transport-options": {
-                "symlink": false,
-                "relative": true
-            }
+            "support": {
+                "issues": "https://github.com/ksfraser/FA_Hooks/issues",
+                "source": "https://github.com/ksfraser/FA_Hooks/tree/main"
+            },
+            "time": "2026-02-06T21:43:54+00:00"
         },
         {
             "name": "ksfraser/ksf-modules-dao",
-            "version": "0.1.1",
+            "version": "dev-main",
             "dist": {
                 "type": "path",
                 "url": "../ksf-modules-dao",
-                "reference": "e17ddbbb6c33cbc0d48d4af887109ff54078022e"
+                "reference": "68e1813a2034aa4e19515b2161172ec111387446"
             },
             "require": {
                 "php": ">=7.3"

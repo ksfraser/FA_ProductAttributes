@@ -23,13 +23,6 @@
   "repositories": [
     {
       "type": "path",
-      "url": "../fa-hooks",
-      "options": {
-        "symlink": false
-      }
-    },
-    {
-      "type": "path",
       "url": "../ksf-modules-dao",
       "options": {
         "symlink": false
