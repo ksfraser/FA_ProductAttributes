@@ -265,6 +265,8 @@ class hooks_FA_ProductAttributes extends hooks
 
         // Handle the tab content
         try {
+            global $path_to_root;
+
             // Temporarily use simple content without FA UI functions to test
             echo "<div style='padding: 20px; border: 1px solid #ccc; margin: 10px;'>";
             echo "<h3>Product Attributes Tab</h3>";
