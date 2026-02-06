@@ -219,6 +219,25 @@ class hooks_FA_ProductAttributes extends hooks
     }
 
     /**
+     * Get a ProductAttributesDao instance
+     * @return \Ksfraser\FA_ProductAttributes\Dao\ProductAttributesDao
+     */
+    private function get_product_attributes_dao() {
+        static $dao = null;
+        if ($dao === null) {
+            // Ensure autoloader is loaded
+            self::ensure_autoloader_loaded();
+
+            // Create database adapter
+            $db_adapter = \Ksfraser\FA_ProductAttributes\Db\DatabaseAdapterFactory::create('fa');
+
+            // Create DAO
+            $dao = new \Ksfraser\FA_ProductAttributes\Dao\ProductAttributesDao($db_adapter);
+        }
+        return $dao;
+    }
+
+    /**
      * FA hook: item_display_tab_content
      * Called by FA to display tab content in the items page
      * @param string $stock_id The item stock ID
