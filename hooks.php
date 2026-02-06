@@ -150,24 +150,15 @@ class hooks_FA_ProductAttributes extends hooks
     function register_hooks() {
         global $path_to_root;
 
-        // Include the global hook manager (only if available)
-        require_once $path_to_root . '/modules/FA_ProductAttributes/fa_hooks.php';
-
-        // Get the hook manager for plugin extension points (only if available)
-        $hooks = fa_hooks();
-        if ($hooks) {
-            // Register extension points for plugins (these use our hook system)
-            $hooks->registerHookPoint('attributes_tab_content', 'product_attributes');
-            $hooks->registerHookPoint('attributes_save', 'product_attributes');
-            $hooks->registerHookPoint('attributes_delete', 'product_attributes');
-        }
-
         // FA automatically calls hook methods on this class:
         // - item_display_tab_headers()
         // - item_display_tab_content()
         // - pre_item_write()
         // - pre_item_delete()
         // No manual registration needed - FA's hook_invoke_all() calls these methods
+
+        // Note: fa_hooks.php is loaded on-demand by components that need it
+        // to avoid loading autoloaders during FA's early initialization
     }
 
     /**
