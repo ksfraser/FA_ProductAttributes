@@ -246,9 +246,13 @@ class hooks_FA_ProductAttributes extends hooks
 
         // Handle the tab content
         try {
-            $dao = $this->get_product_attributes_dao();
-            $dispatcher = new \Ksfraser\FA_ProductAttributes\UI\TabDispatcher($dao, $selected_tab, true);
-            $dispatcher->render();
+            // Temporarily use simple content to test tab switching
+            echo "<div style='padding: 20px; border: 1px solid #ccc; margin: 10px;'>";
+            echo "<h3>Product Attributes Tab</h3>";
+            echo "<p>Selected tab: {$selected_tab}</p>";
+            echo "<p>Stock ID: {$stock_id}</p>";
+            echo "<p>This is a test to see if tab switching works.</p>";
+            echo "</div>";
             return true; // Successfully handled
         } catch (Exception $e) {
             display_error("Error displaying tab content: " . $e->getMessage());
