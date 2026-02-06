@@ -146,11 +146,20 @@ class hooks_FA_ProductAttributes extends hooks
     function register_hooks() {
         global $path_to_root;
 
-        // Include the global hook manager
+        // Ensure autoloader and FA mocks are loaded early
+        self::ensure_autoloader_loaded();
+
+        // Include the global hook manager (only if available)
         require_once $path_to_root . '/modules/FA_ProductAttributes/fa_hooks.php';
 
-        // Get the hook manager for plugin extension points
+        // Get the hook manager for plugin extension points (only if available)
         $hooks = fa_hooks();
+        if ($hooks) {
+            // Register extension points for plugins (these use our hook system)
+            $hooks->registerHookPoint('attributes_tab_content', 'product_attributes');
+            $hooks->registerHookPoint('attributes_save', 'product_attributes');
+            $hooks->registerHookPoint('attributes_delete', 'product_attributes');
+        }
 
         // FA automatically calls hook methods on this class:
         // - item_display_tab_headers()
@@ -158,11 +167,6 @@ class hooks_FA_ProductAttributes extends hooks
         // - pre_item_write()
         // - pre_item_delete()
         // No manual registration needed - FA's hook_invoke_all() calls these methods
-
-        // Register extension points for plugins (these use our hook system)
-        $hooks->registerHookPoint('attributes_tab_content', 'product_attributes');
-        $hooks->registerHookPoint('attributes_save', 'product_attributes');
-        $hooks->registerHookPoint('attributes_delete', 'product_attributes');
     }
 
     /**
@@ -185,6 +189,15 @@ class hooks_FA_ProductAttributes extends hooks
         $autoloader = $path_to_root . '/modules/FA_ProductAttributes/composer-lib/vendor/autoload.php';
         if (file_exists($autoloader)) {
             require_once $autoloader;
+        }
+
+        // Only load FA function mocks in testing/development environments
+        // In production, FA provides the real functions
+        if (defined('FA_TESTING') || getenv('FA_TESTING') || isset($_SERVER['FA_TESTING'])) {
+            $famock = $path_to_root . '/modules/FA_ProductAttributes/composer-lib/vendor/ksfraser/famock/php/FAMock.php';
+            if (file_exists($famock)) {
+                require_once $famock;
+            }
         }
     }
 

@@ -15,6 +15,15 @@ if (file_exists($faHooksAutoload)) {
     }
 }
 
+// Load FA function mocks early to prevent undefined function errors
+// Only load in testing/development environments
+if (defined('FA_TESTING') || getenv('FA_TESTING') || isset($_SERVER['FA_TESTING'])) {
+    $famockPath = __DIR__ . '/composer-lib/vendor/ksfraser/famock/php/FAMock.php';
+    if (file_exists($famockPath)) {
+        require_once $famockPath;
+    }
+}
+
 // Initialize global hook manager if not already done
 if (!isset($GLOBALS['fa_hooks'])) {
     // Try to load via composer autoloader first
@@ -40,8 +49,8 @@ if (!isset($GLOBALS['fa_hooks'])) {
 /**
  * Get the global hook manager instance
  *
- * @return \Ksfraser\FA_Hooks\HookManager|\Ksfraser\FA_ProductAttributes\Hooks\HookManager
+ * @return \Ksfraser\FA_Hooks\HookManager|\Ksfraser\FA_ProductAttributes\Hooks\HookManager|null
  */
 function fa_hooks() {
-    return $GLOBALS['fa_hooks'];
+    return $GLOBALS['fa_hooks'] ?? null;
 }
