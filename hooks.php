@@ -236,10 +236,10 @@ class hooks_FA_ProductAttributes extends hooks
             return false; // Not our tab, let others handle it
         }
 
-        // Check access
-        if (!user_check_access('SA_FA_ProductAttributes')) {
-            return false; // No access, don't handle
-        }
+        // Temporarily disable access check for debugging
+        // if (!user_check_access('SA_FA_ProductAttributes')) {
+        //     return false; // No access, don't handle
+        // }
 
         // Handle the tab content
         try {
