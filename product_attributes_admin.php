@@ -11,7 +11,7 @@ $path_to_root = '../..';
 
 include($path_to_root . "/includes/session.inc");
 
-add_access_extensions();
+add_security_extensions();
 
 include_once($path_to_root . "/includes/ui.inc");
 

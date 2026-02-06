@@ -18,6 +18,9 @@ echo "<!-- Debug: path_to_root = $path_to_root -->\n";
 include($path_to_root . "/includes/session.inc");
 echo "<!-- Debug: session.inc included -->\n";
 
+add_security_extensions();
+echo "<!-- Debug: security extensions added -->\n";
+
 add_access_extensions();
 echo "<!-- Debug: access extensions added -->\n";
 
