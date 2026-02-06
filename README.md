@@ -10,6 +10,7 @@ A core Product Attributes module for FrontAccounting that provides generic attri
 - **Plugin Architecture**: Extensible system allowing plugins to add specific attribute types
 - **Hook-based Integration**: Minimal changes to core FrontAccounting files with extension points
 - **Admin Interface**: Web-based management interface for attributes
+- **Bulk Operations**: Framework for batch operations on multiple products (attribute assignment, price updates, status changes)
 - **RESTful API**: Full API for external integrations
 - **Comprehensive Testing**: Unit tests ensuring reliability
 
@@ -29,16 +30,29 @@ The FA_ProductAttributes core module provides:
 The module supports plugins that can add specific attribute functionality:
 
 - **FA_ProductAttributes_Variations**: Adds WooCommerce-style product variations
+  - Parent-child product relationships
+  - Automatic variation generation from attribute combinations
+  - Retroactive pattern analysis for existing products
+  - Royal Order attribute sequencing
+  - Variation-based pricing rules (fixed, percentage, combined adjustments)
+  - Bulk operations for variation management
 - **Future Plugins**: Product dimensions, tags, custom attributes, etc.
+
+### Recent Changes (v1.x)
+
+- **Plugin Architecture Refactoring**: Moved variation-specific services to FA_ProductAttributes_Variations plugin
+- **Service Separation**: RetroactiveApplicationService moved from core to variations plugin
+- **Clean Separation**: Core module provides generic attributes, plugins add domain-specific functionality
+- **Hook Extensions**: Plugin system uses fa-hooks for clean integration
 
 ### Database Schema
 
-The core module uses 4 main tables:
+The core module manages the foundational attribute structure:
 
 - `product_attribute_categories`: Attribute categories (Color, Size, etc.)
 - `product_attribute_values`: Values within categories (Red, Blue, XL, etc.)
-- `product_attribute_assignments`: Links products to specific attribute values
-- `product_attribute_category_assignments`: Links products to entire categories
+
+Plugins can extend the core with additional tables and functionality as needed.
 ## Extended Hook System Architecture
 
 The Product Attributes module now includes an extended hook system that enables scalable module development and cross-module integration for FrontAccounting.
@@ -233,7 +247,7 @@ The FA_ProductAttributes core module provides extension points for plugins to ad
 
 ### Available Plugins
 
-- **FA_ProductAttributes_Variations**: Adds WooCommerce-style product variations with parent-child relationships
+- **FA_ProductAttributes_Variations**: Adds WooCommerce-style product variations with parent-child relationships, pricing rules, and bulk operations
 - **Future Plugins**: Product dimensions, tags, custom attributes, etc.
 
 ### Installing Plugins

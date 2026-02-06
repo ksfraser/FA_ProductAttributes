@@ -39,30 +39,43 @@ class ItemsIntegration
     /**
      * Hook callback for providing tab content in the switch statement
      *
-     * @param string $content Current content (usually empty)
      * @param string $stock_id The item stock ID
      * @param string $selected_tab The currently selected tab
-     * @return string HTML content for the product_attributes tab
+     * @return bool True if this integration handled the tab, false otherwise
      */
-    public function getTabContent($content, $stock_id, $selected_tab)
+    public function getTabContent($stock_id, $selected_tab)
     {
-        // Only provide content for our tab
-        if ($selected_tab === 'product_attributes') {
-            $attributesContent = $this->service->renderProductAttributesTab($stock_id);
+        // Handle any tab that starts with 'product_attributes'
+        if (preg_match('/^product_attributes/', $selected_tab)) {
+            // For the base product_attributes tab, show the main interface
+            if ($selected_tab === 'product_attributes') {
+                $attributesContent = $this->service->renderProductAttributesTab($stock_id);
+            } else {
+                // For plugin tabs (e.g., product_attributes_dimensions), start with empty content
+                // Plugins will populate this via hooks
+                $attributesContent = '';
+            }
 
-            // Allow plugins to extend the attributes tab
+            // Allow plugins to extend/modify the tab content based on the selected tab
             global $path_to_root;
-            require_once $path_to_root . '/modules/FA_ProductAttributes/fa_hooks.php';
-            $hooks = fa_hooks();
+            $hooksFile = $path_to_root . '/modules/FA_ProductAttributes/fa_hooks.php';
+            if (file_exists($hooksFile)) {
+                require_once $hooksFile;
+                $hooks = fa_hooks();
 
-            // Apply extensions to the attributes tab content
-            $extendedContent = $hooks->apply_filters('attributes_tab_content', $attributesContent, $stock_id, $selected_tab);
+                // Apply extensions to the attributes tab content
+                $extendedContent = $hooks->apply_filters('attributes_tab_content', $attributesContent, $stock_id, $selected_tab);
+            } else {
+                // No hooks available, use content as-is
+                $extendedContent = $attributesContent;
+            }
 
-            return $extendedContent;
+            echo $extendedContent;
+            return true;
         }
 
-        // Return unchanged content for other tabs
-        return $content;
+        // Return false for other tabs (not handled)
+        return false;
     }
 
     /**

@@ -1,47 +1,67 @@
-# Use Case Document
+# Use Case Document - FA_ProductAttributes Core Module
 
-## Use Case: Create Product Variations for New Product Line
+## Overview
+This document describes use cases for the FA_ProductAttributes core module, which provides generic attribute infrastructure. Variation-specific use cases are documented in the FA_ProductAttributes_Variations plugin documentation.
+
+## Core Module Responsibilities
+- Generic attribute category and value management
+- Product-to-attribute assignment system
+- Foundation for plugin extensions
+- Hook-based extensibility system
+
+## Use Case: Manage Attribute Categories and Values
+
+### Actors
+- System Administrator (Primary Actor)
+
+### Preconditions
+- Administrator has access to FrontAccounting Product Attributes admin interface.
+- FA_ProductAttributes core module is installed and active.
+
+### Main Flow
+1. Administrator navigates to Inventory > Stock > Product Attributes.
+2. Views sortable table of attribute categories.
+3. Creates new category (e.g., "Size") with Royal Order value.
+4. Adds values to category (e.g., "Small", "Medium", "Large").
+5. Edits Royal Order values for consistent attribute sequencing.
+6. Modifies or deletes categories and values as needed.
+
+### Postconditions
+- Attribute structure is updated and available for product assignments.
+- Royal Order ensures consistent attribute display across the system.
+
+### Alternative Flows
+- Edit existing category: Update name, Royal Order, or values.
+- Delete category: Confirm no products are using it, then remove.
+- Bulk operations: Import/export attribute structures.
+
+## Use Case: Assign Attributes to Products (Core Functionality)
 
 ### Actors
 - Product Manager (Primary Actor)
 
 ### Preconditions
-- Product Manager has access to FrontAccounting.
-- Master product is created in FA (parent flag = true).
-- Attribute categories and values are defined (or will be created).
+- Product Manager has access to FrontAccounting Items screen.
+- FA_ProductAttributes core module is installed.
+- Attribute categories and values exist in the system.
 
 ### Main Flow
-1. Product Manager navigates to the Items screen for the master product.
-2. On the "Product Attributes" TAB, selects applicable categories (e.g., Size, Color).
-3. If categories don't exist, accesses the admin screen (Inventory > Stock > Product Attributes) to create them:
-   - Views sortable table of categories (sort by Name or Royal Order).
-   - Edits Royal Order values inline or via form.
-   - Creates category "Size" with Royal Order 1, values "Small (S)", "Medium (M)", "Large (L)".
-   - Creates category "Color" with Royal Order 2, values "Red (RED)", "Blue (BLU)".
-4. Returns to the product TAB and attaches categories to the master product.
-5. Selects specific values for each category to define variations (e.g., all combinations: S-RED, S-BLU, M-RED, etc.).
-6. Clicks "Create Variations" button, with option to check "Copy Sales Pricing" to inherit prices from the master product.
-7. System generates child products:
-   - Uses "Royal Order of adjectives" for attribute ordering (based on category Royal Order values, e.g., Size=1 before Color=2).
-   - Stock_id: Parent stock_id + attribute abbreviations in order (e.g., XYZ-L-RED).
-   - Short description: Replace ${ATTRIB_CLASS} placeholders in parent description with long attribute names (e.g., if parent has "Coat - ${Size} ${Color}", variation becomes "Coat - Large Red").
-   - If "Copy Sales Pricing" checked, copies all sales prices from master to each variation.
-8. Each child product inherits base details from master but has unique stock_id and description, with parent flag set to false.
-9. System confirms creation and lists generated variations.
-10. Users can manually deactivate any unwanted variations using FA's standard product deactivation features.
+1. Product Manager navigates to Inventory > Items and selects a product.
+2. Clicks on "Product Attributes" TAB (provided by core module).
+3. Views current attribute assignments for the product.
+4. Adds attribute categories to the product.
+5. Selects specific values for each assigned category.
+6. Saves attribute assignments.
+7. Views "Variations" column showing combinatorial possibilities.
 
 ### Postconditions
-- Child products are created and available in FA inventory.
-- Master product remains unchanged.
+- Product has attributes assigned and available for plugin extensions.
+- Attribute data is stored and can be retrieved by plugins.
 
 ### Alternative Flows
-- If category already exists: Skip creation step.
-- If no values selected: Display error "Select at least one value per category".
-- If stock_id conflict: Append unique suffix (e.g., XYZ-L-RED-1).
-
-### Exceptions
-- Insufficient permissions: Deny access.
-- DB error: Rollback and notify user.
+- Remove assignments: Unassign categories or specific values.
+- Category-level assignment: Assign entire category to product.
+- Individual assignment: Assign specific values within categories.
 
 ## Use Case: Add New Attribute to Existing Product Line and Generate Variations
 

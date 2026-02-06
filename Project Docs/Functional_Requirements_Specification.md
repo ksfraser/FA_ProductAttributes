@@ -1,29 +1,67 @@
 # Functional Requirements Specification (FRS)
 
 ## Introduction
-This document details the functional behavior of the Product Attributes module for FrontAccounting.
+This document details the functional behavior of the FA_ProductAttributes system, consisting of a core module providing generic attribute infrastructure and a plugin architecture for extensible functionality.
+
+## System Components
+
+### Core Module (FA_ProductAttributes)
+**Purpose**: Provides generic attribute management infrastructure and extension points for plugins.
+
+**Core Functionality:**
+- Attribute category and value management
+- Product-to-attribute assignment system
+- Generic attribute UI components
+- Hook-based extension system
+- Product type infrastructure
+
+### Plugin System
+**Purpose**: Enables domain-specific attribute functionality through plugins.
+
+**Extension Mechanism:**
+- Plugins register extensions to core hook points
+- Core provides generic UI that plugins can extend
+- Plugins can add domain-specific services and UI
+- Clean separation of concerns between core and plugins
 
 ## Functional Requirements Details
 
-### FR1: Items Screen Enhancement
+### FR1: Core Attribute Management
+- **Trigger**: Administrator accesses Product Attributes admin interface.
+- **Process**:
+  1. Display attribute categories and values management interface.
+  2. Allow creation, editing, and deletion of categories.
+  3. Allow creation, editing, and deletion of values within categories.
+  4. Maintain Royal Order sorting for consistent attribute display.
+- **Output**: Updated attribute structure available for product assignments.
+
+### FR2: Product Attribute Assignment (Core)
 - **Trigger**: User navigates to Inventory > Items and selects a product.
 - **Process**:
   1. Display existing product details.
-  2. Add "Product Attributes" TAB.
-  3. Check if product is parent (parent flag = true); if yes, show TAB with:
-     - Table showing all child variations with their attributes
-     - "Create Variations", "Make Inactive", "Reactivate Variations", "Create Missing Variations" buttons
-  4. If not parent, show:
-     - "Assign Parent" dropdown with sanity check and force option
-     - Table showing parent-child relationships if applicable
-  5. "Make Inactive": Deactivate parent, default deactivate 0 stock variations, warn on stock >0.
-  6. "Reactivate Variations": Rebuild combinations, activate inactive, prompt for missing.
-  7. "Create Missing Variations": Generate missing combinations, create selected.
-  8. On TAB click, load associated attributes from DB.
-  9. Show list of attributes with add/remove options.
-  10. Allow assignment of categories to the product (similar to WooCommerce variable products).
-  11. Generate variations directly from the Items screen.
-- **Output**: Updated product with attributes saved and variations created.
+  2. Add "Product Attributes" TAB via hook system.
+  3. Show generic attribute assignment interface.
+  4. Allow selection of attribute categories and values.
+  5. Display assigned attributes in table format.
+  6. Show "Variations" column indicating combinatorial possibilities.
+- **Output**: Attributes associated with product, available for plugin extensions.
+
+### FR3: Plugin Extension System
+- **Trigger**: Plugin modules are activated.
+- **Process**:
+  1. Plugins register extensions to core hook points.
+  2. Core module loads and executes plugin extensions.
+  3. Plugins can add UI elements, save handlers, and business logic.
+  4. Extension execution follows priority-based ordering.
+- **Output**: Extended functionality without modifying core code.
+
+### FR4: Product Type Infrastructure
+- **Trigger**: Products are managed through the system.
+- **Process**:
+  1. Support classification of products as Simple, Variable, or Variation.
+  2. Maintain parent-child relationships for variation products.
+  3. Provide infrastructure for plugins to manage product types.
+- **Output**: Consistent product type management across core and plugins.
 
 ### FR1.1: Product Relationship Table
 - **Trigger**: User views product lists or searches for products.
@@ -126,23 +164,31 @@ This document details the functional behavior of the Product Attributes module f
 - No additional FR needed.
 
 ### FR6: Sales and Pricing
-- Sub-screen for updating variation prices.
-- Options: Update all if matching, force update with list, update matching with differ list.
-- Check if FA_BulkPriceUpdate module is installed; if yes, use its bulk update function (pass array of stock_ids, price book, price value) for price setting.
-- If not installed, implement internal bulk update logic.
-- Variations appear in sales interfaces.
+- **Scope Clarification**: Individual item pricing is handled by FA core (out of scope). Variation-based pricing rules are in scope.
+- **Trigger**: User needs to apply pricing rules based on variation attributes.
+- **Process**:
+  1. Define pricing rules per attribute value (e.g., "XXL size: +$2.00", "RED color: +25%").
+  2. Support fixed amount adjustments ($X), percentage adjustments (Y%), or combined (X + Y%).
+  3. Apply rules automatically when generating variations.
+  4. Allow manual override of calculated prices.
+  5. Display price calculations with rule breakdowns.
+- **Output**: Variations created with appropriate pricing based on attribute rules.
 
-### FR7: Reporting and Analytics
-- Create new reports with attribute filters.
-- Modify existing FA reports to support attribute-based filtering where applicable.
-- Validation report for inactive parents with active 0-stock variations.
-
-### FR7: Reporting and Analytics
-- Create new reports with attribute filters.
-- Modify existing FA reports to support attribute-based filtering where applicable.
-
-### FR8: Bulk Operations
-- UI for editing multiple variations at once.
+### FR7: Bulk Operations (Core Module)
+- **Scope**: Core module provides bulk operations framework. Plugins extend with domain-specific rules.
+- **Trigger**: User needs to apply changes to multiple related products simultaneously.
+- **Process**:
+  1. Select parent product and operation type (pricing, attributes, etc.).
+  2. Choose target variations (all, filtered by attributes, etc.).
+  3. Apply bulk changes:
+     - Price adjustments (fixed amount, percentage, or combined)
+     - Attribute assignments/removals
+     - Status changes (active/inactive)
+     - Category assignments
+  4. Plugins can extend with custom bulk operations and validation rules.
+  5. Preview changes before applying.
+  6. Show confirmation with affected products count.
+- **Output**: Bulk changes applied to selected variations with plugin-specific business rules enforced.
 
 ### FR9: Retroactive Application of Module
 - **Trigger**: User accesses a new screen or button (e.g., under Inventory > Stock > Retroactive Attributes).

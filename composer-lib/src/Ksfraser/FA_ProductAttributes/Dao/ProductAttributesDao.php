@@ -241,13 +241,19 @@ class ProductAttributesDao
     {
         $p = $this->db->getTablePrefix();
         
-        // First delete all values for this category
+        // First delete all assignments for this category
+        $this->db->execute(
+            "DELETE FROM `{$p}product_attribute_assignments` WHERE category_id = :category_id",
+            ['category_id' => $categoryId]
+        );
+        
+        // Then delete all values for this category
         $this->db->execute(
             "DELETE FROM `{$p}product_attribute_values` WHERE category_id = :category_id",
             ['category_id' => $categoryId]
         );
         
-        // Then delete the category itself
+        // Finally delete the category itself
         $this->db->execute(
             "DELETE FROM `{$p}product_attribute_categories` WHERE id = :id",
             ['id' => $categoryId]
@@ -257,6 +263,14 @@ class ProductAttributesDao
     public function deleteValue(int $valueId): void
     {
         $p = $this->db->getTablePrefix();
+        
+        // First delete all assignments for this value
+        $this->db->execute(
+            "DELETE FROM `{$p}product_attribute_assignments` WHERE value_id = :value_id",
+            ['value_id' => $valueId]
+        );
+        
+        // Then delete the value itself
         $this->db->execute(
             "DELETE FROM `{$p}product_attribute_values` WHERE id = :id",
             ['id' => $valueId]
@@ -289,18 +303,14 @@ class ProductAttributesDao
      */
     public function getProductsByType(array $types): array
     {
+        $p = $this->db->getTablePrefix();
         $placeholders = str_repeat('?,', count($types) - 1) . '?';
-        $sql = "SELECT stock_id, description, '' as type FROM " . $this->db->escapeTableName('stock_master') . "
-                WHERE stock_id NOT IN (
-                    SELECT DISTINCT parent_stock_id FROM " . $this->db->escapeTableName('product_attribute_assignments') . "
-                    WHERE parent_stock_id IS NOT NULL AND parent_stock_id != ''
-                )";
+        $sql = "SELECT stock_id, description FROM `{$p}stock_master`
+                WHERE mb_flag IN ({$placeholders})";
 
         // For now, we'll return all products that are not variations (don't have parent_stock_id)
         // In a real implementation, you'd need to determine the type from some field or logic
-        $stmt = $this->db->prepare($sql);
-        $stmt->execute([]);
-        return $stmt->fetchAll(\PDO::FETCH_ASSOC);
+        return $this->db->query($sql, $types);
     }
 
     /**
@@ -310,11 +320,10 @@ class ProductAttributesDao
      */
     public function getAllProducts(): array
     {
-        $sql = "SELECT stock_id, description FROM " . $this->db->escapeTableName('stock_master') . "
+        $p = $this->db->getTablePrefix();
+        $sql = "SELECT stock_id, description FROM `{$p}stock_master`
                 ORDER BY stock_id";
-        $stmt = $this->db->prepare($sql);
-        $stmt->execute([]);
-        return $stmt->fetchAll(\PDO::FETCH_ASSOC);
+        return $this->db->query($sql);
     }
 
     /**
@@ -325,20 +334,20 @@ class ProductAttributesDao
      */
     public function getProductParent(string $stockId): ?array
     {
-        $sql = "SELECT parent_stock_id FROM " . $this->db->escapeTableName('product_attribute_assignments') . "
-                WHERE stock_id = ? AND parent_stock_id IS NOT NULL AND parent_stock_id != ''
+        $p = $this->db->getTablePrefix();
+        $sql = "SELECT parent_stock_id FROM `{$p}product_attribute_assignments`
+                WHERE stock_id = :stock_id AND parent_stock_id IS NOT NULL AND parent_stock_id != ''
                 LIMIT 1";
-        $stmt = $this->db->prepare($sql);
-        $stmt->execute([$stockId]);
-        $result = $stmt->fetch(\PDO::FETCH_ASSOC);
+        $result = $this->db->query($sql, ['stock_id' => $stockId]);
 
-        if ($result && !empty($result['parent_stock_id'])) {
+        if (!empty($result)) {
+            $parentStockId = $result[0]['parent_stock_id'];
             // Get parent product details
-            $parentSql = "SELECT stock_id, description FROM " . $this->db->escapeTableName('stock_master') . "
-                          WHERE stock_id = ?";
-            $parentStmt = $this->db->prepare($parentSql);
-            $parentStmt->execute([$result['parent_stock_id']]);
-            return $parentStmt->fetch(\PDO::FETCH_ASSOC);
+            $parentSql = "SELECT stock_id, description FROM `{$p}stock_master`
+                          WHERE stock_id = :stock_id";
+            $parentResult = $this->db->query($parentSql, ['stock_id' => $parentStockId]);
+            
+            return $parentResult[0] ?? null;
         }
 
         return null;
@@ -357,10 +366,11 @@ class ProductAttributesDao
      */
     public function clearParentRelationship(string $stockId): void
     {
-        $sql = "UPDATE " . $this->db->escapeTableName('product_attribute_assignments') . "
-                SET parent_stock_id = NULL WHERE stock_id = ?";
-        $stmt = $this->db->prepare($sql);
-        $stmt->execute([$stockId]);
+        $p = $this->db->getTablePrefix();
+        $this->db->execute(
+            "UPDATE `{$p}product_attribute_assignments` SET parent_stock_id = NULL WHERE stock_id = :stock_id",
+            ['stock_id' => $stockId]
+        );
     }
 
     /**
@@ -368,10 +378,11 @@ class ProductAttributesDao
      */
     public function setParentRelationship(string $stockId, string $parentStockId): void
     {
-        $sql = "UPDATE " . $this->db->escapeTableName('product_attribute_assignments') . "
-                SET parent_stock_id = ? WHERE stock_id = ?";
-        $stmt = $this->db->prepare($sql);
-        $stmt->execute([$parentStockId, $stockId]);
+        $p = $this->db->getTablePrefix();
+        $this->db->execute(
+            "UPDATE `{$p}product_attribute_assignments` SET parent_stock_id = :parent_stock_id WHERE stock_id = :stock_id",
+            ['parent_stock_id' => $parentStockId, 'stock_id' => $stockId]
+        );
     }
 
     /**
@@ -379,10 +390,12 @@ class ProductAttributesDao
      */
     public function getParentProductData(string $stockId): ?array
     {
-        $sql = "SELECT * FROM " . $this->db->escapeTableName('stock_master') . " WHERE stock_id = ?";
-        $stmt = $this->db->prepare($sql);
-        $stmt->execute([$stockId]);
-        return $stmt->fetch(\PDO::FETCH_ASSOC);
+        $p = $this->db->getTablePrefix();
+        $result = $this->db->query(
+            "SELECT * FROM `{$p}stock_master` WHERE stock_id = :stock_id",
+            ['stock_id' => $stockId]
+        );
+        return $result[0] ?? null;
     }
 
     /**
@@ -400,14 +413,13 @@ class ProductAttributesDao
         // Remove fields that shouldn't be copied
         unset($childData['inactive']);
 
-        // Build insert query
+        $p = $this->db->getTablePrefix();
         $fields = array_keys($childData);
-        $placeholders = array_fill(0, count($fields), '?');
+        $placeholders = array_map(fn($field) => ':' . $field, $fields);
 
-        $sql = "INSERT INTO " . $this->db->escapeTableName('stock_master') . " (" . implode(', ', $fields) . ") VALUES (" . implode(', ', $placeholders) . ")";
+        $sql = "INSERT INTO `{$p}stock_master` (" . implode(', ', $fields) . ") VALUES (" . implode(', ', $placeholders) . ")";
 
-        $stmt = $this->db->prepare($sql);
-        $stmt->execute(array_values($childData));
+        $this->db->execute($sql, $childData);
     }
 
     /**
@@ -415,11 +427,12 @@ class ProductAttributesDao
      */
     public function copyParentCategoryAssignments(string $childStockId, string $parentStockId): void
     {
-        $sql = "INSERT INTO " . $this->db->escapeTableName('product_attribute_category_assignments') . "
-                (stock_id, category_id)
-                SELECT ?, category_id FROM " . $this->db->escapeTableName('product_attribute_category_assignments') . "
-                WHERE stock_id = ?";
-        $stmt = $this->db->prepare($sql);
-        $stmt->execute([$childStockId, $parentStockId]);
+        $p = $this->db->getTablePrefix();
+        $this->db->execute(
+            "INSERT INTO `{$p}product_attribute_category_assignments` (stock_id, category_id)
+             SELECT :child_stock_id, category_id FROM `{$p}product_attribute_category_assignments`
+             WHERE stock_id = :parent_stock_id",
+            ['child_stock_id' => $childStockId, 'parent_stock_id' => $parentStockId]
+        );
     }
 }

@@ -48,9 +48,7 @@ page(_("Product Attributes"));
 
 use Ksfraser\FA_ProductAttributes\Db\DatabaseAdapterFactory;
 use Ksfraser\FA_ProductAttributes\Dao\ProductAttributesDao;
-use Ksfraser\FA_ProductAttributes\UI\CategoriesTab;
-use Ksfraser\FA_ProductAttributes\UI\ValuesTab;
-use Ksfraser\FA_ProductAttributes\UI\AssignmentsTab;
+use Ksfraser\FA_ProductAttributes\UI\TabDispatcher;
 
 try {
     $db_adapter = DatabaseAdapterFactory::create('fa'); // Use FA driver via factory
@@ -83,6 +81,13 @@ DebugCompany::debug();
 
 $tab = $_GET['tab'] ?? $_POST['tab'] ?? 'categories';
 display_notification("DEBUG: tab variable set to: '$tab'");
+
+// Check if we're embedded in items.php
+$isEmbedded = isset($_GET['selected_tab']);
+$selectedTab = $_GET['selected_tab'] ?? $tab;
+
+display_notification("DEBUG: isEmbedded: " . ($isEmbedded ? 'yes' : 'no'));
+display_notification("DEBUG: selectedTab: '$selectedTab'");
 
 // Handle both POST and GET actions
 $requestData = $_POST;
@@ -119,54 +124,16 @@ if (!empty($action)) {
     }
 }
 
-echo '<div style="margin:8px 0">'
-    . '<a href="?tab=categories">Categories</a> | '
-    . '<a href="?tab=values">Values</a> | '
-    . '<a href="?tab=assignments">Assignments</a>'
-    . '</div>';
-display_notification("DEBUG: Tab navigation rendered");
-
-display_notification("Current tab: '$tab'");
-
-if ($tab === 'categories') {
-    display_notification("Rendering categories tab");
-    display_notification("DEBUG: About to instantiate CategoriesTab");
-    display_notification("DEBUG: dao type: " . get_class($dao));
-    display_notification("DEBUG: dao is object: " . (is_object($dao) ? 'yes' : 'no'));
-    try {
-        $categoriesTab = new CategoriesTab($dao);
-        display_notification("DEBUG: CategoriesTab instantiated successfully");
-        $categoriesTab->render();
-        display_notification("DEBUG: CategoriesTab render() completed");
-    } catch (Throwable $e) {
-        display_error("ERROR instantiating CategoriesTab: " . $e->getMessage());
-        display_error("ERROR type: " . get_class($e));
-        display_error("ERROR file: " . $e->getFile() . ":" . $e->getLine());
-    }
-} else if ($tab === 'values') {
-    try {
-        $valuesTab = new ValuesTab($dao);
-        display_notification("DEBUG: ValuesTab instantiated successfully");
-        $valuesTab->render();
-        display_notification("DEBUG: ValuesTab render() completed");
-    } catch (Throwable $e) {
-        display_error("ERROR instantiating/rendering ValuesTab: " . $e->getMessage());
-        display_error("ERROR type: " . get_class($e));
-        display_error("ERROR file: " . $e->getFile() . ":" . $e->getLine());
-    }
-} elseif ($tab === 'product_types') {
-    display_error("Product Types management has been moved to the FA_ProductAttributes_Variations plugin. Please install and activate that plugin to manage product types.");
-} else {
-    try {
-        $assignmentsTab = new AssignmentsTab($dao);
-        display_notification("DEBUG: AssignmentsTab instantiated successfully");
-        $assignmentsTab->render();
-        display_notification("DEBUG: AssignmentsTab render() completed");
-    } catch (Throwable $e) {
-        display_error("ERROR instantiating/rendering AssignmentsTab: " . $e->getMessage());
-        display_error("ERROR type: " . get_class($e));
-        display_error("ERROR file: " . $e->getFile() . ":" . $e->getLine());
-    }
+// Create tab dispatcher and render content
+try {
+    $dispatcher = new TabDispatcher($dao, $selectedTab, $isEmbedded);
+    display_notification("DEBUG: TabDispatcher instantiated successfully");
+    $dispatcher->render();
+    display_notification("DEBUG: TabDispatcher render() completed");
+} catch (Throwable $e) {
+    display_error("ERROR with TabDispatcher: " . $e->getMessage());
+    display_error("ERROR type: " . get_class($e));
+    display_error("ERROR file: " . $e->getFile() . ":" . $e->getLine());
 }
 
 display_notification("DEBUG: About to call end_page()");

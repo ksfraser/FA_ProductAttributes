@@ -59,9 +59,6 @@ class hooks_FA_ProductAttributes extends hooks
             // Don't fail installation if schema creation fails
         }
 
-        // Register hooks for the module
-        $this->register_hooks();
-
         return true; // Standard FA install return
     }
 
@@ -152,111 +149,153 @@ class hooks_FA_ProductAttributes extends hooks
         // Include the global hook manager
         require_once $path_to_root . '/modules/FA_ProductAttributes/fa_hooks.php';
 
-        // Get the hook manager
+        // Get the hook manager for plugin extension points
         $hooks = fa_hooks();
 
-        // Register Product Attributes hooks for items.php
-        $hooks->add_hook('item_display_tab_headers', [__CLASS__, 'static_add_tab_headers'], 10);
-        $hooks->add_hook('item_display_tab_content', [__CLASS__, 'static_get_tab_content'], 10);
-        $hooks->add_hook('pre_item_write', [__CLASS__, 'static_handle_product_attributes_save'], 10);
-        $hooks->add_hook('pre_item_delete', [__CLASS__, 'static_handle_product_attributes_delete'], 10);
+        // FA automatically calls hook methods on this class:
+        // - item_display_tab_headers()
+        // - item_display_tab_content()
+        // - pre_item_write()
+        // - pre_item_delete()
+        // No manual registration needed - FA's hook_invoke_all() calls these methods
 
-        // Register extension points for plugins
+        // Register extension points for plugins (these use our hook system)
         $hooks->registerHookPoint('attributes_tab_content', 'product_attributes');
         $hooks->registerHookPoint('attributes_save', 'product_attributes');
         $hooks->registerHookPoint('attributes_delete', 'product_attributes');
     }
 
     /**
-     * Static hook callback for adding tab headers
-     *
-     * @param \Ksfraser\FA_Hooks\TabCollection $collection Current tab collection
-     * @param string $stock_id The item stock ID
-     * @return \Ksfraser\FA_Hooks\TabCollection Modified tab collection
+     * Load plugins on demand when core functionality is accessed
      */
-    public static function static_add_tab_headers($collection, $stock_id) {
-        $service = self::static_get_product_attributes_service();
-        $integration = new \Ksfraser\FA_ProductAttributes\Integration\ItemsIntegration($service);
-        return $integration->addTabHeaders($collection, $stock_id);
+    private static function load_plugins_on_demand() {
+        // Ensure autoloader is loaded before using PluginLoader
+        self::ensure_autoloader_loaded();
+
+        $pluginLoader = \Ksfraser\FA_ProductAttributes\Plugin\PluginLoader::getInstance();
+        $pluginLoader->loadPluginsOnDemand();
     }
 
     /**
-     * Static hook callback for getting tab content
-     *
-     * @param string $content Current content
-     * @param string $stock_id The item stock ID
-     * @param string $selected_tab The selected tab
-     * @return string Tab content
+     * Ensure the composer autoloader is loaded
      */
-    public static function static_get_tab_content($content, $stock_id, $selected_tab) {
-        $service = self::static_get_product_attributes_service();
-        $integration = new \Ksfraser\FA_ProductAttributes\Integration\ItemsIntegration($service);
-        return $integration->getTabContent($content, $stock_id, $selected_tab);
+    private static function ensure_autoloader_loaded() {
+        global $path_to_root;
+
+        $autoloader = $path_to_root . '/modules/FA_ProductAttributes/composer-lib/vendor/autoload.php';
+        if (file_exists($autoloader)) {
+            require_once $autoloader;
+        }
     }
 
     /**
-     * Static hook callback for handling product attributes save
-     *
-     * @param array $item_data The item data being saved
-     * @param string $stock_id The item stock ID
-     * @return array Modified item data
+     * FA hook: item_display_tab_headers
+     * Called by FA to add tab headers to the items page
      */
-    public static function static_handle_product_attributes_save($item_data, $stock_id) {
-        $service = self::static_get_product_attributes_service();
+    function item_display_tab_headers($tabs) {
+        // Load plugins when core functionality is accessed
+        self::load_plugins_on_demand();
+
+        // Add Product Attributes tab to the tabs array
+        // FA expects tabs as arrays: array(title, stock_id_or_null)
+        // Use null to disable tab if user lacks access
+        $stock_id = $_POST['stock_id'] ?? '';
+        $tabs['product_attributes'] = array(
+            _('Product Attributes'),
+            (user_check_access('SA_PRODUCTATTRIBUTES') ? $stock_id : null)
+        );
+
+        return $tabs;
+    }
+
+    /**
+     * FA hook: item_display_tab_content
+     * Called by FA to display tab content in the items page
+     * @param string $stock_id The item stock ID
+     * @param string $selected_tab The currently selected tab
+     * @return bool True if this hook handled the tab, false otherwise
+     */
+    function item_display_tab_content($stock_id, $selected_tab) {
+        // Load plugins when core functionality is accessed
+        self::load_plugins_on_demand();
+
+        // Only handle tabs that start with 'product_attributes'
+        if (!preg_match('/^product_attributes/', $selected_tab)) {
+            return false; // Not our tab, let others handle it
+        }
+
+        // Check access
+        if (!user_check_access('SA_PRODUCTATTRIBUTES')) {
+            return false; // No access, don't handle
+        }
+
+        // Handle the tab content
+        try {
+            $dao = $this->get_product_attributes_dao();
+            $dispatcher = new \Ksfraser\FA_ProductAttributes\UI\TabDispatcher($dao, $selected_tab, true);
+            $dispatcher->render();
+            return true; // Successfully handled
+        } catch (Exception $e) {
+            display_error("Error displaying tab content: " . $e->getMessage());
+            return true; // We handled it (even though there was an error)
+        }
+    }
+
+    /**
+     * FA hook: pre_item_write
+     * Called by FA before saving an item
+     */
+    function pre_item_write($item_data) {
+        // Load plugins when core functionality is accessed
+        self::load_plugins_on_demand();
+
+        // Check user access before allowing attribute modifications
+        if (!user_check_access('SA_PRODUCTATTRIBUTES')) {
+            return $item_data; // Return unchanged data if no access
+        }
+
+        $service = $this->get_product_attributes_service();
         $handler = new \Ksfraser\FA_ProductAttributes\Handler\ProductAttributesHandler($service);
-        return $handler->handle_product_attributes_save($item_data, $stock_id);
+        return $handler->handle_product_attributes_save($item_data, $item_data['stock_id'] ?? '');
     }
 
     /**
-     * Static hook callback for handling product attributes delete
-     *
-     * @param string $stock_id The item stock ID being deleted
+     * FA hook: pre_item_delete
+     * Called by FA before deleting an item
      */
-    public static function static_handle_product_attributes_delete($stock_id) {
-        $service = self::static_get_product_attributes_service();
+    function pre_item_delete($stock_id) {
+        // Load plugins when core functionality is accessed
+        self::load_plugins_on_demand();
+
+        // Check user access before allowing attribute deletions
+        if (!user_check_access('SA_PRODUCTATTRIBUTES')) {
+            return null; // Allow deletion to proceed without touching attributes
+        }
+
+        $service = $this->get_product_attributes_service();
         $handler = new \Ksfraser\FA_ProductAttributes\Handler\ProductAttributesHandler($service);
         $handler->handle_product_attributes_delete($stock_id);
-    }
-
-    /**
-     * Static method to get ProductAttributesService instance
-     *
-     * @return \Ksfraser\FA_ProductAttributes\Service\ProductAttributesService
-     */
-    private static function static_get_product_attributes_service() {
-        global $path_to_root;
-
-        // Include the composer autoloader
-        $autoloader = $path_to_root . '/modules/FA_ProductAttributes/composer-lib/vendor/autoload.php';
-        if (file_exists($autoloader)) {
-            require_once $autoloader;
-        }
-
-        // Create service instance
-        $db = new \Ksfraser\FA_ProductAttributes\Db\FrontAccountingDbAdapter();
-        $dao = new \Ksfraser\FA_ProductAttributes\Dao\ProductAttributesDao($db);
-
-        return new \Ksfraser\FA_ProductAttributes\Service\ProductAttributesService($dao, $db);
-    }
-
-    /**
-     * Get the ProductAttributesService instance
-     *
-     * @return \Ksfraser\FA_ProductAttributes\Service\ProductAttributesService
-     */
-    private function get_product_attributes_service() {
-        global $path_to_root;
-
-        // Include the composer autoloader
-        $autoloader = $path_to_root . '/modules/FA_ProductAttributes/composer-lib/vendor/autoload.php';
-        if (file_exists($autoloader)) {
-            require_once $autoloader;
-        }
-
-        // Create service instance
-        $db = new \Ksfraser\FA_ProductAttributes\Db\FrontAccountingDbAdapter();
-        $dao = new \Ksfraser\FA_ProductAttributes\Dao\ProductAttributesDao($db);
-
-        return new \Ksfraser\FA_ProductAttributes\Service\ProductAttributesService($dao, $db);
+        return null; // FA expects null return for delete hooks
     }
 }
+
+// ============================================================================
+// Hook Registration and Plugin Loading (runs on every page load)
+// ============================================================================
+
+/**
+ * Initialize hooks and load plugins on every page load
+ */
+function fa_product_attributes_init() {
+    global $path_to_root;
+
+    // Register core hooks
+    $core_hooks = new hooks_FA_ProductAttributes();
+    $core_hooks->register_hooks();
+
+    // Plugin loading is now handled lazily when hooks are triggered
+    // This ensures plugins are loaded only when needed
+}
+
+// Initialize on every page load
+fa_product_attributes_init();

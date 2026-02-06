@@ -1,18 +1,49 @@
 # Business Requirements Document (BRD)
 
 ## Overview
-The module will extend FrontAccounting to support product attributes and variations, enabling users to associate attributes with products, create variation products via cloning, and manage attribute categories and values through an admin interface.
+The FA_ProductAttributes system consists of a core module providing generic attribute infrastructure and a plugin architecture enabling extensible attribute-based functionality. The core module manages attribute categories, values, and assignments, while plugins add specific functionality like product variations.
 
 ## Business Objectives
-- Enhance product management in FrontAccounting by adding attribute support.
-- Enable creation of product variations to handle complex inventory scenarios (e.g., different sizes/colors).
-- Provide administrative tools for maintaining attribute categories and values.
-- Ensure seamless integration with existing FA workflows.
+- Provide generic attribute infrastructure for FrontAccounting products
+- Enable extensible attribute-based functionality through plugins
+- Support WooCommerce-style product variations via plugin
+- Ensure clean separation between core attributes and domain-specific features
+- Maintain backward compatibility and ease of maintenance
 
 ## Stakeholders
-- Inventory Managers: Need to associate attributes and create variations.
-- Administrators: Manage attribute categories and values.
-- End Users: Interact with enhanced product screens.
+- **Core Module Users**: Administrators managing attribute categories and values
+- **Plugin Users**: Inventory managers using specific attribute functionality (variations, etc.)
+- **Developers**: Creating new attribute plugins
+- **System Administrators**: Managing module dependencies and installations
+
+## System Architecture
+
+### Core Module (FA_ProductAttributes)
+**Responsibilities:**
+- Generic attribute category and value management
+- Product-to-attribute assignment system
+- STOCK application integration via hooks
+- Extension points for plugin integration
+- Generic attribute services and UI
+
+**Database Tables:**
+- `product_attribute_categories`: Attribute categories (Color, Size, Material, etc.)
+- `product_attribute_values`: Values within categories (Red, Blue, XL, etc.)
+- `product_attribute_assignments`: Links products to attributes
+- `product_attribute_product_types`: Product type classifications
+
+### Plugin Architecture
+**Extension Points:**
+- `attributes_tab_content`: Plugins can add UI to attributes tab
+- `attributes_save`: Plugins can handle attribute save operations
+- `product_type_management`: Plugins can extend product type functionality
+
+**Current Plugins:**
+- **FA_ProductAttributes_Variations**: Adds WooCommerce-style product variations
+  - Parent-child product relationships
+  - Automatic variation generation
+  - Royal Order attribute sequencing
+  - Retroactive pattern analysis for existing products
 
 ## Functional Requirements
 
@@ -65,13 +96,13 @@ The module will extend FrontAccounting to support product attributes and variati
    - No additional development needed; ensure variations are created as separate products.
 
 6. **Sales and Pricing**
-   - FA already supports price books per product; variations inherit this.
-   - Add an "Update Price for All Variations" sub-screen on the Product Attributes TAB (parent products only).
-   - Use Cases:
-     - If all variations have same prices as parent, update all from parent.
-     - For variations with different prices (e.g., size-based), provide "Force Update" option with confirmation list of affected products.
-     - "Update Matching Prices" option: Update only variations with prices matching parent, list differing variations.
-   - If FA_BulkPriceUpdate module is installed, leverage its bulk update functionality for setting prices on multiple variations (accepts array of stock_ids, price book, and price value).
+   - **Scope**: Individual item pricing handled by FA core (out of scope). Variation-based pricing rules are in scope.
+   - Define pricing rules per attribute value (e.g., "XXL size: +$2.00", "RED color: +25%").
+   - Support fixed amount adjustments ($X), percentage adjustments (Y%), or combined (X + Y%).
+   - Apply rules automatically when generating variations.
+   - Allow manual override of calculated prices.
+   - Display price calculations with rule breakdowns.
+   - Provide bulk pricing operations through core module framework.
 
 7. **Reporting and Analytics**
    - Since attributes are new to FA, existing reports lack filters.
@@ -79,8 +110,16 @@ The module will extend FrontAccounting to support product attributes and variati
    - Ensure variations are listed with their attributes in report outputs.
    - Include validation report: Identify inactive parents with active 0-stock variations for cleanup.
 
-8. **Bulk Operations**
-   - Allow bulk editing of prices, stock, or attributes for multiple variations.
+8. **Bulk Operations (Core Module)**
+   - **Scope**: Core module provides bulk operations framework. Plugins extend with domain-specific rules.
+   - Allow bulk editing of multiple variations simultaneously:
+     - Price adjustments (fixed amount, percentage, or combined)
+     - Attribute assignments/removals
+     - Status changes (active/inactive)
+     - Category assignments
+   - Plugins can extend with custom bulk operations and validation rules.
+   - Preview changes before applying.
+   - Show confirmation with affected products count.
 
 9. **Retroactive Application of Module**
    - Provide functionality to analyze existing products and suggest parent-child relationships based on stock_id patterns.

@@ -1,13 +1,28 @@
-# User Acceptance Testing (UAT) Test Cases
+# User Acceptance Testing (UAT) Test Cases - FA_ProductAttributes Core Module
 
 ## Overview
 
-This document provides comprehensive User Acceptance Testing scenarios for the FA_ProductAttributes module. These test cases are derived from the Use Case Document and Functional Requirements Specification, ensuring complete coverage of all user workflows and business requirements.
+This document provides comprehensive User Acceptance Testing scenarios for the FA_ProductAttributes core module, which provides generic attribute infrastructure. Variation-specific test cases are documented separately in the FA_ProductAttributes_Variations plugin UAT documentation.
+
+## Core Module Testing Scope
+
+**Included in Core UAT:**
+- Attribute category and value management
+- Generic product attribute assignment
+- Royal Order sorting functionality
+- Hook extension system validation
+- Plugin compatibility testing
+
+**Excluded from Core UAT (Plugin-Specific):**
+- Product variation generation
+- Parent-child relationship management
+- Retroactive pattern analysis
+- Variation UI extensions
 
 ## Test Case Structure
 
 Each test case includes:
-- **Test Case ID**: Unique identifier
+- **Test Case ID**: Unique identifier (prefixed with CORE-)
 - **Title**: Descriptive test name
 - **Priority**: Critical, High, Medium, Low
 - **Preconditions**: Required setup
@@ -21,10 +36,11 @@ Each test case includes:
 
 ### Prerequisites
 - FrontAccounting 2.3.22 installed and running
-- FA_ProductAttributes module activated
+- FA_ProductAttributes core module activated
 - Test user with admin permissions
 - Sample inventory data created
 - Browser: Chrome/Firefox latest versions
+- **Note**: Plugins should be tested separately after core validation
 
 ### Test Data Setup
 Run the following SQL to create test data:
