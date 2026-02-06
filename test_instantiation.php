@@ -41,7 +41,7 @@ foreach ($files as $file) {
 echo "Files loaded\n";
 
 // Mock DbAdapterInterface
-$db = new class implements \Ksfraser\FA_ProductAttributes\Db\DbAdapterInterface {
+$db = new class implements \Ksfraser\ModulesDAO\Db\DbAdapterInterface {
     public function getDialect(): string { return 'mysql'; }
     public function getTablePrefix(): string { return 'fa_'; }
     public function query(string $sql, array $params = []): array { return []; }

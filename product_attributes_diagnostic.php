@@ -55,7 +55,7 @@ if (file_exists($autoload)) {
         echo "<ul>\n";
 
         try {
-            $db = new Ksfraser\FA_ProductAttributes\Db\FrontAccountingDbAdapter();
+            $db = new Ksfraser\ModulesDAO\Db\FrontAccountingDbAdapter();
             echo "<li>FrontAccountingDbAdapter: SUCCESS</li>\n";
         } catch (Exception $e) {
             echo "<li>FrontAccountingDbAdapter: FAILED - " . $e->getMessage() . "</li>\n";

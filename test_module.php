@@ -14,7 +14,7 @@ if (file_exists($autoload)) {
 
     // Test 2: Check classes can be instantiated
     try {
-        $db = new Ksfraser\FA_ProductAttributes\Db\PdoDbAdapter(new PDO('sqlite::memory:'), '');
+        $db = new Ksfraser\ModulesDAO\Db\PdoDbAdapter(new PDO('sqlite::memory:'), '');
         echo "2. PdoDbAdapter instantiated: YES\n";
 
         $dao = new Ksfraser\FA_ProductAttributes\Dao\ProductAttributesDao($db);
