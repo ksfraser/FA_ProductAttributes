@@ -247,8 +247,8 @@ class hooks_FA_ProductAttributes extends hooks
                 throw new \Exception("DatabaseAdapterFactory class not found. Check autoloader path: " . $autoloader_path);
             }
 
-            // Create database adapter - use our local FA adapter to avoid vendor issues
-            $db_adapter = new \Ksfraser\FA_ProductAttributes\Db\FrontAccountingDbAdapter();
+            // Create database adapter
+            $db_adapter = \Ksfraser\ModulesDAO\Factory\DatabaseAdapterFactory::create('fa');
 
             // Create DAO
             $dao = new \Ksfraser\FA_ProductAttributes\Dao\ProductAttributesDao($db_adapter);
