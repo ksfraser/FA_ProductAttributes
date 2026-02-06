@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "210e7b060387bc8fdd9ca5f239e29311",
+    "content-hash": "9e2afc385d3d9713641c060534edb7b5",
     "packages": [
         {
             "name": "ksfraser/fa-hooks",
@@ -52,16 +52,16 @@
         },
         {
             "name": "ksfraser/ksf-modules-dao",
-            "version": "v0.3.1",
+            "version": "v0.3.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/ksfraser/ksf_ModulesDAO.git",
-                "reference": "68e1813a2034aa4e19515b2161172ec111387446"
+                "reference": "8ddf3c2da1be126f28e22e2cace6c8915e0fba27"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/ksfraser/ksf_ModulesDAO/zipball/68e1813a2034aa4e19515b2161172ec111387446",
-                "reference": "68e1813a2034aa4e19515b2161172ec111387446",
+                "url": "https://api.github.com/repos/ksfraser/ksf_ModulesDAO/zipball/8ddf3c2da1be126f28e22e2cace6c8915e0fba27",
+                "reference": "8ddf3c2da1be126f28e22e2cace6c8915e0fba27",
                 "shasum": ""
             },
             "require": {
@@ -91,10 +91,10 @@
             ],
             "description": "Cross-platform DAO abstraction (DB, WordPress, SuiteCRM, FrontAccounting, CSV, XML)",
             "support": {
-                "source": "https://github.com/ksfraser/ksf_ModulesDAO/tree/v0.3.1",
+                "source": "https://github.com/ksfraser/ksf_ModulesDAO/tree/v0.3.3",
                 "issues": "https://github.com/ksfraser/ksf_ModulesDAO/issues"
             },
-            "time": "2026-02-06T22:30:33+00:00"
+            "time": "2026-02-06T23:54:30+00:00"
         }
     ],
     "packages-dev": [
@@ -1891,7 +1891,9 @@
     ],
     "aliases": [],
     "minimum-stability": "dev",
-    "stability-flags": {},
+    "stability-flags": {
+        "ksfraser/fa-hooks": 20
+    },
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {
