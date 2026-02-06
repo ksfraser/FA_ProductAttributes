@@ -178,19 +178,20 @@ class hooks_FA_ProductAttributes extends hooks
      * Ensure the composer autoloader is loaded
      */
     private static function ensure_autoloader_loaded() {
-        global $path_to_root;
+        // Use __DIR__ to find the autoloader path relative to this hooks.php file
+        // hooks.php is at: modules/FA_ProductAttributes/hooks.php
+        // autoloader is at: modules/FA_ProductAttributes/composer-lib/vendor/autoload.php
+        $autoloader = __DIR__ . '/composer-lib/vendor/autoload.php';
 
-        // Load composer autoloader (needed for core classes in all environments)
-        $autoloader = $path_to_root . '/modules/FA_ProductAttributes/composer-lib/vendor/autoload.php';
         if (file_exists($autoloader)) {
             require_once $autoloader;
             // Debug: Check if autoloader was loaded
             if (function_exists('spl_autoload_functions')) {
                 $functions = spl_autoload_functions();
                 if (is_array($functions) && count($functions) > 0) {
-                    error_log("FA_ProductAttributes: Autoloader loaded successfully");
+                    error_log("FA_ProductAttributes: Autoloader loaded successfully from: " . $autoloader);
                 } else {
-                    error_log("FA_ProductAttributes: Autoloader loaded but no functions registered");
+                    error_log("FA_ProductAttributes: Autoloader loaded but no functions registered from: " . $autoloader);
                 }
             }
         } else {
@@ -200,7 +201,7 @@ class hooks_FA_ProductAttributes extends hooks
         // Only load FA function mocks in testing/development environments
         // In production, FA provides the real functions
         if (defined('FA_TESTING') || getenv('FA_TESTING') || isset($_SERVER['FA_TESTING'])) {
-            $famock = $path_to_root . '/modules/FA_ProductAttributes/composer-lib/vendor/ksfraser/famock/php/FAMock.php';
+            $famock = __DIR__ . '/composer-lib/vendor/ksfraser/famock/php/FAMock.php';
             if (file_exists($famock)) {
                 require_once $famock;
             }
@@ -241,8 +242,9 @@ class hooks_FA_ProductAttributes extends hooks
 
             // Debug: Check if class exists
             if (!class_exists('\Ksfraser\ModulesDAO\DatabaseAdapterFactory')) {
+                $autoloader_path = __DIR__ . '/composer-lib/vendor/autoload.php';
                 error_log("FA_ProductAttributes: DatabaseAdapterFactory class not found after autoloader");
-                throw new \Exception("DatabaseAdapterFactory class not found. Check autoloader path: " . $path_to_root . '/modules/FA_ProductAttributes/composer-lib/vendor/autoload.php');
+                throw new \Exception("DatabaseAdapterFactory class not found. Check autoloader path: " . $autoloader_path);
             }
 
             // Create database adapter
