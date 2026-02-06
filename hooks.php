@@ -143,11 +143,12 @@ class hooks_FA_ProductAttributes extends hooks
      * Register hooks for the module
      * Called during module initialization
      */
+    /**
+     * Register hooks for the module
+     * Called during module initialization
+     */
     function register_hooks() {
         global $path_to_root;
-
-        // Ensure autoloader and FA mocks are loaded early
-        self::ensure_autoloader_loaded();
 
         // Include the global hook manager (only if available)
         require_once $path_to_root . '/modules/FA_ProductAttributes/fa_hooks.php';
@@ -186,14 +187,16 @@ class hooks_FA_ProductAttributes extends hooks
     private static function ensure_autoloader_loaded() {
         global $path_to_root;
 
-        $autoloader = $path_to_root . '/modules/FA_ProductAttributes/composer-lib/vendor/autoload.php';
-        if (file_exists($autoloader)) {
-            require_once $autoloader;
-        }
-
-        // Only load FA function mocks in testing/development environments
-        // In production, FA provides the real functions
+        // Only load composer autoloader in testing/development environments
+        // In production, we don't need it for core functionality
         if (defined('FA_TESTING') || getenv('FA_TESTING') || isset($_SERVER['FA_TESTING'])) {
+            $autoloader = $path_to_root . '/modules/FA_ProductAttributes/composer-lib/vendor/autoload.php';
+            if (file_exists($autoloader)) {
+                require_once $autoloader;
+            }
+
+            // Only load FA function mocks in testing/development environments
+            // In production, FA provides the real functions
             $famock = $path_to_root . '/modules/FA_ProductAttributes/composer-lib/vendor/ksfraser/famock/php/FAMock.php';
             if (file_exists($famock)) {
                 require_once $famock;
