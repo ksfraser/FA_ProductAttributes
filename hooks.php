@@ -230,16 +230,19 @@ class hooks_FA_ProductAttributes extends hooks
         if (function_exists('add_security_extensions')) {
             add_security_extensions();
         }
+        if (function_exists('add_access_extensions')) {
+            add_access_extensions();
+        }
 
         // Only handle tabs that start with 'product_attributes'
         if (!preg_match('/^product_attributes/', $selected_tab)) {
             return false; // Not our tab, let others handle it
         }
 
-        // Temporarily disable access check for debugging
-        // if (!user_check_access('SA_FA_ProductAttributes')) {
-        //     return false; // No access, don't handle
-        // }
+        // Check access
+        if (!user_check_access('SA_FA_ProductAttributes')) {
+            return false; // No access, don't handle
+        }
 
         // Handle the tab content
         try {
