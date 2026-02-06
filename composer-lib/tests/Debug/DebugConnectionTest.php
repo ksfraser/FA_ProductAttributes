@@ -3,7 +3,7 @@
 namespace Ksfraser\FA_ProductAttributes\Test\Debug;
 
 use Ksfraser\FA_ProductAttributes\Debug\DebugConnection;
-use Ksfraser\FA_ProductAttributes\Db\DbAdapterInterface;
+use Ksfraser\ModulesDAO\Db\DbAdapterInterface;
 use PHPUnit\Framework\TestCase;
 
 /**

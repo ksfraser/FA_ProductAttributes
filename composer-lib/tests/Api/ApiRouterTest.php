@@ -4,7 +4,7 @@ namespace Ksfraser\FA_ProductAttributes\Test\Api;
 
 use Ksfraser\FA_ProductAttributes\Api\ApiRouter;
 use Ksfraser\FA_ProductAttributes\Dao\ProductAttributesDao;
-use Ksfraser\FA_ProductAttributes\Db\DbAdapterInterface;
+use Ksfraser\ModulesDAO\Db\DbAdapterInterface;
 use PHPUnit\Framework\TestCase;
 
 class ApiRouterTest extends TestCase

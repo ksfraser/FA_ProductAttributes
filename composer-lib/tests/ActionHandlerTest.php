@@ -4,7 +4,7 @@ namespace Ksfraser\FA_ProductAttributes\Test\Actions;
 
 use Ksfraser\FA_ProductAttributes\Actions\ActionHandler;
 use Ksfraser\FA_ProductAttributes\Dao\ProductAttributesDao;
-use Ksfraser\FA_ProductAttributes\Db\DbAdapterInterface;
+use Ksfraser\ModulesDAO\Db\DbAdapterInterface;
 use PHPUnit\Framework\TestCase;
 
 class ActionHandlerTest extends TestCase
