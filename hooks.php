@@ -184,6 +184,17 @@ class hooks_FA_ProductAttributes extends hooks
         $autoloader = $path_to_root . '/modules/FA_ProductAttributes/composer-lib/vendor/autoload.php';
         if (file_exists($autoloader)) {
             require_once $autoloader;
+            // Debug: Check if autoloader was loaded
+            if (function_exists('spl_autoload_functions')) {
+                $functions = spl_autoload_functions();
+                if (is_array($functions) && count($functions) > 0) {
+                    error_log("FA_ProductAttributes: Autoloader loaded successfully");
+                } else {
+                    error_log("FA_ProductAttributes: Autoloader loaded but no functions registered");
+                }
+            }
+        } else {
+            error_log("FA_ProductAttributes: Autoloader not found at: " . $autoloader);
         }
 
         // Only load FA function mocks in testing/development environments
@@ -227,6 +238,12 @@ class hooks_FA_ProductAttributes extends hooks
         if ($dao === null) {
             // Ensure autoloader is loaded
             self::ensure_autoloader_loaded();
+
+            // Debug: Check if class exists
+            if (!class_exists('\Ksfraser\ModulesDAO\DatabaseAdapterFactory')) {
+                error_log("FA_ProductAttributes: DatabaseAdapterFactory class not found after autoloader");
+                throw new \Exception("DatabaseAdapterFactory class not found. Check autoloader path: " . $path_to_root . '/modules/FA_ProductAttributes/composer-lib/vendor/autoload.php');
+            }
 
             // Create database adapter
             $db_adapter = \Ksfraser\ModulesDAO\DatabaseAdapterFactory::create('fa');
