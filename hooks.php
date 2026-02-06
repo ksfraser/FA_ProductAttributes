@@ -273,7 +273,7 @@ class hooks_FA_ProductAttributes extends hooks
 
             // Try to get assignments without using FA UI functions
             $dao = $this->get_product_attributes_dao();
-            $assignments = $dao->getAssignmentsForStockId($stock_id);
+            $assignments = $dao->listAssignments($stock_id);
 
             echo "<h4>Current Assignments:</h4>";
             if (empty($assignments)) {
