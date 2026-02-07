@@ -440,10 +440,10 @@ class ProductAttributesDaoTest extends TestCase
             ->method('query')
             ->withConsecutive(
                 ['SELECT parent_stock_id FROM `fa_product_attribute_assignments`
-                WHERE stock_id = :stock_id AND parent_stock_id IS NOT NULL AND parent_stock_id != \'\'
-                LIMIT 1', ['stock_id' => 'ABC123']],
+                    WHERE stock_id = :stock_id AND parent_stock_id IS NOT NULL AND parent_stock_id != \'\'
+                    LIMIT 1', ['stock_id' => 'ABC123']],
                 ['SELECT stock_id, description FROM `fa_stock_master`
-                          WHERE stock_id = :stock_id', ['stock_id' => 'PARENT123']]
+                              WHERE stock_id = :stock_id', ['stock_id' => 'PARENT123']]
             )
             ->willReturnOnConsecutiveCalls(
                 [['parent_stock_id' => 'PARENT123']],
@@ -463,8 +463,8 @@ class ProductAttributesDaoTest extends TestCase
         $db->expects($this->once())
             ->method('query')
             ->with('SELECT parent_stock_id FROM `fa_product_attribute_assignments`
-                WHERE stock_id = :stock_id AND parent_stock_id IS NOT NULL AND parent_stock_id != \'\'
-                LIMIT 1', ['stock_id' => 'ABC123'])
+                    WHERE stock_id = :stock_id AND parent_stock_id IS NOT NULL AND parent_stock_id != \'\'
+                    LIMIT 1', ['stock_id' => 'ABC123'])
             ->willReturn([]);
 
         $dao = new ProductAttributesDao($db);
