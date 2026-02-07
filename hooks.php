@@ -257,25 +257,6 @@ class hooks_FA_ProductAttributes extends hooks
     }
 
     /**
-     * Get a VariationsDao instance
-     * @return \Ksfraser\FA_ProductAttributes_Variations\Dao\VariationsDao
-     */
-    private function get_variations_dao() {
-        static $dao = null;
-        if ($dao === null) {
-            // Ensure autoloader is loaded
-            self::ensure_autoloader_loaded();
-
-            // Create database adapter
-            $db_adapter = \Ksfraser\ModulesDAO\Factory\DatabaseAdapterFactory::create('fa');
-
-            // Create DAO
-            $dao = new \Ksfraser\FA_ProductAttributes_Variations\Dao\VariationsDao($db_adapter);
-        }
-        return $dao;
-    }
-
-    /**
      * Get registered sub-tabs from plugins
      * @return array Array of sub-tab configurations
      */
@@ -332,7 +313,6 @@ class hooks_FA_ProductAttributes extends hooks
 
             // Create DAOs
             $dao = $this->get_product_attributes_dao();
-            $variationsDao = $this->get_variations_dao();
 
             // Get registered sub-tabs from plugins
             $subtabs = $this->get_registered_subtabs();
