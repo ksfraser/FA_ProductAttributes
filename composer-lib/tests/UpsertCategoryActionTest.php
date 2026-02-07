@@ -3,7 +3,7 @@
 namespace Ksfraser\FA_ProductAttributes\Test\Actions;
 
 use Ksfraser\FA_ProductAttributes\Actions\UpsertCategoryAction;
-use Ksfraser\FA_ProductAttributes\Dao\ProductAttributesDao;
+use Ksfraser\FA_ProductAttributes_Variations\Dao\VariationsDao;
 use Ksfraser\ModulesDAO\Db\DbAdapterInterface;
 use PHPUnit\Framework\TestCase;
 
@@ -11,7 +11,7 @@ class UpsertCategoryActionTest extends TestCase
 {
     public function testHandleCreateWithValidData(): void
     {
-        $dao = $this->createMock(ProductAttributesDao::class);
+        $dao = $this->createMock(VariationsDao::class);
         $dao->expects($this->once())
             ->method('listCategories')
             ->willReturn([]);
@@ -42,7 +42,7 @@ class UpsertCategoryActionTest extends TestCase
 
     public function testHandleUpdateWithValidData(): void
     {
-        $dao = $this->createMock(ProductAttributesDao::class);
+        $dao = $this->createMock(VariationsDao::class);
         $dao->expects($this->once())
             ->method('listCategories')
             ->willReturn([
@@ -75,7 +75,7 @@ class UpsertCategoryActionTest extends TestCase
 
     public function testHandleCreateWithMissingCode(): void
     {
-        $dao = $this->createMock(ProductAttributesDao::class);
+        $dao = $this->createMock(VariationsDao::class);
         $dao->expects($this->never())
             ->method('listCategories');
         $dao->expects($this->never())
@@ -96,7 +96,7 @@ class UpsertCategoryActionTest extends TestCase
 
     public function testHandleCreateWithMissingLabel(): void
     {
-        $dao = $this->createMock(ProductAttributesDao::class);
+        $dao = $this->createMock(VariationsDao::class);
         $dao->expects($this->never())
             ->method('listCategories');
         $dao->expects($this->never())
@@ -117,7 +117,7 @@ class UpsertCategoryActionTest extends TestCase
 
     public function testHandleCreateWithDuplicateCode(): void
     {
-        $dao = $this->createMock(ProductAttributesDao::class);
+        $dao = $this->createMock(VariationsDao::class);
         $dao->expects($this->once())
             ->method('listCategories')
             ->willReturn([
@@ -142,7 +142,7 @@ class UpsertCategoryActionTest extends TestCase
 
     public function testHandleUpdateWithDuplicateCode(): void
     {
-        $dao = $this->createMock(ProductAttributesDao::class);
+        $dao = $this->createMock(VariationsDao::class);
         $dao->expects($this->once())
             ->method('listCategories')
             ->willReturn([

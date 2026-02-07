@@ -3,7 +3,7 @@
 namespace Ksfraser\FA_ProductAttributes\Test\Actions;
 
 use Ksfraser\FA_ProductAttributes\Actions\DeleteValueAction;
-use Ksfraser\FA_ProductAttributes\Dao\ProductAttributesDao;
+use Ksfraser\FA_ProductAttributes_Variations\Dao\VariationsDao;
 use Ksfraser\ModulesDAO\Db\DbAdapterInterface;
 use PHPUnit\Framework\TestCase;
 
@@ -11,7 +11,7 @@ class DeleteValueActionTest extends TestCase
 {
     public function testHandleWithValidValueIdNotInUse(): void
     {
-        $dao = $this->createMock(ProductAttributesDao::class);
+        $dao = $this->createMock(VariationsDao::class);
         $dao->expects($this->once())
             ->method('listValues')
             ->with(123)

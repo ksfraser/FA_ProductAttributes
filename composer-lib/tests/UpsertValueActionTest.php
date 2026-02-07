@@ -3,7 +3,7 @@
 namespace Ksfraser\FA_ProductAttributes\Test\Actions;
 
 use Ksfraser\FA_ProductAttributes\Actions\UpsertValueAction;
-use Ksfraser\FA_ProductAttributes\Dao\ProductAttributesDao;
+use Ksfraser\FA_ProductAttributes_Variations\Dao\VariationsDao;
 use PHPUnit\Framework\TestCase;
 
 class UpsertValueActionTest extends TestCase

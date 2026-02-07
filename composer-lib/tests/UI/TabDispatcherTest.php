@@ -3,6 +3,7 @@
 namespace Ksfraser\FA_ProductAttributes\Test\UI;
 
 use Ksfraser\FA_ProductAttributes\Dao\ProductAttributesDao;
+use Ksfraser\FA_ProductAttributes_Variations\Dao\VariationsDao;
 use Ksfraser\FA_ProductAttributes\UI\TabDispatcher;
 use PHPUnit\Framework\TestCase;
 
@@ -11,8 +12,9 @@ class TabDispatcherTest extends TestCase
     public function testConstructorWithDefaultTab(): void
     {
         $dao = $this->createMock(ProductAttributesDao::class);
+        $variationsDao = $this->createMock(VariationsDao::class);
 
-        $dispatcher = new TabDispatcher($dao);
+        $dispatcher = new TabDispatcher($dao, $variationsDao);
 
         // Test that it defaults to 'categories' when no tab is specified
         $this->assertInstanceOf(TabDispatcher::class, $dispatcher);
@@ -21,8 +23,9 @@ class TabDispatcherTest extends TestCase
     public function testConstructorWithSpecifiedTab(): void
     {
         $dao = $this->createMock(ProductAttributesDao::class);
+        $variationsDao = $this->createMock(VariationsDao::class);
 
-        $dispatcher = new TabDispatcher($dao, 'values');
+        $dispatcher = new TabDispatcher($dao, $variationsDao, 'values');
 
         $this->assertInstanceOf(TabDispatcher::class, $dispatcher);
     }
@@ -30,8 +33,9 @@ class TabDispatcherTest extends TestCase
     public function testConstructorWithEmbeddedMode(): void
     {
         $dao = $this->createMock(ProductAttributesDao::class);
+        $variationsDao = $this->createMock(VariationsDao::class);
 
-        $dispatcher = new TabDispatcher($dao, 'categories', true);
+        $dispatcher = new TabDispatcher($dao, $variationsDao, 'categories', true);
 
         $this->assertInstanceOf(TabDispatcher::class, $dispatcher);
     }
@@ -42,8 +46,9 @@ class TabDispatcherTest extends TestCase
         $_GET['selected_tab'] = 'values';
 
         $dao = $this->createMock(ProductAttributesDao::class);
+        $variationsDao = $this->createMock(VariationsDao::class);
 
-        $dispatcher = new TabDispatcher($dao);
+        $dispatcher = new TabDispatcher($dao, $variationsDao);
 
         // Clean up
         unset($_GET['selected_tab']);
@@ -57,8 +62,9 @@ class TabDispatcherTest extends TestCase
         $_POST['tab'] = 'assignments';
 
         $dao = $this->createMock(ProductAttributesDao::class);
+        $variationsDao = $this->createMock(VariationsDao::class);
 
-        $dispatcher = new TabDispatcher($dao);
+        $dispatcher = new TabDispatcher($dao, $variationsDao);
 
         // Clean up
         unset($_POST['tab']);
@@ -69,8 +75,9 @@ class TabDispatcherTest extends TestCase
     public function testRenderStandaloneMode(): void
     {
         $dao = $this->createMock(ProductAttributesDao::class);
+        $variationsDao = $this->createMock(VariationsDao::class);
 
-        $dispatcher = new TabDispatcher($dao, 'categories', false);
+        $dispatcher = new TabDispatcher($dao, $variationsDao, 'categories', false);
 
         // This test is limited because the actual rendering depends on class_exists checks
         // In a real application, this would instantiate CategoriesTab and call render()
@@ -80,8 +87,9 @@ class TabDispatcherTest extends TestCase
     public function testRenderMethodExists(): void
     {
         $dao = $this->createMock(ProductAttributesDao::class);
+        $variationsDao = $this->createMock(VariationsDao::class);
 
-        $dispatcher = new TabDispatcher($dao, 'categories', false);
+        $dispatcher = new TabDispatcher($dao, $variationsDao, 'categories', false);
 
         $this->assertTrue(method_exists($dispatcher, 'render'));
     }
@@ -89,8 +97,9 @@ class TabDispatcherTest extends TestCase
     public function testRenderDoesNotThrowExceptionForUnknownTab(): void
     {
         $dao = $this->createMock(ProductAttributesDao::class);
+        $variationsDao = $this->createMock(VariationsDao::class);
 
-        $dispatcher = new TabDispatcher($dao, 'unknown_tab', false);
+        $dispatcher = new TabDispatcher($dao, $variationsDao, 'unknown_tab', false);
 
         // This should not throw an exception even for unknown tabs
         ob_start();

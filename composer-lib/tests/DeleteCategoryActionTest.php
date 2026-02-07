@@ -3,7 +3,7 @@
 namespace Ksfraser\FA_ProductAttributes\Test\Actions;
 
 use Ksfraser\FA_ProductAttributes\Actions\DeleteCategoryAction;
-use Ksfraser\FA_ProductAttributes\Dao\ProductAttributesDao;
+use Ksfraser\FA_ProductAttributes_Variations\Dao\VariationsDao;
 use Ksfraser\ModulesDAO\Db\DbAdapterInterface;
 use PHPUnit\Framework\TestCase;
 
@@ -11,7 +11,7 @@ class DeleteCategoryActionTest extends TestCase
 {
     public function testHandleWithValidCategoryIdNotInUse(): void
     {
-        $dao = $this->createMock(ProductAttributesDao::class);
+        $dao = $this->createMock(VariationsDao::class);
         $dao->expects($this->once())
             ->method('listCategories')
             ->willReturn([
@@ -43,7 +43,7 @@ class DeleteCategoryActionTest extends TestCase
 
     public function testHandleWithValidCategoryIdInUse(): void
     {
-        $dao = $this->createMock(ProductAttributesDao::class);
+        $dao = $this->createMock(VariationsDao::class);
         $dao->expects($this->once())
             ->method('listCategories')
             ->willReturn([
@@ -75,7 +75,7 @@ class DeleteCategoryActionTest extends TestCase
 
     public function testHandleWithInvalidCategoryId(): void
     {
-        $dao = $this->createMock(ProductAttributesDao::class);
+        $dao = $this->createMock(VariationsDao::class);
         $dao->expects($this->never())
             ->method('listCategories');
         $dao->expects($this->never())
@@ -97,7 +97,7 @@ class DeleteCategoryActionTest extends TestCase
 
     public function testHandleWithMissingCategoryId(): void
     {
-        $dao = $this->createMock(ProductAttributesDao::class);
+        $dao = $this->createMock(VariationsDao::class);
         $dao->expects($this->never())
             ->method('listCategories');
         $dao->expects($this->never())
@@ -117,7 +117,7 @@ class DeleteCategoryActionTest extends TestCase
 
     public function testHandleWithNonExistentCategory(): void
     {
-        $dao = $this->createMock(ProductAttributesDao::class);
+        $dao = $this->createMock(VariationsDao::class);
         $dao->expects($this->once())
             ->method('listCategories')
             ->willReturn([

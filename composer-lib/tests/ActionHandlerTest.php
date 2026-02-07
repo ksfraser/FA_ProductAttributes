@@ -4,6 +4,7 @@ namespace Ksfraser\FA_ProductAttributes\Test\Actions;
 
 use Ksfraser\FA_ProductAttributes\Actions\ActionHandler;
 use Ksfraser\FA_ProductAttributes\Dao\ProductAttributesDao;
+use Ksfraser\FA_ProductAttributes_Variations\Dao\VariationsDao;
 use Ksfraser\ModulesDAO\Db\DbAdapterInterface;
 use PHPUnit\Framework\TestCase;
 
@@ -11,13 +12,15 @@ class ActionHandlerTest extends TestCase
 {
     public function testHandleUpsertCategory(): void
     {
-        $dao = $this->createMock(ProductAttributesDao::class);
-        $dao->expects($this->once())
+        $variationsDao = $this->createMock(VariationsDao::class);
+        $variationsDao->expects($this->once())
             ->method('listCategories')
             ->willReturn([]);
-        $dao->expects($this->once())
+        $variationsDao->expects($this->once())
             ->method('upsertCategory')
             ->with('COLOR', 'Color', 'Product colors', 1, true, 0);
+
+        $productAttributesDao = $this->createMock(ProductAttributesDao::class);
 
         $dbAdapter = $this->createMock(DbAdapterInterface::class);
         $dbAdapter->expects($this->once())
@@ -27,7 +30,7 @@ class ActionHandlerTest extends TestCase
             ->method('getTablePrefix')
             ->willReturn('fa_');
 
-        $handler = new ActionHandler($dao, $dbAdapter);
+        $handler = new ActionHandler($variationsDao, $productAttributesDao, $dbAdapter);
 
         $result = $handler->handle('upsert_category', [
             'code' => 'COLOR',
@@ -42,14 +45,15 @@ class ActionHandlerTest extends TestCase
 
     public function testHandleAddAssignment(): void
     {
-        $dao = $this->createMock(ProductAttributesDao::class);
-        $dao->expects($this->once())
+        $variationsDao = $this->createMock(VariationsDao::class);
+        $productAttributesDao = $this->createMock(ProductAttributesDao::class);
+        $productAttributesDao->expects($this->once())
             ->method('addAssignment')
             ->with('TEST123', 456, 789, 1);
 
         $dbAdapter = $this->createMock(DbAdapterInterface::class);
 
-        $handler = new ActionHandler($dao, $dbAdapter);
+        $handler = new ActionHandler($variationsDao, $productAttributesDao, $dbAdapter);
 
         $result = $handler->handle('add_assignment', [
             'stock_id' => 'TEST123',
@@ -63,10 +67,11 @@ class ActionHandlerTest extends TestCase
 
     public function testHandleUnknownAction(): void
     {
-        $dao = $this->createMock(ProductAttributesDao::class);
+        $variationsDao = $this->createMock(VariationsDao::class);
+        $productAttributesDao = $this->createMock(ProductAttributesDao::class);
         $dbAdapter = $this->createMock(DbAdapterInterface::class);
 
-        $handler = new ActionHandler($dao, $dbAdapter);
+        $handler = new ActionHandler($variationsDao, $productAttributesDao, $dbAdapter);
 
         $result = $handler->handle('unknown_action', []);
 
@@ -75,10 +80,11 @@ class ActionHandlerTest extends TestCase
 
     public function testHandleWithException(): void
     {
-        $dao = $this->createMock(ProductAttributesDao::class);
+        $variationsDao = $this->createMock(VariationsDao::class);
+        $productAttributesDao = $this->createMock(ProductAttributesDao::class);
         $dbAdapter = $this->createMock(DbAdapterInterface::class);
 
-        $handler = new ActionHandler($dao, $dbAdapter);
+        $handler = new ActionHandler($variationsDao, $productAttributesDao, $dbAdapter);
 
         $result = $handler->handle('upsert_category', [
             'code' => '',
