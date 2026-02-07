@@ -394,6 +394,7 @@ class hooks_FA_ProductAttributes extends hooks
 
             return true; // We handled this tab
         } catch (Throwable $e) {
+            error_log("FA_ProductAttributes tab rendering error: " . $e->getMessage() . "\nStack trace:\n" . $e->getTraceAsString());
             display_error("Error rendering product attributes tab: " . $e->getMessage());
             return false;
         }
