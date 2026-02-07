@@ -48,11 +48,13 @@ page(_("Product Attributes"));
 
 use Ksfraser\ModulesDAO\Factory\DatabaseAdapterFactory;
 use Ksfraser\FA_ProductAttributes\Dao\ProductAttributesDao;
+use Ksfraser\FA_ProductAttributes_Variations\Dao\VariationsDao;
 use Ksfraser\FA_ProductAttributes\UI\TabDispatcher;
 
 try {
     $db_adapter = DatabaseAdapterFactory::create('fa'); // Use FA driver via factory
     $dao = new ProductAttributesDao($db_adapter);
+    $variationsDao = new VariationsDao($db_adapter);
     //$dao->ensureSchema(); // Tables already exist
 } catch (Exception $e) {
     display_error("Database error: " . $e->getMessage());
@@ -114,7 +116,7 @@ if (!empty($action)) {
 
     // If no plugin handled it, use core action handler
     if ($message === null) {
-        $actionHandler = new ActionHandler($dao, $db_adapter);
+        $actionHandler = new ActionHandler($variationsDao, $dao, $db_adapter);
         display_notification("DEBUG: ActionHandler instantiated");
         $message = $actionHandler->handle($action, $requestData);
         display_notification("DEBUG: ActionHandler->handle() returned: '$message'");
@@ -127,7 +129,7 @@ if (!empty($action)) {
 
 // Create tab dispatcher and render content
 try {
-    $dispatcher = new TabDispatcher($dao, $selectedTab, $isEmbedded);
+    $dispatcher = new TabDispatcher($dao, $variationsDao, $selectedTab, $isEmbedded);
     display_notification("DEBUG: TabDispatcher instantiated successfully");
     $dispatcher->render();
     display_notification("DEBUG: TabDispatcher render() completed");

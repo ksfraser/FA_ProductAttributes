@@ -17,6 +17,7 @@ $files = [
     __DIR__ . '/composer-lib/src/Ksfraser/FA_ProductAttributes/Db/PdoDbAdapter.php',
     __DIR__ . '/composer-lib/src/Ksfraser/FA_ProductAttributes/Schema/SchemaManager.php',
     __DIR__ . '/composer-lib/src/Ksfraser/FA_ProductAttributes/Dao/ProductAttributesDao.php',
+    __DIR__ . '/fa_product_attributes_variations/src/Ksfraser/FA_ProductAttributes_Variations/Dao/VariationsDao.php',
     __DIR__ . '/composer-lib/src/Ksfraser/FA_ProductAttributes/Actions/ActionHandler.php',
     __DIR__ . '/composer-lib/src/Ksfraser/FA_ProductAttributes/Actions/AddAssignmentAction.php',
     __DIR__ . '/composer-lib/src/Ksfraser/FA_ProductAttributes/Actions/DeleteAssignmentAction.php',
@@ -49,10 +50,11 @@ $db = new class implements \Ksfraser\ModulesDAO\Db\DbAdapterInterface {
     public function lastInsertId(): ?int { return 1; }
 };
 
-// Instantiate DAO
+// Instantiate DAOs
 $dao = new \Ksfraser\FA_ProductAttributes\Dao\ProductAttributesDao($db);
+$variationsDao = new \Ksfraser\FA_ProductAttributes_Variations\Dao\VariationsDao($db);
 
-echo "DAO instantiated successfully.\n";
+echo "DAOs instantiated successfully.\n";
 
 // Call some DAO methods to check they exist
 try {
@@ -69,22 +71,25 @@ try {
     echo "DAO listCategories() error: " . $e->getMessage() . "\n";
 }
 
-// List of action classes
+// List of action classes with their required DAO
 $actionClasses = [
-    \Ksfraser\FA_ProductAttributes\Actions\AddAssignmentAction::class,
-    \Ksfraser\FA_ProductAttributes\Actions\AddCategoryAssignmentAction::class,
-    \Ksfraser\FA_ProductAttributes\Actions\DeleteAssignmentAction::class,
-    \Ksfraser\FA_ProductAttributes\Actions\DeleteCategoryAction::class,
-    \Ksfraser\FA_ProductAttributes\Actions\DeleteValueAction::class,
-    \Ksfraser\FA_ProductAttributes\Actions\RemoveCategoryAssignmentAction::class,
-    \Ksfraser\FA_ProductAttributes\Actions\UpsertCategoryAction::class,
-    \Ksfraser\FA_ProductAttributes\Actions\UpsertValueAction::class,
-    \Ksfraser\FA_ProductAttributes\Actions\UpdateCategoryAssignmentsAction::class,
+    [\Ksfraser\FA_ProductAttributes\Actions\AddAssignmentAction::class, $dao],
+    [\Ksfraser\FA_ProductAttributes\Actions\AddCategoryAssignmentAction::class, $dao],
+    [\Ksfraser\FA_ProductAttributes\Actions\DeleteAssignmentAction::class, $dao],
+    [\Ksfraser\FA_ProductAttributes\Actions\DeleteCategoryAction::class, $variationsDao],
+    [\Ksfraser\FA_ProductAttributes\Actions\DeleteValueAction::class, $variationsDao],
+    [\Ksfraser\FA_ProductAttributes\Actions\RemoveCategoryAssignmentAction::class, $dao],
+    [\Ksfraser\FA_ProductAttributes\Actions\UpsertCategoryAction::class, $variationsDao],
+    [\Ksfraser\FA_ProductAttributes\Actions\UpsertValueAction::class, $variationsDao],
+    [\Ksfraser\FA_ProductAttributes\Actions\UpdateCategoryAssignmentsAction::class, $dao],
 ];
 
-foreach ($actionClasses as $actionClass) {
+foreach ($actionClasses as $actionConfig) {
+    $actionClass = $actionConfig[0];
+    $requiredDao = $actionConfig[1];
+    
     try {
-        $action = new $actionClass($dao);
+        $action = new $actionClass($requiredDao);
         echo "Action $actionClass instantiated successfully.\n";
 
         // Call handle method with empty array to check it exists

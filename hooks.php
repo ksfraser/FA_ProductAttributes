@@ -257,6 +257,25 @@ class hooks_FA_ProductAttributes extends hooks
     }
 
     /**
+     * Get a VariationsDao instance
+     * @return \Ksfraser\FA_ProductAttributes_Variations\Dao\VariationsDao
+     */
+    private function get_variations_dao() {
+        static $dao = null;
+        if ($dao === null) {
+            // Ensure autoloader is loaded
+            self::ensure_autoloader_loaded();
+
+            // Create database adapter
+            $db_adapter = \Ksfraser\ModulesDAO\Factory\DatabaseAdapterFactory::create('fa');
+
+            // Create DAO
+            $dao = new \Ksfraser\FA_ProductAttributes_Variations\Dao\VariationsDao($db_adapter);
+        }
+        return $dao;
+    }
+
+    /**
      * Get registered sub-tabs from plugins
      * @return array Array of sub-tab configurations
      */
@@ -311,52 +330,57 @@ class hooks_FA_ProductAttributes extends hooks
         try {
             global $path_to_root;
 
-            // Temporarily use simple content without FA UI functions to test
-            echo "<div style='padding: 20px; border: 1px solid #ccc; margin: 10px;'>";
-            echo "<h3>Product Attributes for: {$stock_id}</h3>";
-
-            // Get assignments and categories
+            // Create DAOs
             $dao = $this->get_product_attributes_dao();
-            $assignments = $dao->listAssignments($stock_id);
-            $categories = $dao->listCategories();
-
-            // Check if this item is a parent (has variations)
-            $isParent = $dao->getProductParent($stock_id) === null && !empty($dao->getVariationCountForProductCategory($stock_id, 0)); // Simple check
-
-            // Product Attributes Controls
-            echo "<div style='margin-bottom: 20px; padding: 10px; background-color: #f0f0f0; border-radius: 5px;'>";
-            echo "<h4>Product Configuration:</h4>";
-            echo "<form method='post' action='' style='display: inline;'>";
-            echo "<input type='hidden' name='stock_id' value='" . htmlspecialchars($stock_id) . "'>";
-            echo "<label><input type='checkbox' name='is_parent' value='1' " . ($isParent ? 'checked' : '') . "> This is a parent product (can have variations)</label> ";
-            echo "<input type='submit' name='update_product_config' value='Update'>";
-            echo "</form>";
-            echo "</div>";
-
-            // Plugin Admin Links
-            echo "<div style='margin-bottom: 20px; padding: 10px; background-color: #e8f4f8; border-radius: 5px;'>";
-            echo "<h4>Plugin Administration:</h4>";
-            echo "<p><a href='./modules/FA_ProductAttributes/product_attributes_admin.php' target='_blank'>Product Attributes Admin</a></p>";
-            // Plugin links will be added here dynamically when plugins are loaded
-            echo "<p><em>Plugin admin links will appear here when plugins are activated.</em></p>";
-            echo "</div>";
+            $variationsDao = $this->get_variations_dao();
 
             // Get registered sub-tabs from plugins
             $subtabs = $this->get_registered_subtabs();
-            $current_subtab = $_GET['subtab'] ?? ($subtabs ? array_key_first($subtabs) : 'core');
+            $current_subtab = $_GET['product_attributes_subtab'] ?? ($subtabs ? array_key_first($subtabs) : 'main');
 
-            // Sub-tabs navigation (dynamically generated from plugins)
+            // Sub-tabs navigation
             if (!empty($subtabs)) {
                 echo "<div style='margin-bottom: 20px;'>";
+                // Add main tab
+                $is_active = ($current_subtab == 'main');
+                echo "<a href='?tab=product_attributes&product_attributes_subtab=main' style='padding: 8px 12px; margin-right: 5px; text-decoration: none; " . ($is_active ? 'background-color: #007cba; color: white;' : 'background-color: #f0f0f0;') . "'>Main</a>";
+
                 foreach ($subtabs as $tab_key => $tab_info) {
                     $is_active = ($current_subtab == $tab_key);
-                    echo "<a href='?tab=product_attributes&subtab={$tab_key}' style='padding: 8px 12px; margin-right: 5px; text-decoration: none; " . ($is_active ? 'background-color: #007cba; color: white;' : 'background-color: #f0f0f0;') . "'>{$tab_info['title']}</a>";
+                    echo "<a href='?tab=product_attributes&product_attributes_subtab={$tab_key}' style='padding: 8px 12px; margin-right: 5px; text-decoration: none; " . ($is_active ? 'background-color: #007cba; color: white;' : 'background-color: #f0f0f0;') . "'>{$tab_info['title']}</a>";
                 }
                 echo "</div>";
             }
 
             // Display content based on sub-tab
-            if (isset($subtabs[$current_subtab])) {
+            if ($current_subtab === 'main') {
+                // Main tab: Show parent product status and assignments
+                $assignments = $dao->listAssignments($stock_id);
+                $isParent = $dao->getProductParent($stock_id) === null && !empty($dao->getVariationCountForProductCategory($stock_id, 0));
+
+                echo "<h4>Product Configuration:</h4>";
+                echo "<form method='post' action='' style='display: inline;'>";
+                echo "<input type='hidden' name='stock_id' value='" . htmlspecialchars($stock_id) . "'>";
+                echo "<label><input type='checkbox' name='is_parent' value='1' " . ($isParent ? 'checked' : '') . "> This is a parent product (can have variations)</label> ";
+                echo "<input type='submit' name='update_product_config' value='Update'>";
+                echo "</form>";
+
+                echo "<h4>Current Assignments:</h4>";
+                if (empty($assignments)) {
+                    echo "<p>No attributes assigned to this product.</p>";
+                } else {
+                    start_table(TABLESTYLE2);
+                    table_header(array(_("Category"), _("Value"), _("Actions")));
+                    foreach ($assignments as $assignment) {
+                        start_row();
+                        label_cell($assignment['category_label'] ?? '');
+                        label_cell($assignment['value_label'] ?? '');
+                        label_cell('<a href="#">' . _("Edit") . '</a> | <a href="#">' . _("Remove") . '</a>');
+                        end_row();
+                    }
+                    end_table();
+                }
+            } elseif (isset($subtabs[$current_subtab])) {
                 // Plugin-provided sub-tab content
                 $tab_info = $subtabs[$current_subtab];
                 if (isset($tab_info['callback']) && is_callable($tab_info['callback'])) {
@@ -365,53 +389,13 @@ class hooks_FA_ProductAttributes extends hooks
                     echo "<p>Sub-tab '{$current_subtab}' is not properly configured.</p>";
                 }
             } else {
-                // Fallback: show basic core information
-                echo "<h4>Product Attributes Core:</h4>";
-                echo "<p>Welcome to Product Attributes. Install plugins to add functionality.</p>";
-                echo "<p>Available plugins will register their own sub-tabs above.</p>";
+                echo "<p>Unknown sub-tab: {$current_subtab}</p>";
             }
 
-            // JavaScript for dynamic value loading
-            echo "<script>
-            document.querySelector('select[name=category_id]').addEventListener('change', function() {
-                var categoryId = this.value;
-                var valueSelect = document.getElementById('value_select');
-                valueSelect.innerHTML = '<option value=\"\">Loading...</option>';
-                valueSelect.disabled = true;
-
-                if (categoryId) {
-                    fetch('./modules/FA_ProductAttributes/api.php?action=get_values&category_id=' + categoryId)
-                        .then(response => response.json())
-                        .then(data => {
-                            valueSelect.innerHTML = '<option value=\"\">Select Value</option>';
-                            data.forEach(function(value) {
-                                valueSelect.innerHTML += '<option value=\"' + value.id + '\">' + value.value + '</option>';
-                            });
-                            valueSelect.disabled = false;
-                        })
-                        .catch(error => {
-                            console.error('Error:', error);
-                            valueSelect.innerHTML = '<option value=\"\">Error loading values</option>';
-                        });
-                } else {
-                    valueSelect.innerHTML = '<option value=\"\">Select Value</option>';
-                    valueSelect.disabled = true;
-                }
-            });
-
-            // Handle sub-tab navigation to maintain state
-            document.querySelectorAll('a[href*=\"subtab=\"]').forEach(function(link) {
-                link.addEventListener('click', function(e) {
-                    // Could add loading indicator here
-                });
-            });
-            </script>";
-
-            echo "</div>";
-            return true; // Successfully handled
-        } catch (Exception $e) {
-            display_error("Error displaying tab content: " . $e->getMessage());
-            return true; // We handled it (even though there was an error)
+            return true; // We handled this tab
+        } catch (Throwable $e) {
+            display_error("Error rendering product attributes tab: " . $e->getMessage());
+            return false;
         }
     }
 

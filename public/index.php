@@ -14,6 +14,7 @@ require_once $autoload;
 
 use Ksfraser\ModulesDAO\Db\PdoDbAdapter;
 use Ksfraser\FA_ProductAttributes\Dao\ProductAttributesDao;
+use Ksfraser\FA_ProductAttributes_Variations\Dao\VariationsDao;
 use Ksfraser\HTML\Elements\HtmlTable;
 use Ksfraser\HTML\Elements\TableBuilder;
 use Ksfraser\HTML\HtmlString;
@@ -33,6 +34,7 @@ if (!$dsn) {
 $pdo = new PDO($dsn, $user, $pass);
 $db = new PdoDbAdapter($pdo, '');
 $dao = new ProductAttributesDao($db);
+$variationsDao = new VariationsDao($db);
 
 $dao->ensureSchema();
 

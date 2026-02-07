@@ -2,14 +2,14 @@
 
 namespace Ksfraser\FA_ProductAttributes\UI;
 
-use Ksfraser\FA_ProductAttributes\Dao\ProductAttributesDao;
+use Ksfraser\FA_ProductAttributes_Variations\Dao\VariationsDao;
 
 class CategoriesTab
 {
-    /** @var ProductAttributesDao */
+    /** @var VariationsDao */
     private $dao;
 
-    public function __construct(ProductAttributesDao $dao)
+    public function __construct(VariationsDao $dao)
     {
         $this->dao = $dao;
     }

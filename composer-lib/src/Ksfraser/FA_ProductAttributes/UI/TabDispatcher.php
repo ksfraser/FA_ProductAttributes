@@ -3,6 +3,7 @@
 namespace Ksfraser\FA_ProductAttributes\UI;
 
 use Ksfraser\FA_ProductAttributes\Dao\ProductAttributesDao;
+use Ksfraser\FA_ProductAttributes_Variations\Dao\VariationsDao;
 
 /**
  * Dispatches tab rendering based on selected_tab parameter
@@ -13,15 +14,19 @@ class TabDispatcher
     /** @var ProductAttributesDao */
     private $dao;
 
+    /** @var VariationsDao */
+    private $variationsDao;
+
     /** @var string */
     private $selectedTab;
 
     /** @var bool */
     private $isEmbedded;
 
-    public function __construct(ProductAttributesDao $dao, string $selectedTab = '', bool $isEmbedded = false)
+    public function __construct(ProductAttributesDao $dao, VariationsDao $variationsDao, string $selectedTab = '', bool $isEmbedded = false)
     {
         $this->dao = $dao;
+        $this->variationsDao = $variationsDao;
         $this->selectedTab = $selectedTab ?: ($_GET['selected_tab'] ?? $_GET['tab'] ?? $_POST['tab'] ?? 'categories');
         $this->isEmbedded = $isEmbedded || isset($_GET['selected_tab']);
     }
@@ -192,15 +197,15 @@ class TabDispatcher
         // Render the appropriate tab
         switch ($this->selectedTab) {
             case 'categories':
-                $tab = new CategoriesTab($this->dao);
+                $tab = new CategoriesTab($this->variationsDao);
                 $tab->render();
                 break;
             case 'values':
-                $tab = new ValuesTab($this->dao);
+                $tab = new ValuesTab($this->variationsDao);
                 $tab->render();
                 break;
             case 'assignments':
-                $tab = new AssignmentsTab($this->dao);
+                $tab = new AssignmentsTab($this->variationsDao);
                 $tab->render();
                 break;
             default:

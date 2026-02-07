@@ -83,6 +83,30 @@
         "/^cd \"c:\\\\Users\\\\prote\\\\Documents\\\\software-devel\\\\FA_ProductAttributes\\\\ksf-modules-dao\"; php \\.\\./composer-lib/vendor/phpunit/phpunit/phpunit --bootstrap tests/bootstrap\\.php tests/Db/$/": {
             "approve": true,
             "matchCommandLine": true
+        },
+        "/^cd ksf-modules-dao ; php test_interface\\.php$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^cd \\.\\. ; cd ksf-modules-dao ; php test_interface\\.php$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^php test_interface\\.php$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^php test_db_methods\\.php$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^cd c:\\\\Users\\\\prote\\\\Documents\\\\software-devel\\\\FA_ProductAttributes\\\\composer-lib ; php vendor/bin/phpunit tests/ProductAttributesDaoTest\\.php --verbose$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^cd \"c:\\\\Users\\\\prote\\\\Documents\\\\software-devel\\\\FA_ProductAttributes\\\\fa_product_attributes_variations\" ; php -l hooks\\.php$/": {
+            "approve": true,
+            "matchCommandLine": true
         }
     }
 }

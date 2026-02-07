@@ -2,17 +2,17 @@
 
 namespace Ksfraser\FA_ProductAttributes\Actions;
 
-use Ksfraser\FA_ProductAttributes\Dao\ProductAttributesDao;
+use Ksfraser\FA_ProductAttributes_Variations\Dao\VariationsDao;
 use Ksfraser\ModulesDAO\Db\DbAdapterInterface;
 
 class DeleteCategoryAction
 {
-    /** @var ProductAttributesDao */
+    /** @var VariationsDao */
     private $dao;
     /** @var DbAdapterInterface */
     private $dbAdapter;
 
-    public function __construct(ProductAttributesDao $dao, DbAdapterInterface $dbAdapter)
+    public function __construct(VariationsDao $dao, DbAdapterInterface $dbAdapter)
     {
         $this->dao = $dao;
         $this->dbAdapter = $dbAdapter;

@@ -108,6 +108,7 @@ Plugins can extend with additional tables following established patterns.
 - **Plugin Loading**: Dynamic plugin discovery and loading
 - **Event System**: Publish-subscribe pattern for loose coupling
 - **Configuration Extensions**: Plugin-specific configuration options
+- **URL Parameter Namespacing**: Module-specific query parameters to prevent cross-contamination (e.g., `product_attributes_subtab` instead of generic `subtab`)
 
 ## Quality Assurance
 
