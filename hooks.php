@@ -198,6 +198,15 @@ class hooks_FA_ProductAttributes extends hooks
             error_log("FA_ProductAttributes: Autoloader not found at: " . $autoloader);
         }
 
+        // Load variations plugin autoloader if available
+        $variationsAutoloader = __DIR__ . '/../FA_ProductAttributes_Variations/vendor/autoload.php';
+        if (file_exists($variationsAutoloader)) {
+            require_once $variationsAutoloader;
+            error_log("FA_ProductAttributes: Variations autoloader loaded from: " . $variationsAutoloader);
+        } else {
+            error_log("FA_ProductAttributes: Variations autoloader not found at: " . $variationsAutoloader);
+        }
+
         // Only load FA function mocks in testing/development environments
         // In production, FA provides the real functions
         if (defined('FA_TESTING') || getenv('FA_TESTING') || isset($_SERVER['FA_TESTING'])) {
