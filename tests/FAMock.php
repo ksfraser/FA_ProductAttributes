@@ -306,3 +306,51 @@ if (!function_exists('db_escape')) {
         return "'" . addslashes($value) . "'";
     }
 }
+
+// FA Hooks System Mocks
+class FAMock {
+    private static $filters = [];
+
+    public static function add_filter($filter_name, $callback, $priority = 10) {
+        if (!isset(self::$filters[$filter_name])) {
+            self::$filters[$filter_name] = [];
+        }
+        if (!isset(self::$filters[$filter_name][$priority])) {
+            self::$filters[$filter_name][$priority] = [];
+        }
+        self::$filters[$filter_name][$priority][] = $callback;
+    }
+
+    public static function apply_filters($filter_name, $value) {
+        if (!isset(self::$filters[$filter_name])) {
+            return $value;
+        }
+
+        // Sort by priority
+        ksort(self::$filters[$filter_name]);
+
+        foreach (self::$filters[$filter_name] as $priority => $callbacks) {
+            foreach ($callbacks as $callback) {
+                $value = call_user_func($callback, $value);
+            }
+        }
+
+        return $value;
+    }
+
+    public static function resetFilters() {
+        self::$filters = [];
+    }
+}
+
+if (!function_exists('add_filter')) {
+    function add_filter($filter_name, $callback, $priority = 10) {
+        FAMock::add_filter($filter_name, $callback, $priority);
+    }
+}
+
+if (!function_exists('apply_filters')) {
+    function apply_filters($filter_name, $value) {
+        return FAMock::apply_filters($filter_name, $value);
+    }
+}

@@ -195,6 +195,62 @@
         "/^php \"c:\\\\Users\\\\prote\\\\Documents\\\\software-devel\\\\FA_ProductAttributes\\\\vendor\\\\bin\\\\phpunit\" --configuration=\"c:\\\\Users\\\\prote\\\\Documents\\\\software-devel\\\\FA_ProductAttributes\\\\phpunit\\.xml\"$/": {
             "approve": true,
             "matchCommandLine": true
+        },
+        "/^cd \"c:\\\\Users\\\\prote\\\\Documents\\\\software-devel\\\\FA_ProductAttributes\\\\composer-lib\" ; php vendor/bin/phpunit tests/$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^php vendor/bin/phpunit tests/$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^php vendor/bin/phpunit tests/Admin/AdminLinksTest\\.php$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^php vendor/bin/phpunit --list-tests \\| grep Admin$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^php vendor/bin/phpunit --list-tests \\| Select-String Admin$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^cd c:\\\\Users\\\\prote\\\\Documents\\\\software-devel\\\\FA_ProductAttributes\\\\composer-lib ; php vendor/bin/phpunit tests/Admin/AdminLinksTest\\.php$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^cd c:\\\\Users\\\\prote\\\\Documents\\\\software-devel\\\\FA_ProductAttributes\\\\composer-lib ; php -r \"require_once 'tests/bootstrap\\.php'; echo function_exists\\('apply_filters'\\) \\? 'apply_filters exists' : 'apply_filters not found';\"$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^php vendor/bin/phpunit composer-lib/tests/Admin/AdminLinksTest\\.php$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^php c:\\\\Users\\\\prote\\\\Documents\\\\software-devel\\\\FA_ProductAttributes\\\\vendor\\\\bin\\\\phpunit c:\\\\Users\\\\prote\\\\Documents\\\\software-devel\\\\FA_ProductAttributes\\\\composer-lib\\\\tests\\\\Admin\\\\AdminLinksTest\\.php$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^php c:\\\\Users\\\\prote\\\\Documents\\\\software-devel\\\\FA_ProductAttributes\\\\vendor\\\\bin\\\\phpunit --bootstrap c:\\\\Users\\\\prote\\\\Documents\\\\software-devel\\\\FA_ProductAttributes\\\\composer-lib\\\\tests\\\\bootstrap\\.php c:\\\\Users\\\\prote\\\\Documents\\\\software-devel\\\\FA_ProductAttributes\\\\composer-lib\\\\tests\\\\Admin\\\\AdminLinksTest\\.php$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^php c:\\\\Users\\\\prote\\\\Documents\\\\software-devel\\\\FA_ProductAttributes\\\\vendor\\\\bin\\\\phpunit --bootstrap c:\\\\Users\\\\prote\\\\Documents\\\\software-devel\\\\FA_ProductAttributes\\\\composer-lib\\\\tests\\\\bootstrap\\.php c:\\\\Users\\\\prote\\\\Documents\\\\software-devel\\\\FA_ProductAttributes\\\\composer-lib\\\\tests$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^php vendor/bin/phpunit tests/Admin/$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^dir tests\\\\Admin$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^php vendor\\\\bin\\\\phpunit$/": {
+            "approve": true,
+            "matchCommandLine": true
         }
     }
 }

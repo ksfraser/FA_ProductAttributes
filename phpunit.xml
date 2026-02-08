@@ -10,8 +10,12 @@
          beStrictAboutTodoAnnotatedTests="true"
          verbose="true">
     <testsuites>
-        <testsuite name="default">
+        <testsuite name="root">
             <directory>tests</directory>
+            <exclude>tests/composer-lib</exclude>
+        </testsuite>
+        <testsuite name="composer-lib">
+            <directory>composer-lib/tests</directory>
         </testsuite>
     </testsuites>
 
