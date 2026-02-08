@@ -1,0 +1,12 @@
+Package: FA_ProductAttributes
+Name: FA_ProductAttributes
+Description: FA Product Attributes Main Module
+Author: Kevin Fraser <kevin@ksfraser.com>
+Maintenance: Kevin Fraser <kevin@ksfraser.com>
+Homepage: http://ksfraser.com
+Type: extension
+InstallPath: modules/FA_ProductAttributes
+Filename: FA_ProductAttributes
+Version: 2.4.0-1
+FA-Version: 2.4
+PHP-Version: 7.3
