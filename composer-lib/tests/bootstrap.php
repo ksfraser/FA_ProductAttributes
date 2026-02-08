@@ -1,5 +1,9 @@
 <?php
 
+// Initialize global filter array for testing
+global $wp_filter;
+$wp_filter = [];
+
 // Load Composer autoloader first (only if not already loaded)
 if (!class_exists('ComposerAutoloaderInitd0ab8830ae0a5f8634b8c8ebafe07e51')) {
     require_once __DIR__ . '/../vendor/autoload.php';
@@ -44,5 +48,34 @@ $files = [
 foreach ($files as $file) {
     if (file_exists($file)) {
         require_once $file;
+    }
+}
+
+// Define global hook functions for testing
+if (!function_exists('add_filter')) {
+    function add_filter($tag, $function_to_add, $priority = 10, $accepted_args = 1) {
+        global $wp_filter;
+        if (!isset($wp_filter[$tag])) {
+            $wp_filter[$tag] = [];
+        }
+        if (!isset($wp_filter[$tag][$priority])) {
+            $wp_filter[$tag][$priority] = [];
+        }
+        $wp_filter[$tag][$priority][] = $function_to_add;
+    }
+}
+
+if (!function_exists('apply_filters')) {
+    function apply_filters($tag, $value) {
+        global $wp_filter;
+        if (!isset($wp_filter[$tag])) {
+            return $value;
+        }
+        foreach ($wp_filter[$tag] as $priority => $functions) {
+            foreach ($functions as $function) {
+                $value = call_user_func($function, $value);
+            }
+        }
+        return $value;
     }
 }
