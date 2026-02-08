@@ -1,6 +1,6 @@
 {
   "name": "ksfraser/fa-product-attributes",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "FrontAccounting-compatible ordered product attributes (royal order of adjectives)",
   "type": "library",
   "license": "MIT",
@@ -25,12 +25,12 @@
   },
   "autoload": {
     "psr-4": {
-      "Ksfraser\\FA_ProductAttributes\\": "src/Ksfraser/FA_ProductAttributes/"
+      "Ksfraser\\FA_ProductAttributes\\": "composer-lib/src/Ksfraser/FA_ProductAttributes/"
     }
   },
   "autoload-dev": {
     "psr-4": {
-      "Ksfraser\\FA_ProductAttributes\\Test\\": "tests/",
+      "Ksfraser\\FA_ProductAttributes\\Test\\": "composer-lib/tests/",
       "Ksfraser\\FA_ProductAttributes_Variations\\Test\\": "../fa_product_attributes_variations/tests/"
     }
   },
