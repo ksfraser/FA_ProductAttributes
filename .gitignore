@@ -5,6 +5,7 @@ fa_product_attributes_variations/
 fa_product_attributes_categories
 plugins/
 ksf-modules-dao/
+famock/
 fa-hooks/
 FA_ProductAttributes_Core/
 ksf_Rest_API/
