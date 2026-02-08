@@ -141,6 +141,31 @@ class ProductAttributesDao
     }
 
     /**
+     * Get the parent stock_id for a product
+     */
+    public function getProductParent(string $stockId): ?string
+    {
+        $p = $this->db->getTablePrefix();
+        $result = $this->db->query("SELECT parent_stock_id FROM `{$p}product_hierarchy` WHERE child_stock_id = :child", ['child' => $stockId]);
+        return $result[0]['parent_stock_id'] ?? null;
+    }
+
+    /**
+     * Set the parent for a product
+     */
+    public function setProductParent(string $stockId, ?string $parentStockId): void
+    {
+        $p = $this->db->getTablePrefix();
+        if ($parentStockId === null) {
+            // Remove parent
+            $this->db->execute("DELETE FROM `{$p}product_hierarchy` WHERE child_stock_id = :child", ['child' => $stockId]);
+        } else {
+            // Insert or update
+            $this->db->execute("INSERT INTO `{$p}product_hierarchy` (child_stock_id, parent_stock_id) VALUES (:child, :parent) ON DUPLICATE KEY UPDATE parent_stock_id = :parent", ['child' => $stockId, 'parent' => $parentStockId]);
+        }
+    }
+
+    /**
      * Get the database adapter
      */
     public function getDbAdapter(): DbAdapterInterface
