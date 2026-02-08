@@ -1,7 +1,9 @@
 <?php
 
-// Load Composer autoloader first
-require_once __DIR__ . '/../vendor/autoload.php';
+// Load Composer autoloader first (only if not already loaded)
+if (!class_exists('ComposerAutoloaderInitd0ab8830ae0a5f8634b8c8ebafe07e51')) {
+    require_once __DIR__ . '/../vendor/autoload.php';
+}
 
 // Load FA function mocks from FAMock library
 if (file_exists(__DIR__ . '/../vendor/ksfraser/famock/php/FAMock.php')) {
