@@ -1,0 +1,6 @@
+name=FA_ProductAttributes_Categories
+description=FA Product Attributes Categories Plugin
+version=1.0.0
+menuentries=product_categories_admin.php
+access=SA_FA_ProductAttributes
+depends=FA_ProductAttributes_Core
