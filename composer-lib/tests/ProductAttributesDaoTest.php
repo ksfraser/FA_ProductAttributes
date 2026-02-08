@@ -101,7 +101,7 @@ class ProductAttributesDaoTest extends TestCase
 
     public function testEnsureSchema(): void
     {
-        $schema = $this->createMock(\Ksfraser\FA_ProductAttributes\Schema\SchemaManager::class);
+        $schema = $this->createMock(\Ksfraser\SchemaManager\SchemaManager::class);
         $db = $this->createMock(DbAdapterInterface::class);
         
         $schema->expects($this->once())

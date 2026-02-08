@@ -2,19 +2,61 @@
 
 A core Product Attributes module for FrontAccounting that provides generic attribute infrastructure and enables extensible attribute-based functionality through plugins.
 
-## Features
+## Repository Structure & Inter-relationships
 
-- **Generic Attribute System**: Core infrastructure for category-based attributes (Color, Size, Material, etc.)
-- **Flexible Assignment**: Assign attributes at individual product level or category level
-- **Royal Order Sorting**: Maintain consistent attribute display order
-- **Plugin Architecture**: Extensible system allowing plugins to add specific attribute types
-- **Hook-based Integration**: Minimal changes to core FrontAccounting files with extension points
-- **Admin Interface**: Web-based management interface for attributes
-- **Bulk Operations**: Framework for batch operations on multiple products (attribute assignment, price updates, status changes)
-- **RESTful API**: Full API for external integrations
-- **Comprehensive Testing**: Unit tests ensuring reliability
+This repository contains a modular FA Product Attributes system designed for scalable development and deployment:
 
-## Architecture Overview
+### Core Components
+
+- **`FA_ProductAttributes`** (this repo): Shared composer library containing core attribute infrastructure
+  - Generic attribute categories, values, and assignments
+  - Database schema management
+  - Common services and utilities
+  - Used by all FA modules requiring attribute functionality
+
+- **`FA_ProductAttributes_Core`**: Main FA module providing the admin interface
+  - Requires: `ksfraser/fa-product-attributes` (shared library)
+  - Provides: Web-based attribute management interface
+  - Integrates with FA's item management system
+
+- **`FA_ProductAttributes_Variations`**: Plugin module for product variations
+  - Requires: `ksfraser/fa-product-attributes` (shared library)
+  - Depends on: `FA_ProductAttributes_Core` (for loading order)
+  - Provides: Parent-child product relationships, variation generation
+
+- **`FA_ProductAttributes_Categories`**: Plugin module for category-based attributes
+  - Requires: `ksfraser/fa-product-attributes` (shared library)  
+  - Depends on: `FA_ProductAttributes_Core` (for loading order)
+  - Provides: Category-level attribute inheritance
+
+### Deployment Architecture
+
+```
+FrontAccounting modules/
+├── FA_ProductAttributes_Core/     # Main module (loads first)
+│   ├── vendor/
+│   │   └── ksfraser/fa-product-attributes/  # Shared library
+│   └── _init/config                        # FA module config
+├── FA_ProductAttributes_Variations/        # Plugin module
+│   ├── vendor/
+│   │   └── ksfraser/fa-product-attributes/  # Shared library
+│   └── _init/config                        # Depends on Core
+└── FA_ProductAttributes_Categories/        # Plugin module
+    ├── vendor/
+    │   └── ksfraser/fa-product-attributes/  # Shared library
+    └── _init/config                        # Depends on Core
+```
+
+### Design Principles
+
+- **Shared Library**: Common code lives in `ksfraser/fa-product-attributes` composer package
+- **Module Independence**: Each FA module is self-contained with its own vendor dependencies
+- **Loading Order**: Core module loads first, plugins depend on it for proper initialization
+- **Plugin Architecture**: Clean separation between generic attributes (core) and domain-specific features (plugins)
+
+See `Project Docs/` for detailed business requirements, functional specifications, and architecture documentation.
+
+See `AGENTS-TECH.md` for technical implementation details and agent-specific requirements.
 
 ### Core Module Responsibilities
 

@@ -25,6 +25,118 @@ class ProductAttributesDao
     }
 
     /** @return array<int, array<string, mixed>> */
+    public function listCategories(): array
+    {
+        $p = $this->db->getTablePrefix();
+        return $this->db->query(
+            "SELECT * FROM `{$p}product_attribute_categories` ORDER BY sort_order, code"
+        );
+    }
+
+    public function upsertCategory(string $code, string $label, string $description, int $sortOrder, bool $active, ?int $id = null): int
+    {
+        $p = $this->db->getTablePrefix();
+        if ($id === null) {
+            // Check if exists by code
+            $existing = $this->db->query("SELECT id FROM `{$p}product_attribute_categories` WHERE code = :code", ['code' => $code]);
+            if (!empty($existing)) {
+                // Update by code
+                $this->db->execute(
+                    "UPDATE `{$p}product_attribute_categories`\nSET label = :label, description = :description, sort_order = :sort_order, active = :active\nWHERE code = :code",
+                    ['code' => $code, 'label' => $label, 'description' => $description, 'sort_order' => $sortOrder, 'active' => (int)$active]
+                );
+                return $existing[0]['id'];
+            } else {
+                // Insert
+                $this->db->execute(
+                    "INSERT INTO `{$p}product_attribute_categories` (code, label, description, sort_order, active)\nVALUES (:code, :label, :description, :sort_order, :active)",
+                    ['code' => $code, 'label' => $label, 'description' => $description, 'sort_order' => $sortOrder, 'active' => (int)$active]
+                );
+                return $this->db->lastInsertId();
+            }
+        } else {
+            // Update by id
+            $this->db->execute(
+                "UPDATE `{$p}product_attribute_categories`\nSET code = :code, label = :label, description = :description, sort_order = :sort_order, active = :active\nWHERE id = :id",
+                ['id' => $id, 'code' => $code, 'label' => $label, 'description' => $description, 'sort_order' => $sortOrder, 'active' => (int)$active]
+            );
+            return $id;
+        }
+    }
+
+    /** @return array<int, array<string, mixed>> */
+    public function listValues(int $categoryId): array
+    {
+        $p = $this->db->getTablePrefix();
+        return $this->db->query(
+            "SELECT * FROM `{$p}product_attribute_values` WHERE category_id = :category_id ORDER BY sort_order, slug",
+            ['category_id' => $categoryId]
+        );
+    }
+
+    public function upsertValue(string $categoryId, string $value, string $slug, int $sortOrder, bool $active = true): int
+    {
+        $p = $this->db->getTablePrefix();
+        // Check if exists by category_id and slug
+        $existing = $this->db->query("SELECT id FROM `{$p}product_attribute_values` WHERE category_id = :category_id AND slug = :slug", ['category_id' => (int)$categoryId, 'slug' => $slug]);
+        if (!empty($existing)) {
+            // Update
+            $this->db->execute(
+                "UPDATE `{$p}product_attribute_values`\nSET value = :value, sort_order = :sort_order, active = :active\nWHERE category_id = :category_id AND slug = :slug",
+                ['category_id' => (int)$categoryId, 'value' => $value, 'sort_order' => $sortOrder, 'active' => (int)$active, 'slug' => $slug]
+            );
+            return $existing[0]['id'];
+        } else {
+            // Insert
+            $this->db->execute(
+                "INSERT INTO `{$p}product_attribute_values` (category_id, value, slug, sort_order, active)\nVALUES (:category_id, :value, :slug, :sort_order, :active)",
+                ['category_id' => (int)$categoryId, 'value' => $value, 'slug' => $slug, 'sort_order' => $sortOrder, 'active' => (int)$active]
+            );
+            return $this->db->lastInsertId();
+        }
+    }
+
+    /** @return array<int, array<string, mixed>> */
+    public function getValuesForCategory(int $categoryId): array
+    {
+        $p = $this->db->getTablePrefix();
+        return $this->db->query(
+            "SELECT * FROM `{$p}product_attribute_values` WHERE category_id = :category_id ORDER BY sort_order, slug",
+            ['category_id' => $categoryId]
+        );
+    }
+
+    public function deleteCategory(int $id): void
+    {
+        $p = $this->db->getTablePrefix();
+        $this->db->execute(
+            "DELETE FROM `{$p}product_attribute_assignments` WHERE category_id = :category_id",
+            ['category_id' => $id]
+        );
+        $this->db->execute(
+            "DELETE FROM `{$p}product_attribute_values` WHERE category_id = :category_id",
+            ['category_id' => $id]
+        );
+        $this->db->execute(
+            "DELETE FROM `{$p}product_attribute_categories` WHERE id = :id",
+            ['id' => $id]
+        );
+    }
+
+    public function deleteValue(int $id): void
+    {
+        $p = $this->db->getTablePrefix();
+        $this->db->execute(
+            "DELETE FROM `{$p}product_attribute_assignments` WHERE value_id = :value_id",
+            ['value_id' => $id]
+        );
+        $this->db->execute(
+            "DELETE FROM `{$p}product_attribute_values` WHERE id = :id",
+            ['id' => $id]
+        );
+    }
+
+    /** @return array<int, array<string, mixed>> */
     public function listAssignments(string $stockId): array
     {
         $p = $this->db->getTablePrefix();
@@ -104,9 +216,8 @@ class ProductAttributesDao
 
     public function getVariationCountForProductCategory(string $stockId, int $categoryId): int
     {
-        // This method is deprecated - variations are now handled by VariationsDao
-        // For backward compatibility, return 0
-        return 0;
+        // Return the count of values for the category
+        return count($this->getValuesForCategory($categoryId));
     }
 
     /**

@@ -1,4 +1,4 @@
-/composer-lib/vendor/
+/vendor/
 /data/
 /public/.phpunit.result.cache
 fa_product_attributes_variations/
@@ -6,3 +6,6 @@ fa_product_attributes_categories
 plugins/
 ksf-modules-dao/
 fa-hooks/
+FA_ProductAttributes_Core/
+ksf_Rest_API/
+ksf_SchemaManager/

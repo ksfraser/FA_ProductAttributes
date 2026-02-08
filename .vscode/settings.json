@@ -107,6 +107,94 @@
         "/^cd \"c:\\\\Users\\\\prote\\\\Documents\\\\software-devel\\\\FA_ProductAttributes\\\\fa_product_attributes_variations\" ; php -l hooks\\.php$/": {
             "approve": true,
             "matchCommandLine": true
+        },
+        "/^cd 'c:\\\\Users\\\\prote\\\\Documents\\\\software-devel\\\\FA_ProductAttributes\\\\fa_product_attributes_variations'; php -l src/Ksfraser/FA_ProductAttributes_Variations/Service/FrontAccountingVariationService\\.php$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^cd 'c:\\\\Users\\\\prote\\\\Documents\\\\software-devel\\\\FA_ProductAttributes\\\\fa_product_attributes_variations'; php -r \"require 'vendor/autoload\\.php'; var_dump\\(class_exists\\('Ksfraser\\\\FA_ProductAttributes_Variations\\\\Service\\\\FrontAccountingVariationService'\\)\\);\"$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^cd 'c:\\\\Users\\\\prote\\\\Documents\\\\software-devel\\\\FA_ProductAttributes\\\\fa_product_attributes_variations'; php -r \"require 'src/Ksfraser/FA_ProductAttributes_Variations/Service/FrontAccountingVariationService\\.php'; var_dump\\(class_exists\\('Ksfraser\\\\FA_ProductAttributes_Variations\\\\Service\\\\FrontAccountingVariationService'\\)\\);\"$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^cd 'c:\\\\Users\\\\prote\\\\Documents\\\\software-devel\\\\FA_ProductAttributes\\\\fa_product_attributes_variations'; php -r \"require 'vendor/autoload\\.php'; print_r\\(spl_autoload_functions\\(\\)\\);\"$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^cd 'c:\\\\Users\\\\prote\\\\Documents\\\\software-devel\\\\FA_ProductAttributes\\\\fa_product_attributes_variations'; php -r \"require 'vendor/autoload\\.php'; var_dump\\(class_exists\\('Ksfraser\\\\FA_ProductAttributes_Variations\\\\Service\\\\FrontAccountingVariationService', true\\)\\);\"$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^cd 'c:\\\\Users\\\\prote\\\\Documents\\\\software-devel\\\\FA_ProductAttributes\\\\fa_product_attributes_variations'; php -r \"require 'vendor/autoload\\.php'; print_r\\(count\\(spl_autoload_functions\\(\\)\\)\\);\"$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^cd 'c:\\\\Users\\\\prote\\\\Documents\\\\software-devel\\\\FA_ProductAttributes\\\\fa_product_attributes_variations'; php -r \"require 'vendor/autoload\\.php'; var_dump\\(class_exists\\('Ksfraser\\\\FA_ProductAttributes_Variations\\\\Service\\\\VariationService', true\\)\\);\"$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^cd 'c:\\\\Users\\\\prote\\\\Documents\\\\software-devel\\\\FA_ProductAttributes\\\\fa_product_attributes_variations'; php -r \"require 'src/Ksfraser/FA_ProductAttributes_Variations/Service/VariationService\\.php'; echo 'loaded VariationService';\"$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^cd 'c:\\\\Users\\\\prote\\\\Documents\\\\software-devel\\\\FA_ProductAttributes\\\\fa_product_attributes_variations'; php -r \"require 'vendor/autoload\\.php'; spl_autoload_call\\('Ksfraser\\\\FA_ProductAttributes_Variations\\\\Service\\\\VariationService'\\); var_dump\\(class_exists\\('Ksfraser\\\\FA_ProductAttributes_Variations\\\\Service\\\\VariationService'\\)\\);\"$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^cd 'c:\\\\Users\\\\prote\\\\Documents\\\\software-devel\\\\FA_ProductAttributes\\\\fa_product_attributes_variations'; php -r \"echo realpath\\('src/Ksfraser/FA_ProductAttributes_Variations/Service/VariationService\\.php'\\);\"$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^cd 'c:\\\\Users\\\\prote\\\\Documents\\\\software-devel\\\\FA_ProductAttributes\\\\fa_product_attributes_variations'; php -r \"require_once 'vendor/autoload\\.php'; echo 'Autoloader loaded\\\\n'; var_dump\\(class_exists\\('Ksfraser\\\\FA_ProductAttributes_Variations\\\\VariationService', true\\)\\);\"$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^cd 'c:\\\\Users\\\\prote\\\\Documents\\\\software-devel\\\\FA_ProductAttributes\\\\fa_product_attributes_variations'; php -r \"require_once 'vendor/autoload\\.php'; echo 'Autoloader loaded\\\\n'; var_dump\\(class_exists\\('Ksfraser\\\\FA_ProductAttributes_Variations\\\\Service\\\\VariationService', true\\)\\);\"$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^cd 'c:\\\\Users\\\\prote\\\\Documents\\\\software-devel\\\\FA_ProductAttributes\\\\fa_product_attributes_variations'; php -r \"require_once 'vendor/autoload\\.php'; var_dump\\(class_exists\\('Ksfraser\\\\FA_ProductAttributes_Variations\\\\Service\\\\FrontAccountingVariationService', true\\)\\);\"$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^cd 'c:\\\\Users\\\\prote\\\\Documents\\\\software-devel\\\\FA_ProductAttributes\\\\fa_product_attributes_variations'; php vendor/bin/phpunit$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^cd 'c:\\\\Users\\\\prote\\\\Documents\\\\software-devel\\\\FA_ProductAttributes\\\\fa_product_attributes_variations'; php vendor/bin/phpunit --filter VariationServiceTest::testGenerateCombinationsEmpty$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^cd 'c:\\\\Users\\\\prote\\\\Documents\\\\software-devel\\\\FA_ProductAttributes\\\\fa_product_attributes_variations'; php -r \"require_once 'vendor/autoload\\.php'; var_dump\\(class_exists\\('Ksfraser\\\\FA_ProductAttributes\\\\Dao\\\\ProductAttributesDao', true\\)\\);\"$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^cd 'c:\\\\Users\\\\prote\\\\Documents\\\\software-devel\\\\FA_ProductAttributes\\\\fa_product_attributes_variations'; php -r \"require_once 'vendor/autoload\\.php'; var_dump\\(class_exists\\('Ksfraser\\\\FA_ProductAttributes\\\\Db\\\\DbAdapterInterface', true\\)\\);\"$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^cd 'c:\\\\Users\\\\prote\\\\Documents\\\\software-devel\\\\FA_ProductAttributes\\\\fa_product_attributes_variations'; php vendor/bin/phpunit --filter VariationsDaoTest::testEnsureVariationsSchema$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "mv": true,
+        "Move-Item": true,
+        "git init": true,
+        "git pull": true,
+        "/^cd \"c:\\\\Users\\\\prote\\\\Documents\\\\software-devel\\\\FA_ProductAttributes\\\\fa_product_attributes_variations\"; php \"\\.\\.\\\\vendor\\\\bin\\\\phpunit\" \\| head -50$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^cd \"c:\\\\Users\\\\prote\\\\Documents\\\\software-devel\\\\FA_ProductAttributes\\\\fa_product_attributes_variations\"; php \"\\.\\.\\\\vendor\\\\bin\\\\phpunit\" --stop-on-error$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^php \"c:\\\\Users\\\\prote\\\\Documents\\\\software-devel\\\\FA_ProductAttributes\\\\vendor\\\\bin\\\\phpunit\" --configuration=\"c:\\\\Users\\\\prote\\\\Documents\\\\software-devel\\\\FA_ProductAttributes\\\\phpunit\\.xml\"$/": {
+            "approve": true,
+            "matchCommandLine": true
         }
     }
 }

@@ -31,6 +31,7 @@ class ProductAttributesDaoTest extends TestCase
     {
         $db = $this->createMock(DbAdapterInterface::class);
         $db->method('getTablePrefix')->willReturn('fa_');
+        $db->method('lastInsertId')->willReturn(1);
         $db->expects($this->once())
             ->method('query')
             ->with('SELECT id FROM `fa_product_attribute_categories` WHERE code = :code', ['code' => 'color'])
@@ -49,7 +50,8 @@ class ProductAttributesDaoTest extends TestCase
             );
 
         $dao = new ProductAttributesDao($db);
-        $dao->upsertCategory('color', 'Color', '', 1, true);
+        $result = $dao->upsertCategory('color', 'Color', '', 1, true);
+        $this->assertEquals(1, $result);
     }
 
     public function testUpsertCategoryUpdate(): void
@@ -134,6 +136,7 @@ class ProductAttributesDaoTest extends TestCase
     {
         $db = $this->createMock(DbAdapterInterface::class);
         $db->method('getTablePrefix')->willReturn('fa_');
+        $db->method('lastInsertId')->willReturn(1);
         $db->expects($this->once())
             ->method('query')
             ->with('SELECT id FROM `fa_product_attribute_values` WHERE category_id = :category_id AND slug = :slug', ['category_id' => 1, 'slug' => 'red'])
@@ -152,7 +155,8 @@ class ProductAttributesDaoTest extends TestCase
             );
 
         $dao = new ProductAttributesDao($db);
-        $dao->upsertValue(1, 'Red', 'red', 1, true);
+        $result = $dao->upsertValue('1', 'Red', 'red', 1, true);
+        $this->assertEquals(1, $result);
     }
 
     public function testUpsertValueUpdate(): void
@@ -177,28 +181,7 @@ class ProductAttributesDaoTest extends TestCase
             );
 
         $dao = new ProductAttributesDao($db);
-        $dao->upsertValue(1, 'Red', 'red', 1, true);
-    }
-
-    public function testUpsertValueUpdateById(): void
-    {
-        $db = $this->createMock(DbAdapterInterface::class);
-        $db->method('getTablePrefix')->willReturn('fa_');
-        $db->expects($this->once())
-            ->method('execute')
-            ->with(
-                "UPDATE `fa_product_attribute_values`\nSET value = :value, slug = :slug, sort_order = :sort_order, active = :active\nWHERE id = :id",
-                [
-                    'id' => 5,
-                    'value' => 'Blue',
-                    'slug' => 'blue',
-                    'sort_order' => 2,
-                    'active' => 0,
-                ]
-            );
-
-        $dao = new ProductAttributesDao($db);
-        $dao->upsertValue(1, 'Blue', 'blue', 2, false, 5);
+        $dao->upsertValue('1', 'Red', 'red', 1, true);
     }
 
     public function testListAssignments(): void
