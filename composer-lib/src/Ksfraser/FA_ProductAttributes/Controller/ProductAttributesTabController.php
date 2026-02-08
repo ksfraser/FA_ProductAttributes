@@ -49,7 +49,7 @@ class ProductAttributesTabController
             if ($parentStockId === '') $parentStockId = null;
             try {
                 $this->dao->setProductParent($stock_id, $parentStockId);
-                // Notification handled by Ajax
+                display_notification("Product configuration updated.");
             } catch (\Exception $e) {
                 display_error("Failed to update product configuration: " . $e->getMessage());
             }

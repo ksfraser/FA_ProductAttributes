@@ -41,36 +41,8 @@ class ProductAttributesTabUI
         }
         $html .= "</select></label> ";
 
-        $html .= "<button type='button' onclick='fa_pa_updateParent(this)' name='update_product_config' value='1'>Update</button>";
+        $html .= "<input type='submit' name='update_product_config' value='Update'>";
         $html .= "</form>";
-
-        $html .= "<script>
-        function fa_pa_updateParent(button) {
-            var form = button.form;
-            var formData = new FormData(form);
-            var xhr = new XMLHttpRequest();
-            xhr.open('POST', window.location.href + '&ajax=1', true);
-            xhr.onreadystatechange = function() {
-                if (xhr.readyState === 4) {
-                    if (xhr.status === 200) {
-                        try {
-                            var response = JSON.parse(xhr.responseText);
-                            if (response.success) {
-                                alert(response.message);
-                            } else {
-                                alert('Error: ' + response.message);
-                            }
-                        } catch (e) {
-                            alert('Invalid response from server: ' + xhr.responseText.substring(0, 100));
-                        }
-                    } else {
-                        alert('Error updating parent product: ' + xhr.status);
-                    }
-                }
-            };
-            xhr.send(formData);
-        }
-        </script>";
 
         $html .= "<h4>Current Assignments:</h4>";
         if (empty($assignments)) {
