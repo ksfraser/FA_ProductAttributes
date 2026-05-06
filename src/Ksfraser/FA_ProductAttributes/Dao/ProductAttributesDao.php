@@ -74,9 +74,19 @@ class ProductAttributesDao
         );
     }
 
-    public function upsertValue(string $categoryId, string $value, string $slug, int $sortOrder, bool $active = true): int
+    public function upsertValue(string $categoryId, string $value, string $slug, int $sortOrder, bool $active = true, int $id = 0): int
     {
         $p = $this->db->getTablePrefix();
+
+        // When an explicit id is supplied, update by primary key
+        if ($id > 0) {
+            $this->db->execute(
+                "UPDATE `{$p}product_attribute_values`\nSET value = :value, slug = :slug, sort_order = :sort_order, active = :active, category_id = :category_id\nWHERE id = :id",
+                ['category_id' => (int)$categoryId, 'value' => $value, 'slug' => $slug, 'sort_order' => $sortOrder, 'active' => (int)$active, 'id' => $id]
+            );
+            return $id;
+        }
+
         // Check if exists by category_id and slug
         $existing = $this->db->query("SELECT id FROM `{$p}product_attribute_values` WHERE category_id = :category_id AND slug = :slug", ['category_id' => (int)$categoryId, 'slug' => $slug]);
         if (!empty($existing)) {

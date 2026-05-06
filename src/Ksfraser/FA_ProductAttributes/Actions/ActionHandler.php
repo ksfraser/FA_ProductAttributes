@@ -1,0 +1,105 @@
+<?php
+
+namespace Ksfraser\FA_ProductAttributes\Actions;
+
+use Ksfraser\FA_ProductAttributes\Dao\ProductAttributesDao;
+use Ksfraser\FA_ProductAttributes_Variations\Dao\VariationsDao;
+use Ksfraser\FA_ProductAttributes_Variations\Actions\AssignParentAction;
+use Ksfraser\FA_ProductAttributes_Variations\Actions\CreateMissingVariationsAction;
+use Ksfraser\FA_ProductAttributes_Variations\Actions\MakeInactiveAction;
+use Ksfraser\FA_ProductAttributes_Variations\Actions\ReactivateVariationsAction;
+use Ksfraser\ModulesDAO\Db\DbAdapterInterface;
+
+/**
+ * Single Responsibility: Dispatches form POST actions to the correct Action class.
+ *
+ * Maps action name strings → action handler instances.
+ */
+class ActionHandler
+{
+    /** @var VariationsDao */
+    private $variationsDao;
+
+    /** @var ProductAttributesDao */
+    private $productAttributesDao;
+
+    /** @var DbAdapterInterface */
+    private $dbAdapter;
+
+    public function __construct(
+        VariationsDao $variationsDao,
+        ProductAttributesDao $productAttributesDao,
+        DbAdapterInterface $dbAdapter
+    ) {
+        $this->variationsDao        = $variationsDao;
+        $this->productAttributesDao = $productAttributesDao;
+        $this->dbAdapter            = $dbAdapter;
+    }
+
+    /**
+     * Dispatch an action by name.
+     *
+     * @param string              $action   The action identifier (e.g. 'upsert_category')
+     * @param array<string, mixed> $postData POST data from the request
+     * @return string|null Result message, or null if action is unknown or threw an exception
+     */
+    public function handle(string $action, array $postData): ?string
+    {
+        try {
+            switch ($action) {
+                case 'upsert_category':
+                    return (new UpsertCategoryAction($this->variationsDao, $this->dbAdapter))->handle($postData);
+
+                case 'delete_category':
+                    return (new DeleteCategoryAction($this->variationsDao, $this->dbAdapter))->handle($postData);
+
+                case 'add_assignment':
+                    return (new AddAssignmentAction($this->productAttributesDao))->handle($postData);
+
+                case 'delete_assignment':
+                    return (new DeleteAssignmentAction($this->productAttributesDao))->handle($postData);
+
+                case 'add_category_assignment':
+                    return (new AddCategoryAssignmentAction($this->productAttributesDao))->handle($postData);
+
+                case 'remove_category_assignment':
+                    return (new RemoveCategoryAssignmentAction($this->productAttributesDao))->handle($postData);
+
+                case 'update_category_assignments':
+                    return (new UpdateCategoryAssignmentsAction($this->productAttributesDao))->handle($postData);
+
+                case 'upsert_value':
+                    return (new UpsertValueAction($this->productAttributesDao))->handle($postData);
+
+                case 'delete_value':
+                    return (new DeleteValueAction($this->variationsDao, $this->dbAdapter))->handle($postData);
+
+                case 'generate_variations':
+                    return (new GenerateVariationsAction($this->productAttributesDao, $this->dbAdapter))->handle($postData);
+
+                case 'create_child':
+                    return (new CreateChildAction($this->productAttributesDao, $this->dbAdapter))->handle($postData);
+
+                case 'update_product_types':
+                    return (new UpdateProductTypesAction($this->productAttributesDao, $this->dbAdapter))->handle($postData);
+
+                case 'make_inactive':
+                    return (new MakeInactiveAction($this->variationsDao, $this->dbAdapter))->handle($postData);
+
+                case 'reactivate_variations':
+                    return (new ReactivateVariationsAction($this->variationsDao, $this->dbAdapter))->handle($postData);
+
+                case 'create_missing_variations':
+                    return (new CreateMissingVariationsAction($this->variationsDao, $this->productAttributesDao, $this->dbAdapter))->handle($postData);
+
+                case 'assign_parent':
+                    return (new AssignParentAction($this->variationsDao, $this->dbAdapter))->handle($postData);
+
+                default:
+                    return null;
+            }
+        } catch (\Exception $e) {
+            return null;
+        }
+    }
+}

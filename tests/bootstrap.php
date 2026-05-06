@@ -34,9 +34,38 @@ $files = [
     __DIR__ . '/../src/Ksfraser/FA_ProductAttributes/Actions/CreateChildAction.php',
     __DIR__ . '/../src/Ksfraser/FA_ProductAttributes/Actions/UpdateProductTypesAction.php',
     __DIR__ . '/../src/Ksfraser/FA_ProductAttributes/Install/ComposerInstaller.php',
+    __DIR__ . '/../src/Ksfraser/FA_ProductAttributes/Integration/ItemsIntegration.php',
+    __DIR__ . '/../src/Ksfraser/FA_ProductAttributes/Plugin/PluginLoader.php',
     __DIR__ . '/../src/Ksfraser/FA_ProductAttributes/UI/ProductAttributesUI.php',
     __DIR__ . '/../src/Ksfraser/FA_ProductAttributes/UI/ProductTypesTab.php',
-    __DIR__ . '/../src/Ksfraser/FA_ProductAttributes/Integration/ItemsIntegration.php',
+    __DIR__ . '/../src/Ksfraser/FA_ProductAttributes/UI/CategoriesTab.php',
+    __DIR__ . '/../src/Ksfraser/FA_ProductAttributes/UI/ValuesTab.php',
+    __DIR__ . '/../src/Ksfraser/FA_ProductAttributes/UI/AssignmentsTab.php',
+    __DIR__ . '/../src/Ksfraser/FA_ProductAttributes/UI/TabDispatcher.php',
+    __DIR__ . '/../src/Ksfraser/FA_ProductAttributes/Debug/DebugCompany.php',
+    __DIR__ . '/../src/Ksfraser/FA_ProductAttributes/Debug/DebugConnection.php',
+    __DIR__ . '/../src/Ksfraser/FA_ProductAttributes/Debug/DebugSchemaNames.php',
+    __DIR__ . '/../src/Ksfraser/FA_ProductAttributes/Debug/DebugTBPref.php',
+    __DIR__ . '/../src/Ksfraser/FA_ProductAttributes/Debug/DisplaySql.php',
+    // REST API classes
+    __DIR__ . '/../src/Ksfraser/FA_ProductAttributes/Api/BaseApiController.php',
+    __DIR__ . '/../src/Ksfraser/FA_ProductAttributes/Api/CategoriesApiController.php',
+    __DIR__ . '/../src/Ksfraser/FA_ProductAttributes/Api/ValuesApiController.php',
+    __DIR__ . '/../src/Ksfraser/FA_ProductAttributes/Api/AssignmentsApiController.php',
+    __DIR__ . '/../src/Ksfraser/FA_ProductAttributes/Api/ApiRouter.php',
+    // Variations plugin classes
+    __DIR__ . '/../fa_product_attributes_variations/src/Ksfraser/FA_ProductAttributes_Variations/Dao/VariationsDao.php',
+    __DIR__ . '/../fa_product_attributes_variations/src/Ksfraser/FA_ProductAttributes_Variations/UI/ProductRelationshipTable.php',
+    __DIR__ . '/../fa_product_attributes_variations/src/Ksfraser/FA_ProductAttributes_Variations/UI/VariationsButtonsPanel.php',
+    // Variation action classes
+    __DIR__ . '/../fa_product_attributes_variations/src/Ksfraser/FA_ProductAttributes_Variations/Actions/MakeInactiveAction.php',
+    __DIR__ . '/../fa_product_attributes_variations/src/Ksfraser/FA_ProductAttributes_Variations/Actions/ReactivateVariationsAction.php',
+    __DIR__ . '/../fa_product_attributes_variations/src/Ksfraser/FA_ProductAttributes_Variations/Actions/CreateMissingVariationsAction.php',
+    __DIR__ . '/../fa_product_attributes_variations/src/Ksfraser/FA_ProductAttributes_Variations/Actions/AssignParentAction.php',
+    // Reporting service (BR7/BR7.1)
+    __DIR__ . '/../fa_product_attributes_variations/src/Ksfraser/FA_ProductAttributes_Variations/Service/AttributeReportService.php',
+    // Security / access control (NFR2)
+    __DIR__ . '/../src/Ksfraser/FA_ProductAttributes/Security/AccessChecker.php',
 ];
 
 foreach ($files as $file) {
