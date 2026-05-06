@@ -3,7 +3,7 @@
 namespace Ksfraser\FA_ProductAttributes\Test\Actions;
 
 use Ksfraser\FA_ProductAttributes\Actions\DeleteCategoryAction;
-use Ksfraser\FA_ProductAttributes_Variations\Dao\VariationsDao;
+use Ksfraser\FA_ProductAttributes\Variations\Dao\VariationsDao;
 use Ksfraser\ModulesDAO\Db\DbAdapterInterface;
 use PHPUnit\Framework\TestCase;
 

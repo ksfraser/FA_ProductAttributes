@@ -31,9 +31,9 @@ class GenerateVariationsAction
      */
     public function handle(array $postData): string
     {
-        if (class_exists('Ksfraser\FA_ProductAttributes_Variations\Actions\GenerateVariationsAction')) {
+        if (class_exists('Ksfraser\FA_ProductAttributes\Variations\Actions\GenerateVariationsAction')) {
             /** @var object $delegate */
-            $delegate = new \Ksfraser\FA_ProductAttributes_Variations\Actions\GenerateVariationsAction(
+            $delegate = new \Ksfraser\FA_ProductAttributes\Variations\Actions\GenerateVariationsAction(
                 $this->dao,
                 $this->dbAdapter
             );

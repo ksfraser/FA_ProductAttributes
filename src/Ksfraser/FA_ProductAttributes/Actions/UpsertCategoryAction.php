@@ -2,7 +2,7 @@
 
 namespace Ksfraser\FA_ProductAttributes\Actions;
 
-use Ksfraser\FA_ProductAttributes_Variations\Dao\VariationsDao;
+use Ksfraser\FA_ProductAttributes\Variations\Dao\VariationsDao;
 use Ksfraser\ModulesDAO\Db\DbAdapterInterface;
 
 /**

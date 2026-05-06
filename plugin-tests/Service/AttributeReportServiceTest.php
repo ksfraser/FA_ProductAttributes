@@ -2,8 +2,8 @@
 
 namespace Ksfraser\FA_ProductAttributes\Test\Service;
 
-use Ksfraser\FA_ProductAttributes_Variations\Dao\VariationsDao;
-use Ksfraser\FA_ProductAttributes_Variations\Service\AttributeReportService;
+use Ksfraser\FA_ProductAttributes\Variations\Dao\VariationsDao;
+use Ksfraser\FA_ProductAttributes\Variations\Service\AttributeReportService;
 use Ksfraser\ModulesDAO\Db\DbAdapterInterface;
 use PHPUnit\Framework\TestCase;
 

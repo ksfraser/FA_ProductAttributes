@@ -11,8 +11,7 @@ use PHPUnit\Framework\TestCase;
  * Strategy:
  *  - Enumerate every PHP file under the "public/" tree, which simulates the FA
  *    install root that the plugin is dropped into.
- *  - Assert that the plugin only touches files within its own directories:
- *      FA_ProductAttributes_Core/  and  fa_product_attributes_variations/
+ *  - Assert that the plugin only touches files within its own directory: src/
  *  - Verify that no hook implementation *replaces* a core hook — every hook
  *    registered by the plugin must use add_filter / add_action style
  *    registration that does not remove or overwrite the original handler.
@@ -29,8 +28,6 @@ class FACoreUnchangedTest extends TestCase
      * @var string[]
      */
     private static $pluginRoots = [
-        'FA_ProductAttributes_Core',
-        'fa_product_attributes_variations',
         'src',
         'plugin-tests',
         'tests',

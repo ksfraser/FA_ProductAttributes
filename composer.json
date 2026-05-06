@@ -30,8 +30,7 @@
   },
   "autoload-dev": {
     "psr-4": {
-      "Ksfraser\\FA_ProductAttributes\\Test\\": "composer-lib/tests/",
-      "Ksfraser\\FA_ProductAttributes_Variations\\Test\\": "../fa_product_attributes_variations/tests/"
+      "Ksfraser\\FA_ProductAttributes\\Test\\": "composer-lib/tests/"
     }
   },
   "config": {

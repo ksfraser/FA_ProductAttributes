@@ -29,9 +29,9 @@ class CreateChildAction
      */
     public function handle(array $postData): string
     {
-        if (class_exists('Ksfraser\FA_ProductAttributes_Variations\Actions\CreateChildAction')) {
+        if (class_exists('Ksfraser\FA_ProductAttributes\Variations\Actions\CreateChildAction')) {
             /** @var object $delegate */
-            $delegate = new \Ksfraser\FA_ProductAttributes_Variations\Actions\CreateChildAction(
+            $delegate = new \Ksfraser\FA_ProductAttributes\Variations\Actions\CreateChildAction(
                 $this->dao,
                 $this->dbAdapter
             );

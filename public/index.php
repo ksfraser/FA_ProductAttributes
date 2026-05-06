@@ -14,7 +14,7 @@ require_once $autoload;
 
 use Ksfraser\ModulesDAO\Db\PdoDbAdapter;
 use Ksfraser\FA_ProductAttributes\Dao\ProductAttributesDao;
-use Ksfraser\FA_ProductAttributes_Variations\Dao\VariationsDao;
+use Ksfraser\FA_ProductAttributes\Variations\Dao\VariationsDao;
 use Ksfraser\HTML\Elements\HtmlTable;
 use Ksfraser\HTML\Elements\TableBuilder;
 use Ksfraser\HTML\HtmlString;

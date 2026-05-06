@@ -3,11 +3,11 @@
 namespace Ksfraser\FA_ProductAttributes\Actions;
 
 use Ksfraser\FA_ProductAttributes\Dao\ProductAttributesDao;
-use Ksfraser\FA_ProductAttributes_Variations\Dao\VariationsDao;
-use Ksfraser\FA_ProductAttributes_Variations\Actions\AssignParentAction;
-use Ksfraser\FA_ProductAttributes_Variations\Actions\CreateMissingVariationsAction;
-use Ksfraser\FA_ProductAttributes_Variations\Actions\MakeInactiveAction;
-use Ksfraser\FA_ProductAttributes_Variations\Actions\ReactivateVariationsAction;
+use Ksfraser\FA_ProductAttributes\Variations\Dao\VariationsDao;
+use Ksfraser\FA_ProductAttributes\Variations\Actions\AssignParentAction;
+use Ksfraser\FA_ProductAttributes\Variations\Actions\CreateMissingVariationsAction;
+use Ksfraser\FA_ProductAttributes\Variations\Actions\MakeInactiveAction;
+use Ksfraser\FA_ProductAttributes\Variations\Actions\ReactivateVariationsAction;
 use Ksfraser\ModulesDAO\Db\DbAdapterInterface;
 
 /**

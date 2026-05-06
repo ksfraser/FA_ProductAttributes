@@ -3,8 +3,8 @@
 namespace Ksfraser\FA_ProductAttributes\Test\Actions;
 
 use Ksfraser\FA_ProductAttributes\Dao\ProductAttributesDao;
-use Ksfraser\FA_ProductAttributes_Variations\Actions\CreateMissingVariationsAction;
-use Ksfraser\FA_ProductAttributes_Variations\Dao\VariationsDao;
+use Ksfraser\FA_ProductAttributes\Variations\Actions\CreateMissingVariationsAction;
+use Ksfraser\FA_ProductAttributes\Variations\Dao\VariationsDao;
 use Ksfraser\ModulesDAO\Db\DbAdapterInterface;
 use PHPUnit\Framework\TestCase;
 

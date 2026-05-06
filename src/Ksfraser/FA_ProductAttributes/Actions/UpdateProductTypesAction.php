@@ -29,9 +29,9 @@ class UpdateProductTypesAction
      */
     public function handle(array $postData): string
     {
-        if (class_exists('Ksfraser\FA_ProductAttributes_Variations\Actions\UpdateProductTypesAction')) {
+        if (class_exists('Ksfraser\FA_ProductAttributes\Variations\Actions\UpdateProductTypesAction')) {
             /** @var object $delegate */
-            $delegate = new \Ksfraser\FA_ProductAttributes_Variations\Actions\UpdateProductTypesAction(
+            $delegate = new \Ksfraser\FA_ProductAttributes\Variations\Actions\UpdateProductTypesAction(
                 $this->dao,
                 $this->dbAdapter
             );

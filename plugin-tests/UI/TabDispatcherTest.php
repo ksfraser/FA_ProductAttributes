@@ -3,7 +3,7 @@
 namespace Ksfraser\FA_ProductAttributes\Test\UI;
 
 use Ksfraser\FA_ProductAttributes\Dao\ProductAttributesDao;
-use Ksfraser\FA_ProductAttributes_Variations\Dao\VariationsDao;
+use Ksfraser\FA_ProductAttributes\Variations\Dao\VariationsDao;
 use Ksfraser\FA_ProductAttributes\UI\TabDispatcher;
 use PHPUnit\Framework\TestCase;
 

@@ -56,17 +56,26 @@ $files = [
     __DIR__ . '/../src/Ksfraser/FA_ProductAttributes/Api/ValuesApiController.php',
     __DIR__ . '/../src/Ksfraser/FA_ProductAttributes/Api/AssignmentsApiController.php',
     __DIR__ . '/../src/Ksfraser/FA_ProductAttributes/Api/ApiRouter.php',
-    // Variations plugin classes
-    __DIR__ . '/../fa_product_attributes_variations/src/Ksfraser/FA_ProductAttributes_Variations/Dao/VariationsDao.php',
-    __DIR__ . '/../fa_product_attributes_variations/src/Ksfraser/FA_ProductAttributes_Variations/UI/ProductRelationshipTable.php',
-    __DIR__ . '/../fa_product_attributes_variations/src/Ksfraser/FA_ProductAttributes_Variations/UI/VariationsButtonsPanel.php',
-    // Variation action classes
-    __DIR__ . '/../fa_product_attributes_variations/src/Ksfraser/FA_ProductAttributes_Variations/Actions/MakeInactiveAction.php',
-    __DIR__ . '/../fa_product_attributes_variations/src/Ksfraser/FA_ProductAttributes_Variations/Actions/ReactivateVariationsAction.php',
-    __DIR__ . '/../fa_product_attributes_variations/src/Ksfraser/FA_ProductAttributes_Variations/Actions/CreateMissingVariationsAction.php',
-    __DIR__ . '/../fa_product_attributes_variations/src/Ksfraser/FA_ProductAttributes_Variations/Actions/AssignParentAction.php',
-    // Reporting service (BR7/BR7.1)
-    __DIR__ . '/../fa_product_attributes_variations/src/Ksfraser/FA_ProductAttributes_Variations/Service/AttributeReportService.php',
+    // Variations classes (merged into main src/Variations/)
+    __DIR__ . '/../src/Ksfraser/FA_ProductAttributes/Variations/Dao/VariationsDao.php',
+    __DIR__ . '/../src/Ksfraser/FA_ProductAttributes/Variations/Handler/VariationsHandler.php',
+    __DIR__ . '/../src/Ksfraser/FA_ProductAttributes/Variations/Integration/VariationsIntegration.php',
+    __DIR__ . '/../src/Ksfraser/FA_ProductAttributes/Variations/Actions/AssignParentAction.php',
+    __DIR__ . '/../src/Ksfraser/FA_ProductAttributes/Variations/Actions/CreateChildAction.php',
+    __DIR__ . '/../src/Ksfraser/FA_ProductAttributes/Variations/Actions/CreateMissingVariationsAction.php',
+    __DIR__ . '/../src/Ksfraser/FA_ProductAttributes/Variations/Actions/GenerateVariationsAction.php',
+    __DIR__ . '/../src/Ksfraser/FA_ProductAttributes/Variations/Actions/MakeInactiveAction.php',
+    __DIR__ . '/../src/Ksfraser/FA_ProductAttributes/Variations/Actions/ReactivateVariationsAction.php',
+    __DIR__ . '/../src/Ksfraser/FA_ProductAttributes/Variations/Actions/UpdateProductTypesAction.php',
+    __DIR__ . '/../src/Ksfraser/FA_ProductAttributes/Variations/Service/AttributeReportService.php',
+    __DIR__ . '/../src/Ksfraser/FA_ProductAttributes/Variations/Service/FrontAccountingVariationService.php',
+    __DIR__ . '/../src/Ksfraser/FA_ProductAttributes/Variations/Service/PricingRulesService.php',
+    __DIR__ . '/../src/Ksfraser/FA_ProductAttributes/Variations/Service/RetroactiveApplicationService.php',
+    __DIR__ . '/../src/Ksfraser/FA_ProductAttributes/Variations/Service/VariationService.php',
+    __DIR__ . '/../src/Ksfraser/FA_ProductAttributes/Variations/UI/ProductRelationshipTable.php',
+    __DIR__ . '/../src/Ksfraser/FA_ProductAttributes/Variations/UI/ProductTypesTab.php',
+    __DIR__ . '/../src/Ksfraser/FA_ProductAttributes/Variations/UI/RoyalOrderHelper.php',
+    __DIR__ . '/../src/Ksfraser/FA_ProductAttributes/Variations/UI/VariationsButtonsPanel.php',
     // Security / access control (NFR2)
     __DIR__ . '/../src/Ksfraser/FA_ProductAttributes/Security/AccessChecker.php',
     // Controller classes (merged from FA_ProductAttributes_Core)
