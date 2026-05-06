@@ -69,6 +69,10 @@ $files = [
     __DIR__ . '/../fa_product_attributes_variations/src/Ksfraser/FA_ProductAttributes_Variations/Service/AttributeReportService.php',
     // Security / access control (NFR2)
     __DIR__ . '/../src/Ksfraser/FA_ProductAttributes/Security/AccessChecker.php',
+    // Controller classes (merged from FA_ProductAttributes_Core)
+    __DIR__ . '/../src/Ksfraser/FA_ProductAttributes/Controller/ProductAttributesTabController.php',
+    // Additional UI classes (merged from FA_ProductAttributes_Core)
+    __DIR__ . '/../src/Ksfraser/FA_ProductAttributes/UI/ProductAttributesTabUI.php',
 ];
 
 foreach ($files as $file) {

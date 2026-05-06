@@ -438,4 +438,63 @@ class ProductAttributesDaoTest extends TestCase
         $result = $dao->getDbAdapter();
         $this->assertSame($db, $result);
     }
+
+    public function testSetProductParentInserts(): void
+    {
+        $db = $this->createMock(DbAdapterInterface::class);
+        $db->method('getTablePrefix')->willReturn('fa_');
+        $db->expects($this->once())
+            ->method('execute')
+            ->with(
+                'INSERT INTO `fa_product_hierarchy` (child_stock_id, parent_stock_id) VALUES (:child, :parent)'
+                . ' ON DUPLICATE KEY UPDATE parent_stock_id = :parent2',
+                ['child' => 'CHILD001', 'parent' => 'PARENT001', 'parent2' => 'PARENT001']
+            );
+
+        $dao = new ProductAttributesDao($db);
+        $dao->setProductParent('CHILD001', 'PARENT001');
+    }
+
+    public function testSetProductParentDeletesWhenNull(): void
+    {
+        $db = $this->createMock(DbAdapterInterface::class);
+        $db->method('getTablePrefix')->willReturn('fa_');
+        $db->expects($this->once())
+            ->method('execute')
+            ->with(
+                'DELETE FROM `fa_product_hierarchy` WHERE child_stock_id = :child',
+                ['child' => 'CHILD001']
+            );
+
+        $dao = new ProductAttributesDao($db);
+        $dao->setProductParent('CHILD001', null);
+    }
+
+    public function testGetProductParentReturnsParent(): void
+    {
+        $db = $this->createMock(DbAdapterInterface::class);
+        $db->method('getTablePrefix')->willReturn('fa_');
+        $db->expects($this->once())
+            ->method('query')
+            ->with(
+                'SELECT parent_stock_id FROM `fa_product_hierarchy` WHERE child_stock_id = :child',
+                ['child' => 'CHILD001']
+            )
+            ->willReturn([['parent_stock_id' => 'PARENT001']]);
+
+        $dao = new ProductAttributesDao($db);
+        $result = $dao->getProductParent('CHILD001');
+        $this->assertEquals('PARENT001', $result);
+    }
+
+    public function testGetProductParentReturnsNullWhenNone(): void
+    {
+        $db = $this->createMock(DbAdapterInterface::class);
+        $db->method('getTablePrefix')->willReturn('fa_');
+        $db->method('query')->willReturn([]);
+
+        $dao = new ProductAttributesDao($db);
+        $result = $dao->getProductParent('CHILD001');
+        $this->assertNull($result);
+    }
 }

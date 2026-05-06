@@ -262,6 +262,47 @@ class ProductAttributesDao
     }
 
     /**
+     * Set or clear the parent of a product in the product_hierarchy table.
+     * If $parentStockId is null, the row for $childStockId is deleted.
+     *
+     * @param string      $childStockId   The child product's stock_id
+     * @param string|null $parentStockId  The parent product's stock_id, or null to remove
+     */
+    public function setProductParent(string $childStockId, ?string $parentStockId): void
+    {
+        $p = $this->db->getTablePrefix();
+        if ($parentStockId === null) {
+            $this->db->execute(
+                "DELETE FROM `{$p}product_hierarchy` WHERE child_stock_id = :child",
+                ['child' => $childStockId]
+            );
+        } else {
+            // INSERT … ON DUPLICATE KEY UPDATE (child_stock_id has a UNIQUE KEY)
+            $this->db->execute(
+                "INSERT INTO `{$p}product_hierarchy` (child_stock_id, parent_stock_id) VALUES (:child, :parent)"
+                . " ON DUPLICATE KEY UPDATE parent_stock_id = :parent2",
+                ['child' => $childStockId, 'parent' => $parentStockId, 'parent2' => $parentStockId]
+            );
+        }
+    }
+
+    /**
+     * Get the parent stock_id for a given product, or null if it has no parent.
+     *
+     * @param string $stockId
+     * @return string|null
+     */
+    public function getProductParent(string $stockId): ?string
+    {
+        $p = $this->db->getTablePrefix();
+        $rows = $this->db->query(
+            "SELECT parent_stock_id FROM `{$p}product_hierarchy` WHERE child_stock_id = :child",
+            ['child' => $stockId]
+        );
+        return !empty($rows) ? (string)$rows[0]['parent_stock_id'] : null;
+    }
+
+    /**
      * Get the database adapter
      */
     public function getDbAdapter(): DbAdapterInterface
