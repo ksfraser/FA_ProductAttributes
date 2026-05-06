@@ -24,10 +24,12 @@ class BulkOperationsService
 
     /** @var array<string, bool> Known built-in operation types */
     private static $builtinTypes = [
-        'assign_attributes'  => true,
-        'delete_attributes'  => true,
-        'status_change'      => true,
-        'category_assignment' => true,
+        'assign_attributes'        => true,
+        'delete_attributes'        => true,
+        'status_change'            => true,
+        'category_assignment'      => true,
+        'update_variations'        => true,
+        'deactivate_variations'    => true,
     ];
 
     public function __construct(ProductAttributesDao $dao, DbAdapterInterface $db)
@@ -156,6 +158,102 @@ class BulkOperationsService
                     $failed++;
                     $errors[] = "Failed for {$stockId}: " . $e->getMessage();
                 }
+            }
+        }
+
+        return [
+            'success'   => $failed === 0,
+            'processed' => $processed,
+            'failed'    => $failed,
+            'errors'    => $errors,
+        ];
+    }
+
+    /**
+     * Bulk update variation stock IDs in FA's stockmaster table.
+     *
+     * Each entry in $changes must have 'old_stock_id' and 'new_stock_id'.
+     * Updates stockmaster.stock_id and the parent_stock_id references of children.
+     *
+     * @param array<int, array{old_stock_id: string, new_stock_id: string}> $changes
+     * @return array<string, mixed> ['success'=>bool, 'processed'=>int, 'failed'=>int, 'errors'=>array]
+     */
+    public function bulkUpdateVariationStockIds(array $changes): array
+    {
+        $processed = 0;
+        $failed    = 0;
+        $errors    = [];
+        $p         = $this->db->getTablePrefix();
+
+        foreach ($changes as $change) {
+            $oldId = trim((string)($change['old_stock_id'] ?? ''));
+            $newId = trim((string)($change['new_stock_id'] ?? ''));
+
+            if ($oldId === '' || $newId === '') {
+                $failed++;
+                $errors[] = "Skipped entry with empty old/new stock_id";
+                continue;
+            }
+
+            try {
+                // Update the variation's own stock_id
+                $this->db->execute(
+                    "UPDATE `{$p}stockmaster` SET stock_id = :new WHERE stock_id = :old",
+                    ['new' => $newId, 'old' => $oldId]
+                );
+                // Update any children that reference the old parent_stock_id
+                $this->db->execute(
+                    "UPDATE `{$p}product_attribute_assignments`"
+                    . " SET parent_stock_id = :new WHERE parent_stock_id = :old",
+                    ['new' => $newId, 'old' => $oldId]
+                );
+                $processed++;
+            } catch (\Exception $e) {
+                $failed++;
+                $errors[] = "Failed to rename {$oldId}: " . $e->getMessage();
+            }
+        }
+
+        return [
+            'success'   => $failed === 0,
+            'processed' => $processed,
+            'failed'    => $failed,
+            'errors'    => $errors,
+        ];
+    }
+
+    /**
+     * Bulk deactivate (soft-delete) variations in FA's stockmaster table.
+     *
+     * Sets stockmaster.inactive = 1 for each supplied stock_id.
+     *
+     * @param array<int, string> $stockIds  List of variation stock IDs to deactivate
+     * @return array<string, mixed>
+     */
+    public function bulkDeactivateVariations(array $stockIds): array
+    {
+        $processed = 0;
+        $failed    = 0;
+        $errors    = [];
+        $p         = $this->db->getTablePrefix();
+
+        foreach ($stockIds as $stockId) {
+            $stockId = trim((string)$stockId);
+            if ($stockId === '') {
+                $failed++;
+                $errors[] = "Skipped empty stock_id";
+                continue;
+            }
+
+            try {
+                $this->db->execute(
+                    "UPDATE `{$p}stockmaster` SET inactive = 1 WHERE stock_id = :stock_id",
+                    ['stock_id' => $stockId]
+                );
+                $processed++;
+            } catch (\Exception $e) {
+                $failed++;
+                $errors[] = "Failed to deactivate {$stockId}: " . $e->getMessage();
             }
         }
 

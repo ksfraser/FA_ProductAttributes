@@ -284,4 +284,106 @@ class BulkOperationsServiceTest extends TestCase
         $isValid = $this->service->validateBulkOperation($operation);
         $this->assertTrue($isValid);
     }
+
+    // ── bulkUpdateVariationStockIds ────────────────────────────────────────────
+
+    public function testBulkUpdateVariationStockIdsSuccess(): void
+    {
+        $this->db->method('getTablePrefix')->willReturn('0_');
+        $this->db->expects($this->exactly(4)) // 2 changes × 2 UPDATE calls each
+            ->method('execute');
+
+        $changes = [
+            ['old_stock_id' => 'SHIRT-S', 'new_stock_id' => 'SHIRT-SM'],
+            ['old_stock_id' => 'SHIRT-L', 'new_stock_id' => 'SHIRT-LG'],
+        ];
+
+        $result = $this->service->bulkUpdateVariationStockIds($changes);
+
+        $this->assertTrue($result['success']);
+        $this->assertEquals(2, $result['processed']);
+        $this->assertEquals(0, $result['failed']);
+    }
+
+    public function testBulkUpdateVariationStockIdsSkipsEmptyOldId(): void
+    {
+        $this->db->method('getTablePrefix')->willReturn('0_');
+        $this->db->expects($this->exactly(2)) // Only the valid change executes
+            ->method('execute');
+
+        $changes = [
+            ['old_stock_id' => '', 'new_stock_id' => 'SHIRT-LG'],
+            ['old_stock_id' => 'SHIRT-L', 'new_stock_id' => 'SHIRT-LG'],
+        ];
+
+        $result = $this->service->bulkUpdateVariationStockIds($changes);
+
+        $this->assertFalse($result['success']);
+        $this->assertEquals(1, $result['processed']);
+        $this->assertEquals(1, $result['failed']);
+    }
+
+    public function testBulkUpdateVariationStockIdsHandlesDbException(): void
+    {
+        $this->db->method('getTablePrefix')->willReturn('0_');
+        $this->db->method('execute')->willThrowException(new \Exception('DB error'));
+
+        $changes = [['old_stock_id' => 'SHIRT-S', 'new_stock_id' => 'SHIRT-SM']];
+
+        $result = $this->service->bulkUpdateVariationStockIds($changes);
+
+        $this->assertFalse($result['success']);
+        $this->assertEquals(0, $result['processed']);
+        $this->assertEquals(1, $result['failed']);
+        $this->assertCount(1, $result['errors']);
+    }
+
+    // ── bulkDeactivateVariations ───────────────────────────────────────────────
+
+    public function testBulkDeactivateVariationsSuccess(): void
+    {
+        $this->db->method('getTablePrefix')->willReturn('0_');
+        $this->db->expects($this->exactly(3))->method('execute');
+
+        $result = $this->service->bulkDeactivateVariations(['SHIRT-S', 'SHIRT-M', 'SHIRT-L']);
+
+        $this->assertTrue($result['success']);
+        $this->assertEquals(3, $result['processed']);
+        $this->assertEquals(0, $result['failed']);
+    }
+
+    public function testBulkDeactivateVariationsSkipsEmptyStockId(): void
+    {
+        $this->db->method('getTablePrefix')->willReturn('0_');
+        $this->db->expects($this->exactly(2))->method('execute');
+
+        $result = $this->service->bulkDeactivateVariations(['SHIRT-S', '', 'SHIRT-L']);
+
+        $this->assertFalse($result['success']);
+        $this->assertEquals(2, $result['processed']);
+        $this->assertEquals(1, $result['failed']);
+    }
+
+    public function testBulkDeactivateVariationsHandlesDbException(): void
+    {
+        $this->db->method('getTablePrefix')->willReturn('0_');
+        $this->db->method('execute')->willThrowException(new \Exception('DB error'));
+
+        $result = $this->service->bulkDeactivateVariations(['SHIRT-FAIL']);
+
+        $this->assertFalse($result['success']);
+        $this->assertEquals(0, $result['processed']);
+        $this->assertEquals(1, $result['failed']);
+    }
+
+    public function testBulkDeactivateVariationsReturnsEmptyArrayOkay(): void
+    {
+        $this->db->method('getTablePrefix')->willReturn('0_');
+        $this->db->expects($this->never())->method('execute');
+
+        $result = $this->service->bulkDeactivateVariations([]);
+
+        $this->assertTrue($result['success']);
+        $this->assertEquals(0, $result['processed']);
+    }
 }

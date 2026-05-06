@@ -94,8 +94,10 @@ This Requirements Traceability Matrix tracks requirements for the FA_ProductAttr
 | NFR5.1 | Data integrity via Make Inactive | Prevent orphans | `MakeInactiveAction` — deactivates only zero-stock variations, warns on stocked ones | TC47 `MakeInactiveActionTest` | Completed |
 | NFR6 | Compatibility | FA 2.3.22 and PHP 7.3 | All source files scanned for PHP 8.0+ syntax; SQL uses prepared statements; no PHP 8 types used | TC48 `CompatibilityTest` — 4 assertions across 2 source directories | Completed |
 | NFR7 | Code Quality | SOLID principles, DI, SRP | Interfaces, traits, polymorphism, RoyalOrderHelper | TC49: Test adherence | Completed |
-| NFR8 | Testing | Unit tests for all code, edge cases | PHPUnit framework — 190 tests, 411 assertions covering all action handlers, services, security, performance, compatibility, and integration | TC50: Test coverage metrics | Completed |
+| NFR8 | Testing | Unit tests for all code, edge cases | PHPUnit framework — 227 tests, 500 assertions covering all action handlers, services, security, performance, compatibility, and integration | TC50: Test coverage metrics | Completed |
 | NFR9 | Documentation | PHPDoc, UML diagrams | All classes have PHPDoc; ERD, Message Flow, and Architecture diagrams in `Project Docs/Architecture_and_ERD.md` | TC51: See Architecture_and_ERD.md | Completed |
+| MERGE-1 | Merge FA_ProductVariations repo | Absorb standalone MVC variation repo | `Install/SeedDataInstaller`, `Service/VariationsDashboardService`, `UI/VariationsDashboardTab`, `BulkOperationsService` bulk variation methods | `SeedDataInstallerTest`, `VariationsDashboardServiceTest`, `VariationsDashboardTabTest`, new `BulkOperationsServiceTest` cases | Completed |
+| MERGE-2 | Merge FA_ProductAttributes_Categories repo | Absorb empty categories repo | No src to merge — all categories functionality already present in `CategoriesTab`, `ValuesTab`, `UpsertCategoryAction`, `DeleteCategoryAction` | Pre-existing tests | Completed |
 
 ## Notes
 - Requirement IDs correspond to sections in BRD.
@@ -114,3 +116,8 @@ This Requirements Traceability Matrix tracks requirements for the FA_ProductAttr
 | NFR1 | n/a (test only) | `plugin-tests/FACoreUnchangedTest.php` |
 | NFR2 | `src/Ksfraser/FA_ProductAttributes/Security/AccessChecker.php` | `plugin-tests/Security/AccessCheckerTest.php` |
 | ActionHandler wiring | `src/Ksfraser/FA_ProductAttributes/Actions/ActionHandler.php` (4 new cases) | — |
+| MERGE-1 (FA_ProductVariations merge) | `src/Ksfraser/FA_ProductAttributes/Install/SeedDataInstaller.php` — Royal Order seed data (8 categories, 63 values) | `plugin-tests/Install/SeedDataInstallerTest.php` |
+| MERGE-1 (FA_ProductVariations merge) | `src/Ksfraser/FA_ProductAttributes/Service/VariationsDashboardService.php` — paginated summary, 4 filter methods | `plugin-tests/Service/VariationsDashboardServiceTest.php` |
+| MERGE-1 (FA_ProductVariations merge) | `src/Ksfraser/FA_ProductAttributes/UI/VariationsDashboardTab.php` — FA-style dashboard tab | `plugin-tests/UI/VariationsDashboardTabTest.php` |
+| MERGE-1 (FA_ProductVariations merge) | `BulkOperationsService::bulkUpdateVariationStockIds()` + `bulkDeactivateVariations()` | 9 new cases in `plugin-tests/Service/BulkOperationsServiceTest.php` |
+| MERGE-2 (FA_ProductAttributes_Categories merge) | No new code — functionality already present in core module | Pre-existing tests |
