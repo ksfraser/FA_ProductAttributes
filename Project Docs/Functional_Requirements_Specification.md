@@ -269,3 +269,60 @@ This document details the functional behavior of the FA_ProductAttributes system
 ## Error Handling
 - Invalid inputs: Display error messages.
 - DB failures: Rollback and notify user.
+
+---
+
+## Extended Attribute Tabs — v0.6 and v0.7
+
+### FR11: Shipping / Logistics Attributes *(v0.6.0)*
+- **Trigger**: User navigates to the "Shipping" tab on the Product Attributes screen.
+- **Process**:
+  1. Display form fields: weight (kg), length/width/height (cm), fragile flag, hazmat flag, country of origin, HS tariff code, freight class, shipping class.
+  2. Save values into `0_product_shipping_attributes` keyed on `stock_id`.
+  3. Show **Clone to Variations** panel: list all child variations with checkboxes; if no variations exist, panel is hidden. "Select All" toggling supported.
+  4. On clone submit, write parent's shipping row to each selected variation's stock_id.
+- **Output**: Shipping attributes stored per product; optionally propagated to variations.
+
+### FR12: Product Identifiers *(v0.7.0)*
+- **Trigger**: User navigates to the "Identifiers" tab.
+- **Process**:
+  1. Display three fieldset groups: Brand/Manufacturer, Barcodes (MPN, GTIN, EAN, UPC, ISBN, ASIN, internal barcode), Sourcing (supplier part number, model number).
+  2. All fields nullable; empty strings stored as NULL.
+  3. Save into `0_product_identifiers` keyed on `stock_id`.
+  4. Clone panel: propagate to selected variations (same as shipping panel pattern).
+- **Output**: Identifier data stored; optionally propagated.
+
+### FR13: Product Lifecycle *(v0.7.0)*
+- **Trigger**: User navigates to the "Lifecycle" tab.
+- **Process**:
+  1. Display status dropdown: active / draft / discontinued / archived.
+  2. Display boolean checkboxes: special order, clearance, out-of-stock notice, new arrival, best-seller, featured, seasonal.
+  3. Date fields: available_from (YYYY-MM-DD), discontinue_on (YYYY-MM-DD). Validated on save.
+  4. Text field: clearance note.
+  5. Save into `0_product_lifecycle` keyed on `stock_id`.
+  6. Clone panel: propagate full lifecycle row to selected variations.
+- **Output**: Lifecycle status and flags stored; optionally propagated.
+
+### FR14: Product Tags *(v0.7.0)*
+- **Trigger**: User navigates to the "Tags" tab.
+- **Process**:
+  1. **Global tag management section** (always visible): table of all tags with name, slug, and delete button. Add-tag form: entering a name auto-generates a slug. Delete cascades tag assignments.
+  2. **Per-product assignment section** (visible when stock_id present): checkbox list of all tags, pre-checked for tags already assigned. Changes submitted immediately per checkbox (auto-submit).
+- **Output**: Tags created/deleted globally; per-product tag assignments updated.
+
+### FR15: Product Media (Multi-Photo) *(v0.7.0)*
+- **Trigger**: User navigates to the "Media" tab.
+- **Process**:
+  1. Display gallery of existing media items, each showing: thumbnail/link (URL), alt text, sort order, primary star indicator, variation-scope checkboxes, delete button.
+  2. Variation-scope checkboxes: list each child variation; checked means this media item applies to that variation. Saved via `0_product_media_variation_links`.
+  3. Add-new-media form at bottom: URL (required), alt text, sort order, media type (image/video/document), is_primary flag.
+  4. Delete: removes media row and cascades to variation links.
+- **Output**: Media gallery stored; each item optionally scoped to subset of variations.
+
+### FR16: Product Attributes Summary *(v0.7.0)*
+- **Trigger**: User navigates to the "Summary" tab.
+- **Process**:
+  1. Display read-only sections for each attribute group: product attributes (assigned categories/values), shipping attributes, identifiers, lifecycle, tags, and media count.
+  2. Each section shows stored data in compact form.
+  3. No edits from this tab; links navigate to the respective tab.
+- **Output**: At-a-glance view of all product attribute data.

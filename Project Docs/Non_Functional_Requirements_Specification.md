@@ -31,6 +31,8 @@
 ## Scalability
 - DB: Handle up to 10,000 products with attributes.
 - Attributes: Up to 100 categories, 500 values per category.
+- Extended attributes: Up to 12 database tables (6 core + 6 extended); all indexed on `stock_id`.
+- Media: Up to 50 media items per product; variation links indexed on both `media_id` and `variation_stock_id`.
 
 ## Portability
 - OS: Windows/Linux (as per FA).

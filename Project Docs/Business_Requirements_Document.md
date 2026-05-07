@@ -31,6 +31,13 @@ The FA_ProductAttributes system consists of a core module providing generic attr
 - `product_attribute_values`: Values within categories (Red, Blue, XL, etc.)
 - `product_attribute_assignments`: Links products to attributes
 - `product_attribute_product_types`: Product type classifications
+- `product_shipping_attributes`: Per-product shipping/logistics data (weight, dimensions, hazmat, customs)
+- `product_identifiers`: Brand, manufacturer, barcode, GTIN/EAN/UPC/ISBN/ASIN, supplier part numbers
+- `product_lifecycle`: Status (active/draft/discontinued/archived) and flags (special order, clearance, new arrival, etc.)
+- `product_tags`: Global tag dictionary with slugs
+- `product_tag_assignments`: Many-to-many product↔tag
+- `product_media`: Per-product photos/videos/documents with sort order and primary flag
+- `product_media_variation_links`: Scopes individual media items to a subset of variations
 
 ### Plugin Architecture
 **Extension Points:**
@@ -78,6 +85,27 @@ The FA_ProductAttributes system consists of a core module providing generic attr
    - Include a "Copy Sales Pricing" checkbox: If checked, copies all sales prices from the master product to each variation.
    - Use "Royal Order of adjectives" for attribute sequencing (e.g., Size before Color).
    - Stock_id format: Parent stock_id + attribute abbreviations in order (e.g., XYZ-L-RED).
+
+4. **Shipping / Logistics Attributes** *(v0.6.0)*
+   - Per-product shipping attributes tab: weight (kg), dimensions (L×W×H cm), fragile flag, hazmat flag, country of origin, HS tariff code, freight class, shipping class.
+   - Cloning panel: select which variations should inherit the parent product's shipping attributes (one-click clone-to-all or selective checkbox).
+
+5. **Product Identifiers** *(v0.7.0)*
+   - Per-product identifiers tab: brand, manufacturer, MPN (manufacturer part number), GTIN, EAN, UPC, ISBN, ASIN, internal barcode, supplier part number, model number.
+   - Cloning panel: propagate identifiers to selected variations.
+
+6. **Product Lifecycle** *(v0.7.0)*
+   - Per-product lifecycle tab: status dropdown (active / draft / discontinued / archived), boolean flags (special order, clearance, out-of-stock notice, new arrival, best-seller, featured, seasonal), available-from date, discontinue-on date, and a clearance note.
+   - Cloning panel: propagate lifecycle settings to selected variations.
+
+7. **Product Tags** *(v0.7.0)*
+   - Global tag management: create and delete tags (name + auto-generated slug).
+   - Per-product tag assignment: checkbox list of all tags; changes saved immediately.
+
+8. **Product Media (Multi-Photo)** *(v0.7.0)*
+   - Per-product media gallery: add image/video/document URLs with alt text, sort order, and primary flag.
+   - Per media item: variation-scoping checkboxes to restrict which variations display that media item.
+   - Delete individual media items.
    - Short description: Replace ${ATTRIB_CLASS} placeholders in parent description with corresponding long attribute names (e.g., if parent has "Coat - ${Size} ${Color}", variation becomes "Coat - Large Red").
    - Each variation inherits base product details but has unique stock_id and description, with parent flag set to false and parent_stock_id set to master's stock_id.
    - Users can manually deactivate unwanted variations after creation if certain combinations are not needed.

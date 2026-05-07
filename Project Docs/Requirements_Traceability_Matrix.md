@@ -83,6 +83,45 @@ This Requirements Traceability Matrix tracks requirements for the FA_ProductAttr
 | BR9.2 | Suggest parent creation for groups | Propose new parents | `RetroactiveApplicationService::suggestParent()` | TC36: Test parent suggestions | Completed |
 | BR9.3 | Suggest parent-child associations | Link existing products | `RetroactiveApplicationService::suggestAssociations()` | TC37: Test association suggestions | Completed |
 | BR9.4 | Bulk edit screen for assignments | Assign multiple at once | `BulkOperationsService` bulk assignment operations | TC38: Test bulk assignment | Completed |
+
+---
+
+## v0.6.0 — Shipping / Logistics Attributes
+
+| Requirement ID | Description | Business Need | Design Element | Test Case | Status | Component |
+|----------------|-------------|---------------|----------------|-----------|--------|-----------|
+| BR11 | Shipping attributes tab | Store per-product shipping data | `ShippingAttributesTab` + `ShippingAttributesDao` | TC-S1: Renders shipping form | Completed | Core |
+| BR11.1 | Save shipping data | Persist weight/dimensions/flags | `ShippingAttributesDao::upsert()` via `UpsertShippingAttributesAction` | TC-S2: Save shipping data | Completed | Core |
+| BR11.2 | Clone shipping to variations | Propagate to selected children | `CloneShippingToVariationsAction` + `ShippingClonePanel` | TC-S3: Clone to all variations | Completed | Core |
+| BR11.3 | Shipping schema | New DB table for shipping data | `0_product_shipping_attributes` (stock_id PK + 10 columns) | TC-S4: Schema integrity | Completed | Core |
+
+---
+
+## v0.7.0 — Product Identifiers, Lifecycle, Tags, Media
+
+| Requirement ID | Description | Business Need | Design Element | Test Case | Status | Component |
+|----------------|-------------|---------------|----------------|-----------|--------|-----------|
+| BR12 | Product identifiers tab | Store brand/barcode/sourcing data | `ProductIdentifiersTab` + `ProductIdentifiersDao` | TC-I1: Renders identifiers form | Completed | Core |
+| BR12.1 | Save identifiers (upsert) | Persist brand/GTIN/MPN/etc. | `UpsertProductIdentifiersAction` — trims, nulls empty strings | TC-I2: Save all identifier fields | Completed | Core |
+| BR12.2 | Clone identifiers to variations | Propagate to selected children | `CloneIdentifiersToVariationsAction` + `IdentifiersClonePanel` | TC-I3: Clone identifiers | Completed | Core |
+| BR12.3 | Identifiers schema | New DB table | `0_product_identifiers` (stock_id PK + 11 columns) | TC-I4: Schema integrity | Completed | Core |
+| BR13 | Product lifecycle tab | Manage product status and flags | `ProductLifecycleTab` + `ProductLifecycleDao` | TC-L1: Renders lifecycle form | Completed | Core |
+| BR13.1 | Status dropdown | Set active/draft/discontinued/archived | `UpsertProductLifecycleAction` validates ENUM | TC-L2: Status saved correctly | Completed | Core |
+| BR13.2 | Boolean lifecycle flags | Clearance, special order, seasonal, etc. | 7 checkbox fields cast to tinyint | TC-L3: Flags persisted correctly | Completed | Core |
+| BR13.3 | Date fields | Available-from / discontinue-on | YYYY-MM-DD validation in action | TC-L4: Date format validated | Completed | Core |
+| BR13.4 | Clone lifecycle to variations | Propagate lifecycle row to children | `CloneLifecycleToVariationsAction` + `LifecycleClonePanel` | TC-L5: Clone lifecycle | Completed | Core |
+| BR13.5 | Lifecycle schema | New DB table | `0_product_lifecycle` (stock_id PK + 12 columns) | TC-L6: Schema integrity | Completed | Core |
+| BR14 | Product tags | Flexible keyword tagging | `ProductTagsTab` + `ProductTagsDao` | TC-T1: Tag management UI | Completed | Core |
+| BR14.1 | Global tag management | Create/delete tags with name+slug | `UpsertTagAction` (auto slug), `DeleteTagAction` (cascade) | TC-T2: Create/delete tags | Completed | Core |
+| BR14.2 | Per-product tag assignment | Assign/remove tags per product | `AddTagAssignmentAction`, `RemoveTagAssignmentAction` | TC-T3: Tag assignment per product | Completed | Core |
+| BR14.3 | Tags schema | Two new DB tables | `0_product_tags`, `0_product_tag_assignments` | TC-T4: Tags schema integrity | Completed | Core |
+| BR15 | Multi-photo media gallery | Multiple media per product | `ProductMediaTab` + `ProductMediaDao` | TC-M1: Gallery renders | Completed | Core |
+| BR15.1 | Add media item | Store URL/alt/type/primary | `AddProductMediaAction` — validates media_type ENUM | TC-M2: Add image | Completed | Core |
+| BR15.2 | Delete media item | Remove photo and cascade links | `DeleteProductMediaAction` | TC-M3: Delete media and links | Completed | Core |
+| BR15.3 | Variation scoping for media | Select which variations show a photo | `SetMediaVariationLinksAction` — DELETE + INSERT pattern | TC-M4: Scope media to variations | Completed | Core |
+| BR15.4 | Media schema | Two new DB tables | `0_product_media`, `0_product_media_variation_links` | TC-M5: Media schema integrity | Completed | Core |
+| BR16 | Product attributes summary tab | Read-only at-a-glance overview | `ProductAttributesSummaryTab` — renders all 6 attribute groups | TC-SUM1: Summary tab renders all sections | Completed | Core |
+| BR16.1 | Summary includes all attribute groups | Complete product data view | Uses all 6 DAOs (attributes, shipping, identifiers, lifecycle, tags, media) | TC-SUM2: All sections present | Completed | Core |
 | BR9.5 | Sanity checks and force options | Validate assignments | `BulkOperationsService::validateBulkOperation()` warnings | TC39: Test validation and force | Completed |
 | BR10 | API for external integration | REST endpoints for CRUD | External system access | TC40: Test API endpoints | Completed |
 | BR10.1 | Authentication and security | API key validation | Secure access | TC41: Test auth mechanisms | Completed |

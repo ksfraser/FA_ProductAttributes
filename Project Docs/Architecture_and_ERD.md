@@ -70,6 +70,72 @@
               │     parent_stock_id │◄── KEY idx_parent
               │     updated_ts      │
               └─────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                  Extended Product Attribute Tables (v0.6–v0.7)               │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+┌──────────────────────────────────┐    ┌──────────────────────────────────┐
+│  0_product_shipping_attributes   │    │  0_product_identifiers           │
+│──────────────────────────────────│    │──────────────────────────────────│
+│ PK  stock_id  VARCHAR(32)        │    │ PK  stock_id  VARCHAR(32)        │
+│     weight_kg DECIMAL(10,3)      │    │     brand     VARCHAR(128)       │
+│     length_cm DECIMAL(10,2)      │    │     manufacturer VARCHAR(128)    │
+│     width_cm  DECIMAL(10,2)      │    │     mpn       VARCHAR(64)        │
+│     height_cm DECIMAL(10,2)      │    │     gtin      VARCHAR(14)        │
+│     is_fragile TINYINT(1)        │    │     ean       VARCHAR(13)        │
+│     is_hazmat  TINYINT(1)        │    │     upc       VARCHAR(12)        │
+│     ship_class VARCHAR(32)       │    │     isbn      VARCHAR(13)        │
+│     ...                          │    │     asin      VARCHAR(10)        │
+└──────────────────────────────────┘    │     internal_barcode VARCHAR(64) │
+                                        │     supplier_part_no VARCHAR(64) │
+                                        │     model_no  VARCHAR(64)        │
+                                        └──────────────────────────────────┘
+
+┌──────────────────────────────────────────────────────────────┐
+│  0_product_lifecycle                                          │
+│──────────────────────────────────────────────────────────────│
+│ PK  stock_id       VARCHAR(32)                               │
+│     status         ENUM(active,draft,discontinued,archived)  │
+│     is_special_order   TINYINT(1)                            │
+│     is_clearance       TINYINT(1)                            │
+│     is_out_of_stock_notice TINYINT(1)                        │
+│     is_new_arrival     TINYINT(1)                            │
+│     is_bestseller      TINYINT(1)                            │
+│     is_featured        TINYINT(1)                            │
+│     is_seasonal        TINYINT(1)                            │
+│     available_from     DATE                                  │
+│     discontinue_on     DATE                                  │
+│     clearance_note     VARCHAR(255)                          │
+└──────────────────────────────────────────────────────────────┘
+
+┌──────────────────────────────┐    ┌────────────────────────────────────┐
+│  0_product_tags              │    │  0_product_tag_assignments          │
+│──────────────────────────────│    │────────────────────────────────────│
+│ PK  id    INT(11) AI         │◄───┤ FK  tag_id   INT(11)               │
+│     name  VARCHAR(128)       │    │ PK  stock_id VARCHAR(32) (compound)│
+│     slug  VARCHAR(128) UQ    │    └────────────────────────────────────┘
+└──────────────────────────────┘
+
+┌──────────────────────────────────────────────┐
+│  0_product_media                              │
+│──────────────────────────────────────────────│
+│ PK  id         INT(11) AI                    │
+│     stock_id   VARCHAR(32)  KEY idx_stock    │
+│     url        VARCHAR(1024)                 │
+│     alt_text   VARCHAR(255)                  │
+│     sort_order INT(11)                       │
+│     media_type ENUM(image,video,document)    │
+│     is_primary TINYINT(1)                    │
+└──────────────────┬───────────────────────────┘
+                   │ 1
+                   │ N
+┌──────────────────▼───────────────────────────┐
+│  0_product_media_variation_links              │
+│──────────────────────────────────────────────│
+│ PK  media_id           INT(11) (compound)    │
+│ PK  variation_stock_id VARCHAR(32) (compound)│
+└──────────────────────────────────────────────┘
 ```
 
 ---
@@ -80,36 +146,42 @@
 ┌────────────────────────────────────────────────────────────────────────────┐
 │                         FA_ProductAttributes Core                           │
 │                                                                              │
-│  ┌──────────────┐   ┌──────────────────────┐   ┌────────────────────────┐  │
-│  │ PluginLoader │──►│ ProductAttributesHndlr│──►│ ActionHandler          │  │
-│  └──────────────┘   │ (fa-hooks callbacks)  │   │  ├ UpsertCategoryAction│  │
-│                     └──────────┬────────────┘   │  ├ DeleteCategoryAction│  │
-│                                │                │  ├ AddAssignmentAction │  │
-│                                │                │  ├ MakeInactiveAction  │  │
-│                                ▼                │  ├ ReactivateVariation │  │
-│  ┌──────────────────────────────────────────┐   │  ├ CreateMissingVars  │  │
-│  │        ProductAttributesService          │   │  ├ AssignParentAction  │  │
-│  │  renderProductAttributesTab()            │   │  └ ...                 │  │
-│  │  saveProductAttributes()                 │   └────────────────────────┘  │
-│  └───────────────────┬──────────────────────┘                               │
-│                      │ uses                                                  │
-│            ┌─────────▼─────────┐   ┌───────────────────────────────────┐   │
-│            │ ProductAttributesDAO│  │  UI Layer                         │   │
-│            │  listCategories()   │  │  ├ ProductAttributesUI            │   │
-│            │  listValues()       │  │  ├ CategoriesTab                  │   │
-│            │  addAssignment()    │  │  ├ ValuesTab                      │   │
-│            │  deleteAssignment() │  │  ├ AssignmentsTab                 │   │
-│            │  ensureSchema()     │  │  └ TabDispatcher                  │   │
-│            └─────────┬──────────┘  └───────────────────────────────────┘   │
-│                      │                                                       │
-│            ┌─────────▼────────┐    ┌─────────────────────────────────────┐ │
-│            │ DbAdapterInterface│   │  REST API Layer                      │ │
-│            │  (PDO/FA bridge)  │   │  ├ ApiRouter                        │ │
-│            └──────────────────┘   │  ├ CategoriesApiController           │ │
-│                                    │  ├ ValuesApiController               │ │
-│                                    │  └ AssignmentsApiController          │ │
-│                                    └─────────────────────────────────────┘ │
-└────────────────────────────────────────────────────────────────────────────┘
+│  ┌──────────────┐   ┌──────────────────────┐   ┌───────────────────────────┐  │
+│  │ PluginLoader │──►│ ProductAttributesHndlr│──►│ ActionHandler             │  │
+│  └──────────────┘   │ (fa-hooks callbacks)  │   │  ├ UpsertCategoryAction   │  │
+│                     └──────────┬────────────┘   │  ├ DeleteCategoryAction   │  │
+│                                │                │  ├ AddAssignmentAction    │  │
+│                                │                │  ├ UpsertProductIdentifiers│  │
+│                                ▼                │  ├ CloneIdentifiersToVars │  │
+│  ┌──────────────────────────────────────────┐   │  ├ UpsertProductLifecycle │  │
+│  │        ProductAttributesService          │   │  ├ CloneLifecycleToVars   │  │
+│  │  renderProductAttributesTab()            │   │  ├ UpsertTag / DeleteTag  │  │
+│  │  saveProductAttributes()                 │   │  ├ AddTagAssignment       │  │
+│  └───────────────────┬──────────────────────┘   │  ├ RemoveTagAssignment    │  │
+│                      │ uses                      │  ├ AddProductMedia        │  │
+│            ┌─────────▼────────────┐             │  ├ DeleteProductMedia     │  │
+│            │ DAOs                 │             │  └ SetMediaVariationLinks │  │
+│            │ ProductAttributesDao │             └───────────────────────────┘  │
+│            │ ShippingAttributesDao│                                             │
+│            │ ProductIdentifiersDao│  ┌────────────────────────────────────┐    │
+│            │ ProductLifecycleDao  │  │  UI Layer (TabDispatcher: 9 tabs)  │    │
+│            │ ProductTagsDao       │  │  ├ CategoriesTab                   │    │
+│            │ ProductMediaDao      │  │  ├ ValuesTab                       │    │
+│            └─────────┬────────────┘  │  ├ AssignmentsTab                  │    │
+│                      │               │  ├ ShippingAttributesTab           │    │
+│            ┌─────────▼────────┐     │  ├ ShippingClonePanel              │    │
+│            │ DbAdapterInterface│    │  ├ ProductIdentifiersTab            │    │
+│            │  (PDO/FA bridge)  │    │  ├ IdentifiersClonePanel            │    │
+│            └──────────────────┘     │  ├ ProductLifecycleTab              │    │
+│                                      │  ├ LifecycleClonePanel              │    │
+│            ┌─────────────────────┐   │  ├ ProductTagsTab                  │    │
+│            │  REST API Layer      │  │  ├ ProductMediaTab                 │    │
+│            │  ├ ApiRouter         │  │  └ ProductAttributesSummaryTab     │    │
+│            │  ├ CategoriesApi     │  └────────────────────────────────────┘    │
+│            │  ├ ValuesApi         │                                             │
+│            │  └ AssignmentsApi    │                                             │
+│            └─────────────────────┘                                             │
+└────────────────────────────────────────────────────────────────────────────────┘
 
 ┌────────────────────────────────────────────────────────────────────────────┐
 │               fa_product_attributes_variations Plugin                       │

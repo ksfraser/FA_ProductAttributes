@@ -738,6 +738,182 @@ INSERT INTO stock_master (stock_id, description, category_id, taxable, mb_flag, 
 - [ ] Cross-browser compatibility verified
 - [ ] User sign-off obtained
 
+---
+
+## Shipping Attributes Tab Test Cases (v0.6.0)
+
+### TC-UAT-SHIP-001: Save Shipping Attributes
+**Priority**: High
+**Preconditions**: Product "TEST-TSHIRT" exists
+**Test Steps**:
+1. Navigate to Product Attributes -> Shipping tab for TEST-TSHIRT
+2. Enter weight: 0.5, length: 30, width: 20, height: 10
+3. Check "Fragile" checkbox
+4. Click Save
+**Expected Results**: Values persisted; success message shown
+**Pass/Fail**: PASS if saved; FAIL if error
+
+### TC-UAT-SHIP-002: Clone Shipping to Variations
+**Priority**: High
+**Preconditions**: TEST-TSHIRT has shipping data and variations
+**Test Steps**:
+1. On Shipping tab, open Clone panel
+2. Select all variation checkboxes
+3. Submit clone form
+**Expected Results**: Each selected variation's shipping row matches parent
+**Pass/Fail**: PASS if all variations updated
+
+---
+
+## Product Identifiers Tab Test Cases (v0.7.0)
+
+### TC-UAT-IDENT-001: Save Product Identifiers
+**Priority**: High
+**Preconditions**: Product "TEST-TSHIRT" exists
+**Test Steps**:
+1. Navigate to Identifiers tab
+2. Enter Brand: "TestBrand", MPN: "TB-001", UPC: "012345678901"
+3. Leave ISBN empty
+4. Click Save
+**Expected Results**: Filled fields persisted; empty fields stored as NULL
+**Pass/Fail**: PASS if data saved correctly
+
+### TC-UAT-IDENT-002: Clone Identifiers to Variations
+**Priority**: Medium
+**Preconditions**: TEST-TSHIRT has identifiers and variations
+**Test Steps**:
+1. On Identifiers tab, open Clone panel; select all variations; submit
+**Expected Results**: All variations have same identifier data as parent
+**Pass/Fail**: PASS if propagated correctly
+
+---
+
+## Product Lifecycle Tab Test Cases (v0.7.0)
+
+### TC-UAT-LC-001: Save Lifecycle Status and Flags
+**Priority**: High
+**Preconditions**: Product "TEST-TSHIRT" exists
+**Test Steps**:
+1. Navigate to Lifecycle tab
+2. Set Status: "active", check "Is Clearance", set Available From: "2026-01-01"
+3. Enter Clearance Note: "End of season"
+4. Click Save
+**Expected Results**: Status, flags, date, and note persisted
+**Pass/Fail**: PASS if saved correctly
+
+### TC-UAT-LC-002: Invalid Date Rejected
+**Priority**: Medium
+**Preconditions**: Product exists on Lifecycle tab
+**Test Steps**:
+1. Enter "not-a-date" in Available From field
+2. Click Save
+**Expected Results**: Validation error; no data saved
+**Pass/Fail**: PASS if rejected with error message
+
+### TC-UAT-LC-003: Clone Lifecycle to Variations
+**Priority**: Medium
+**Preconditions**: TEST-TSHIRT has lifecycle data and variations
+**Test Steps**:
+1. On Lifecycle tab Clone panel; select all variations; submit
+**Expected Results**: All variations have matching lifecycle row
+**Pass/Fail**: PASS if propagated
+
+---
+
+## Product Tags Tab Test Cases (v0.7.0)
+
+### TC-UAT-TAGS-001: Create Global Tag
+**Priority**: High
+**Preconditions**: Tags tab open (any context)
+**Test Steps**:
+1. Navigate to Tags tab
+2. Enter tag name "Seasonal" in Add Tag form; submit
+**Expected Results**: Tag created with auto-slug "seasonal"; appears in tag table
+**Pass/Fail**: PASS if tag visible with correct slug
+
+### TC-UAT-TAGS-002: Assign Tag to Product
+**Priority**: High
+**Preconditions**: Tag "Seasonal" exists; product "TEST-TSHIRT" loaded
+**Test Steps**:
+1. On Tags tab for TEST-TSHIRT, check "Seasonal" checkbox
+**Expected Results**: Tag assignment saved immediately (auto-submit); checkbox remains checked on reload
+**Pass/Fail**: PASS if assignment persisted
+
+### TC-UAT-TAGS-003: Remove Tag from Product
+**Priority**: Medium
+**Preconditions**: "Seasonal" tag assigned to TEST-TSHIRT
+**Test Steps**:
+1. Uncheck "Seasonal" checkbox on Tags tab
+**Expected Results**: Assignment removed; checkbox unchecked on reload
+**Pass/Fail**: PASS if unassignment persisted
+
+### TC-UAT-TAGS-004: Delete Tag Cascades Assignments
+**Priority**: High
+**Preconditions**: "Seasonal" tag assigned to at least one product
+**Test Steps**:
+1. Click Delete next to "Seasonal" in global tag table; confirm
+**Expected Results**: Tag removed from dictionary; all product assignments removed
+**Pass/Fail**: PASS if tag and all assignments deleted
+
+---
+
+## Product Media Tab Test Cases (v0.7.0)
+
+### TC-UAT-MEDIA-001: Add Image to Product
+**Priority**: High
+**Preconditions**: Product "TEST-TSHIRT" exists; Media tab open
+**Test Steps**:
+1. Enter URL, Alt Text "Front view", type "image", check "Is Primary"
+2. Click Add Media
+**Expected Results**: New media item appears in gallery; displays linked thumbnail
+**Pass/Fail**: PASS if item in gallery with correct details
+
+### TC-UAT-MEDIA-002: Scope Media to Specific Variations
+**Priority**: High
+**Preconditions**: Media item exists; TEST-TSHIRT has variations
+**Test Steps**:
+1. On media item, check two variation checkboxes (e.g., TEST-TSHIRT-S-RED, TEST-TSHIRT-M-RED)
+2. Submit variation links form
+**Expected Results**: Only checked variations linked to this media item; unchecked variations not linked
+**Pass/Fail**: PASS if variation_links reflects selection
+
+### TC-UAT-MEDIA-003: Delete Media Item
+**Priority**: High
+**Preconditions**: Media item with variation links exists
+**Test Steps**:
+1. Click Delete on a media item; confirm
+**Expected Results**: Media item removed; all variation links for that item removed (cascade)
+**Pass/Fail**: PASS if item and links removed
+
+---
+
+## Product Attributes Summary Tab Test Cases (v0.7.0)
+
+### TC-UAT-SUM-001: Summary Shows All Attribute Groups
+**Priority**: High
+**Preconditions**: TEST-TSHIRT has data in all attribute groups (attributes, shipping, identifiers, lifecycle, tags, media)
+**Test Steps**:
+1. Navigate to Summary tab for TEST-TSHIRT
+**Expected Results**: Tab displays 6 read-only sections: Product Attributes, Shipping, Identifiers, Lifecycle, Tags, Media
+**Pass/Fail**: PASS if all 6 sections present with data
+
+### TC-UAT-SUM-002: Summary is Read-Only
+**Priority**: Medium
+**Preconditions**: Summary tab open
+**Test Steps**:
+1. Attempt to edit any field on Summary tab
+**Expected Results**: No editable fields; all data displayed as text only
+**Pass/Fail**: PASS if no editable inputs present
+
+### TC-UAT-SUM-003: Summary Shows Correct Data
+**Priority**: High
+**Preconditions**: TEST-TSHIRT has known data in all sections
+**Test Steps**:
+1. Save known values in each tab (Shipping, Identifiers, Lifecycle, Tags, Media)
+2. Navigate to Summary tab
+**Expected Results**: All saved values visible in correct sections
+**Pass/Fail**: PASS if data matches what was saved
+
 ## Sign-off
 
 **Tested By**: _______________________ **Date**: ____________
