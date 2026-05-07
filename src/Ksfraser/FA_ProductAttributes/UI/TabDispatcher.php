@@ -86,6 +86,7 @@ class TabDispatcher
             'categories'  => _('Categories'),
             'values'      => _('Values'),
             'assignments' => _('Assignments'),
+            'shipping'    => _('Shipping'),
         ];
 
         echo '<div class="tab-nav">';
@@ -111,6 +112,16 @@ class TabDispatcher
             case 'categories':
                 $tabObj = new CategoriesTab($this->dao);
                 $tabObj->render();
+                break;
+
+            case 'shipping':
+                $stockId = (string)($_GET['stock_id'] ?? $_POST['stock_id'] ?? '');
+                $shippingTab = new ShippingAttributesTab(
+                    new \Ksfraser\FA_ProductAttributes\Dao\ShippingAttributesDao(
+                        $this->dao->getDbAdapter()
+                    )
+                );
+                $shippingTab->render($stockId);
                 break;
 
             default:

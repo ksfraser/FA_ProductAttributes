@@ -3,6 +3,7 @@
 namespace Ksfraser\FA_ProductAttributes\Actions;
 
 use Ksfraser\FA_ProductAttributes\Dao\ProductAttributesDao;
+use Ksfraser\FA_ProductAttributes\Dao\ShippingAttributesDao;
 use Ksfraser\FA_ProductAttributes\Variations\Dao\VariationsDao;
 use Ksfraser\FA_ProductAttributes\Variations\Actions\AssignParentAction;
 use Ksfraser\FA_ProductAttributes\Variations\Actions\CreateMissingVariationsAction;
@@ -23,17 +24,22 @@ class ActionHandler
     /** @var ProductAttributesDao */
     private $productAttributesDao;
 
+    /** @var ShippingAttributesDao */
+    private $shippingAttributesDao;
+
     /** @var DbAdapterInterface */
     private $dbAdapter;
 
     public function __construct(
         VariationsDao $variationsDao,
         ProductAttributesDao $productAttributesDao,
-        DbAdapterInterface $dbAdapter
+        DbAdapterInterface $dbAdapter,
+        ?ShippingAttributesDao $shippingAttributesDao = null
     ) {
-        $this->variationsDao        = $variationsDao;
-        $this->productAttributesDao = $productAttributesDao;
-        $this->dbAdapter            = $dbAdapter;
+        $this->variationsDao          = $variationsDao;
+        $this->productAttributesDao   = $productAttributesDao;
+        $this->dbAdapter              = $dbAdapter;
+        $this->shippingAttributesDao  = $shippingAttributesDao;
     }
 
     /**
@@ -94,6 +100,12 @@ class ActionHandler
 
                 case 'assign_parent':
                     return (new AssignParentAction($this->variationsDao, $this->dbAdapter))->handle($postData);
+
+                case 'upsert_shipping_attributes':
+                    if ($this->shippingAttributesDao !== null) {
+                        return (new UpsertShippingAttributesAction($this->shippingAttributesDao))->handle($postData);
+                    }
+                    return null;
 
                 default:
                     return null;

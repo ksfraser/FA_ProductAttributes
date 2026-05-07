@@ -17,6 +17,7 @@ $files = [
     __DIR__ . '/../src/Ksfraser/FA_ProductAttributes/Db/FrontAccountingDbAdapter.php',
     __DIR__ . '/../src/Ksfraser/FA_ProductAttributes/Db/PdoDbAdapter.php',
     __DIR__ . '/../src/Ksfraser/FA_ProductAttributes/Dao/ProductAttributesDao.php',
+    __DIR__ . '/../src/Ksfraser/FA_ProductAttributes/Dao/ShippingAttributesDao.php',
     __DIR__ . '/../src/Ksfraser/FA_ProductAttributes/Service/ProductAttributesService.php',
     __DIR__ . '/../src/Ksfraser/FA_ProductAttributes/Service/BulkOperationsService.php',
     __DIR__ . '/../src/Ksfraser/FA_ProductAttributes/Service/VariationsDashboardService.php',
@@ -34,6 +35,7 @@ $files = [
     __DIR__ . '/../src/Ksfraser/FA_ProductAttributes/Actions/UpdateCategoryAssignmentsAction.php',
     __DIR__ . '/../src/Ksfraser/FA_ProductAttributes/Actions/CreateChildAction.php',
     __DIR__ . '/../src/Ksfraser/FA_ProductAttributes/Actions/UpdateProductTypesAction.php',
+    __DIR__ . '/../src/Ksfraser/FA_ProductAttributes/Actions/UpsertShippingAttributesAction.php',
     __DIR__ . '/../src/Ksfraser/FA_ProductAttributes/Install/ComposerInstaller.php',
     __DIR__ . '/../src/Ksfraser/FA_ProductAttributes/Install/SeedDataInstaller.php',
     __DIR__ . '/../src/Ksfraser/FA_ProductAttributes/Integration/ItemsIntegration.php',
@@ -82,6 +84,7 @@ $files = [
     __DIR__ . '/../src/Ksfraser/FA_ProductAttributes/Controller/ProductAttributesTabController.php',
     // Additional UI classes (merged from FA_ProductAttributes_Core)
     __DIR__ . '/../src/Ksfraser/FA_ProductAttributes/UI/ProductAttributesTabUI.php',
+    __DIR__ . '/../src/Ksfraser/FA_ProductAttributes/UI/ShippingAttributesTab.php',
 ];
 
 foreach ($files as $file) {
