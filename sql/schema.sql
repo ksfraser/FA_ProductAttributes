@@ -120,3 +120,106 @@ CREATE TABLE IF NOT EXISTS 0_product_shipping_attributes (
   PRIMARY KEY (stock_id),
   KEY idx_hazardous (is_hazardous)
 );
+
+-- ─── Product Identifiers ─────────────────────────────────────────────────────
+-- Industry-standard barcodes, sourcing references and brand metadata.
+
+CREATE TABLE IF NOT EXISTS 0_product_identifiers (
+  stock_id          VARCHAR(32)   NOT NULL,
+  brand             VARCHAR(128)  NULL,
+  manufacturer      VARCHAR(128)  NULL,
+  mpn               VARCHAR(64)   NULL  COMMENT 'Manufacturer Part Number',
+  gtin              VARCHAR(14)   NULL  COMMENT 'GTIN-14 (covers EAN-13, UPC-A, ITF-14)',
+  ean               VARCHAR(13)   NULL  COMMENT 'EAN-13 barcode',
+  upc               VARCHAR(12)   NULL  COMMENT 'UPC-A barcode',
+  isbn              VARCHAR(17)   NULL  COMMENT 'ISBN-13 with dashes (books/media)',
+  asin              VARCHAR(16)   NULL  COMMENT 'Amazon Standard Identification Number',
+  internal_barcode  VARCHAR(64)   NULL  COMMENT 'Internal / custom scanning barcode',
+  supplier_part_no  VARCHAR(64)   NULL  COMMENT 'Primary supplier part number',
+  model_no          VARCHAR(64)   NULL,
+  updated_ts        TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP
+                                           ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (stock_id),
+  KEY idx_gtin (gtin),
+  KEY idx_upc  (upc),
+  KEY idx_ean  (ean)
+);
+
+-- ─── Product Lifecycle / Status ──────────────────────────────────────────────
+-- Storefront-visible status and promotion flags beyond FA's binary inactive.
+
+CREATE TABLE IF NOT EXISTS 0_product_lifecycle (
+  stock_id                VARCHAR(32)   NOT NULL,
+  status                  ENUM('active','draft','discontinued','archived')
+                                        NOT NULL DEFAULT 'active',
+  is_special_order        TINYINT(1)    NOT NULL DEFAULT 0
+                                        COMMENT 'Must be ordered; not kept in regular stock',
+  is_clearance            TINYINT(1)    NOT NULL DEFAULT 0
+                                        COMMENT 'Clearance / liquidation pricing',
+  is_out_of_stock_notice  TINYINT(1)    NOT NULL DEFAULT 0
+                                        COMMENT 'Show out-of-stock notice on storefront',
+  is_new_arrival          TINYINT(1)    NOT NULL DEFAULT 0,
+  is_bestseller           TINYINT(1)    NOT NULL DEFAULT 0,
+  is_featured             TINYINT(1)    NOT NULL DEFAULT 0
+                                        COMMENT 'Featured on homepage / collections',
+  is_seasonal             TINYINT(1)    NOT NULL DEFAULT 0,
+  available_from          DATE          NULL  COMMENT 'Pre-order availability date',
+  discontinue_on          DATE          NULL  COMMENT 'Planned discontinue date',
+  clearance_note          VARCHAR(255)  NULL,
+  updated_ts              TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP
+                                                 ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (stock_id),
+  KEY idx_status   (status),
+  KEY idx_featured (is_featured)
+);
+
+-- ─── Product Tags ─────────────────────────────────────────────────────────────
+-- Global tag dictionary.
+
+CREATE TABLE IF NOT EXISTS 0_product_tags (
+  id          INT UNSIGNED  NOT NULL AUTO_INCREMENT,
+  name        VARCHAR(128)  NOT NULL,
+  slug        VARCHAR(128)  NOT NULL  COMMENT 'URL-safe lower-case identifier',
+  updated_ts  TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP
+                                     ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  UNIQUE KEY uk_slug (slug)
+);
+
+-- Product to tag many-to-many.
+
+CREATE TABLE IF NOT EXISTS 0_product_tag_assignments (
+  stock_id  VARCHAR(32)   NOT NULL,
+  tag_id    INT UNSIGNED  NOT NULL,
+  PRIMARY KEY (stock_id, tag_id),
+  KEY idx_tag_id (tag_id)
+);
+
+-- ─── Product Media ────────────────────────────────────────────────────────────
+-- Images, videos, and documents attached to a product.
+
+CREATE TABLE IF NOT EXISTS 0_product_media (
+  id          INT UNSIGNED  NOT NULL AUTO_INCREMENT,
+  stock_id    VARCHAR(32)   NOT NULL,
+  url         VARCHAR(2048) NOT NULL,
+  alt_text    VARCHAR(255)  NULL,
+  sort_order  SMALLINT      NOT NULL DEFAULT 0,
+  media_type  ENUM('image','video','document') NOT NULL DEFAULT 'image',
+  is_primary  TINYINT(1)    NOT NULL DEFAULT 0,
+  updated_ts  TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP
+                                     ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  KEY idx_stock_id (stock_id),
+  KEY idx_primary  (stock_id, is_primary)
+);
+
+-- Which variations a media item applies to.
+-- Empty = applies to parent (or all) — row only inserted when explicitly scoped.
+
+CREATE TABLE IF NOT EXISTS 0_product_media_variation_links (
+  media_id            INT UNSIGNED  NOT NULL,
+  variation_stock_id  VARCHAR(32)   NOT NULL,
+  PRIMARY KEY (media_id, variation_stock_id),
+  KEY idx_variation (variation_stock_id)
+);
+

@@ -83,9 +83,14 @@ class TabDispatcher
     {
         // Tab navigation
         $tabs = [
+            'summary'     => _('Summary'),
             'categories'  => _('Categories'),
             'values'      => _('Values'),
             'assignments' => _('Assignments'),
+            'identifiers' => _('Identifiers'),
+            'lifecycle'   => _('Lifecycle'),
+            'tags'        => _('Tags'),
+            'media'       => _('Media'),
             'shipping'    => _('Shipping'),
         ];
 
@@ -131,6 +136,92 @@ class TabDispatcher
                     $variationsDao
                 );
                 $clonePanel->render($stockId);
+                break;
+
+            case 'identifiers':
+                $stockId        = (string)($_GET['stock_id'] ?? $_POST['stock_id'] ?? '');
+                $identifiersDao = new \Ksfraser\FA_ProductAttributes\Dao\ProductIdentifiersDao(
+                    $this->dao->getDbAdapter()
+                );
+                $identTab = new \Ksfraser\FA_ProductAttributes\UI\ProductIdentifiersTab($identifiersDao);
+                $identTab->render($stockId);
+                $variationsDao2 = new \Ksfraser\FA_ProductAttributes\Variations\Dao\VariationsDao(
+                    $this->dao->getDbAdapter(),
+                    $this->dao
+                );
+                $identClone = new \Ksfraser\FA_ProductAttributes\UI\IdentifiersClonePanel(
+                    $identifiersDao,
+                    $variationsDao2
+                );
+                $identClone->render($stockId);
+                break;
+
+            case 'lifecycle':
+                $stockId      = (string)($_GET['stock_id'] ?? $_POST['stock_id'] ?? '');
+                $lifecycleDao = new \Ksfraser\FA_ProductAttributes\Dao\ProductLifecycleDao(
+                    $this->dao->getDbAdapter()
+                );
+                $lcTab = new \Ksfraser\FA_ProductAttributes\UI\ProductLifecycleTab($lifecycleDao);
+                $lcTab->render($stockId);
+                $variationsDao3 = new \Ksfraser\FA_ProductAttributes\Variations\Dao\VariationsDao(
+                    $this->dao->getDbAdapter(),
+                    $this->dao
+                );
+                $lcClone = new \Ksfraser\FA_ProductAttributes\UI\LifecycleClonePanel(
+                    $lifecycleDao,
+                    $variationsDao3
+                );
+                $lcClone->render($stockId);
+                break;
+
+            case 'tags':
+                $stockId  = (string)($_GET['stock_id'] ?? $_POST['stock_id'] ?? '');
+                $tagsDao  = new \Ksfraser\FA_ProductAttributes\Dao\ProductTagsDao(
+                    $this->dao->getDbAdapter()
+                );
+                $tagsTab = new \Ksfraser\FA_ProductAttributes\UI\ProductTagsTab($tagsDao);
+                $tagsTab->render($stockId);
+                break;
+
+            case 'media':
+                $stockId       = (string)($_GET['stock_id'] ?? $_POST['stock_id'] ?? '');
+                $mediaDao      = new \Ksfraser\FA_ProductAttributes\Dao\ProductMediaDao(
+                    $this->dao->getDbAdapter()
+                );
+                $variationsDao4 = new \Ksfraser\FA_ProductAttributes\Variations\Dao\VariationsDao(
+                    $this->dao->getDbAdapter(),
+                    $this->dao
+                );
+                $mediaTab = new \Ksfraser\FA_ProductAttributes\UI\ProductMediaTab($mediaDao, $variationsDao4);
+                $mediaTab->render($stockId);
+                break;
+
+            case 'summary':
+                $stockId         = (string)($_GET['stock_id'] ?? $_POST['stock_id'] ?? '');
+                $shippingDaoS    = new \Ksfraser\FA_ProductAttributes\Dao\ShippingAttributesDao(
+                    $this->dao->getDbAdapter()
+                );
+                $identifiersDaoS = new \Ksfraser\FA_ProductAttributes\Dao\ProductIdentifiersDao(
+                    $this->dao->getDbAdapter()
+                );
+                $lifecycleDaoS   = new \Ksfraser\FA_ProductAttributes\Dao\ProductLifecycleDao(
+                    $this->dao->getDbAdapter()
+                );
+                $tagsDaoS        = new \Ksfraser\FA_ProductAttributes\Dao\ProductTagsDao(
+                    $this->dao->getDbAdapter()
+                );
+                $mediaDaoS       = new \Ksfraser\FA_ProductAttributes\Dao\ProductMediaDao(
+                    $this->dao->getDbAdapter()
+                );
+                $summaryTab = new \Ksfraser\FA_ProductAttributes\UI\ProductAttributesSummaryTab(
+                    $this->dao,
+                    $identifiersDaoS,
+                    $lifecycleDaoS,
+                    $tagsDaoS,
+                    $mediaDaoS,
+                    $shippingDaoS
+                );
+                $summaryTab->render($stockId);
                 break;
 
             default:
