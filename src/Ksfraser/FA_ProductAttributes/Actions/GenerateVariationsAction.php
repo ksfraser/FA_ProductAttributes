@@ -3,6 +3,7 @@
 namespace Ksfraser\FA_ProductAttributes\Actions;
 
 use Ksfraser\FA_ProductAttributes\Dao\ProductAttributesDao;
+use Ksfraser\FA_ProductAttributes\Dao\ShippingAttributesDao;
 use Ksfraser\ModulesDAO\Db\DbAdapterInterface;
 
 /**
@@ -19,10 +20,17 @@ class GenerateVariationsAction
     /** @var DbAdapterInterface */
     private $dbAdapter;
 
-    public function __construct(ProductAttributesDao $dao, DbAdapterInterface $dbAdapter)
-    {
-        $this->dao       = $dao;
-        $this->dbAdapter = $dbAdapter;
+    /** @var ShippingAttributesDao|null */
+    private $shippingDao;
+
+    public function __construct(
+        ProductAttributesDao $dao,
+        DbAdapterInterface $dbAdapter,
+        ShippingAttributesDao $shippingDao = null
+    ) {
+        $this->dao        = $dao;
+        $this->dbAdapter  = $dbAdapter;
+        $this->shippingDao = $shippingDao;
     }
 
     /**
@@ -35,7 +43,8 @@ class GenerateVariationsAction
             /** @var object $delegate */
             $delegate = new \Ksfraser\FA_ProductAttributes\Variations\Actions\GenerateVariationsAction(
                 $this->dao,
-                $this->dbAdapter
+                $this->dbAdapter,
+                $this->shippingDao
             );
             return $delegate->handle($postData);
         }

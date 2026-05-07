@@ -3,6 +3,7 @@
 namespace Ksfraser\FA_ProductAttributes\Variations\Actions;
 
 use Ksfraser\FA_ProductAttributes\Dao\ProductAttributesDao;
+use Ksfraser\FA_ProductAttributes\Dao\ShippingAttributesDao;
 use Ksfraser\ModulesDAO\Db\DbAdapterInterface;
 use Ksfraser\FA_ProductAttributes\Variations\UI\RoyalOrderHelper;
 
@@ -13,10 +14,17 @@ class GenerateVariationsAction
     /** @var DbAdapterInterface */
     private $dbAdapter;
 
-    public function __construct(ProductAttributesDao $dao, DbAdapterInterface $dbAdapter)
-    {
-        $this->dao = $dao;
-        $this->dbAdapter = $dbAdapter;
+    /** @var ShippingAttributesDao|null */
+    private $shippingDao;
+
+    public function __construct(
+        ProductAttributesDao $dao,
+        DbAdapterInterface $dbAdapter,
+        ShippingAttributesDao $shippingDao = null
+    ) {
+        $this->dao        = $dao;
+        $this->dbAdapter  = $dbAdapter;
+        $this->shippingDao = $shippingDao;
     }
 
     public function handle(array $postData): string
@@ -76,6 +84,9 @@ class GenerateVariationsAction
 
                 // Create the variation product
                 $this->createVariationProduct($parentProduct, $variationStockId, $variationDescription);
+
+                // Clone parent shipping attributes to the new variation (if available)
+                $this->cloneShippingIfAvailable($stockId, $variationStockId);
 
                 $createdCount++;
             } catch (\Exception $e) {
@@ -178,6 +189,24 @@ class GenerateVariationsAction
             ['stock_id' => $stockId]
         );
         return ($result[0]['count'] ?? 0) > 0;
+    }
+
+    /**
+     * Copy the parent's shipping attributes to the child, if a ShippingAttributesDao
+     * was provided and the parent has a shipping record.
+     */
+    private function cloneShippingIfAvailable(string $parentId, string $childId): void
+    {
+        if ($this->shippingDao === null) {
+            return;
+        }
+        $parentShipping = $this->shippingDao->get($parentId);
+        if ($parentShipping === null) {
+            return;
+        }
+        $data = $parentShipping;
+        unset($data['stock_id']);
+        $this->shippingDao->upsert($childId, $data);
     }
 
     private function createVariationProduct(array $parentProduct, string $variationStockId, string $variationDescription): void

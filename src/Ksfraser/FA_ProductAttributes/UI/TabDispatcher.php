@@ -115,13 +115,22 @@ class TabDispatcher
                 break;
 
             case 'shipping':
-                $stockId = (string)($_GET['stock_id'] ?? $_POST['stock_id'] ?? '');
-                $shippingTab = new ShippingAttributesTab(
-                    new \Ksfraser\FA_ProductAttributes\Dao\ShippingAttributesDao(
-                        $this->dao->getDbAdapter()
-                    )
+                $stockId     = (string)($_GET['stock_id'] ?? $_POST['stock_id'] ?? '');
+                $shippingDao = new \Ksfraser\FA_ProductAttributes\Dao\ShippingAttributesDao(
+                    $this->dao->getDbAdapter()
                 );
+                $shippingTab = new ShippingAttributesTab($shippingDao);
                 $shippingTab->render($stockId);
+                // Render the "copy to variations" panel beneath the main form
+                $variationsDao = new \Ksfraser\FA_ProductAttributes\Variations\Dao\VariationsDao(
+                    $this->dao->getDbAdapter(),
+                    $this->dao
+                );
+                $clonePanel = new \Ksfraser\FA_ProductAttributes\UI\ShippingClonePanel(
+                    $shippingDao,
+                    $variationsDao
+                );
+                $clonePanel->render($stockId);
                 break;
 
             default:

@@ -3,6 +3,7 @@
 namespace Ksfraser\FA_ProductAttributes\Variations\Actions;
 
 use Ksfraser\FA_ProductAttributes\Dao\ProductAttributesDao;
+use Ksfraser\FA_ProductAttributes\Dao\ShippingAttributesDao;
 use Ksfraser\FA_ProductAttributes\Variations\Dao\VariationsDao;
 use Ksfraser\ModulesDAO\Db\DbAdapterInterface;
 
@@ -23,14 +24,19 @@ class CreateMissingVariationsAction
     /** @var DbAdapterInterface */
     private $db;
 
+    /** @var ShippingAttributesDao|null */
+    private $shippingDao;
+
     public function __construct(
         VariationsDao $variationsDao,
         ProductAttributesDao $coreDao,
-        DbAdapterInterface $db
+        DbAdapterInterface $db,
+        ShippingAttributesDao $shippingDao = null
     ) {
         $this->variationsDao = $variationsDao;
         $this->coreDao       = $coreDao;
         $this->db            = $db;
+        $this->shippingDao   = $shippingDao;
     }
 
     /**
@@ -90,6 +96,7 @@ class CreateMissingVariationsAction
             try {
                 $this->variationsDao->createChildProduct($childId, $parentData);
                 $this->variationsDao->setParentRelationship($childId, $stockId);
+                $this->cloneShippingIfAvailable($stockId, $childId);
                 $created++;
             } catch (\Exception $e) {
                 $errors[] = $e->getMessage();
@@ -102,6 +109,24 @@ class CreateMissingVariationsAction
         }
 
         return $message;
+    }
+
+    /**
+     * Copy the parent's shipping attributes to the child, if a ShippingAttributesDao
+     * was provided and the parent has a shipping record.
+     */
+    private function cloneShippingIfAvailable(string $parentId, string $childId): void
+    {
+        if ($this->shippingDao === null) {
+            return;
+        }
+        $parentShipping = $this->shippingDao->get($parentId);
+        if ($parentShipping === null) {
+            return;
+        }
+        $data = $parentShipping;
+        unset($data['stock_id']);
+        $this->shippingDao->upsert($childId, $data);
     }
 
     /** Build all cartesian-product combinations from $categoryValues */

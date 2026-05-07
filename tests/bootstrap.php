@@ -36,6 +36,7 @@ $files = [
     __DIR__ . '/../src/Ksfraser/FA_ProductAttributes/Actions/CreateChildAction.php',
     __DIR__ . '/../src/Ksfraser/FA_ProductAttributes/Actions/UpdateProductTypesAction.php',
     __DIR__ . '/../src/Ksfraser/FA_ProductAttributes/Actions/UpsertShippingAttributesAction.php',
+    __DIR__ . '/../src/Ksfraser/FA_ProductAttributes/Actions/CloneShippingToVariationsAction.php',
     __DIR__ . '/../src/Ksfraser/FA_ProductAttributes/Install/ComposerInstaller.php',
     __DIR__ . '/../src/Ksfraser/FA_ProductAttributes/Install/SeedDataInstaller.php',
     __DIR__ . '/../src/Ksfraser/FA_ProductAttributes/Integration/ItemsIntegration.php',
@@ -85,6 +86,7 @@ $files = [
     // Additional UI classes (merged from FA_ProductAttributes_Core)
     __DIR__ . '/../src/Ksfraser/FA_ProductAttributes/UI/ProductAttributesTabUI.php',
     __DIR__ . '/../src/Ksfraser/FA_ProductAttributes/UI/ShippingAttributesTab.php',
+    __DIR__ . '/../src/Ksfraser/FA_ProductAttributes/UI/ShippingClonePanel.php',
 ];
 
 foreach ($files as $file) {

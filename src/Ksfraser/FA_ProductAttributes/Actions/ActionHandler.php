@@ -5,6 +5,7 @@ namespace Ksfraser\FA_ProductAttributes\Actions;
 use Ksfraser\FA_ProductAttributes\Dao\ProductAttributesDao;
 use Ksfraser\FA_ProductAttributes\Dao\ShippingAttributesDao;
 use Ksfraser\FA_ProductAttributes\Variations\Dao\VariationsDao;
+use Ksfraser\FA_ProductAttributes\Actions\CloneShippingToVariationsAction;
 use Ksfraser\FA_ProductAttributes\Variations\Actions\AssignParentAction;
 use Ksfraser\FA_ProductAttributes\Variations\Actions\CreateMissingVariationsAction;
 use Ksfraser\FA_ProductAttributes\Variations\Actions\MakeInactiveAction;
@@ -81,7 +82,7 @@ class ActionHandler
                     return (new DeleteValueAction($this->variationsDao, $this->dbAdapter))->handle($postData);
 
                 case 'generate_variations':
-                    return (new GenerateVariationsAction($this->productAttributesDao, $this->dbAdapter))->handle($postData);
+                    return (new GenerateVariationsAction($this->productAttributesDao, $this->dbAdapter, $this->shippingAttributesDao))->handle($postData);
 
                 case 'create_child':
                     return (new CreateChildAction($this->productAttributesDao, $this->dbAdapter))->handle($postData);
@@ -96,7 +97,7 @@ class ActionHandler
                     return (new ReactivateVariationsAction($this->variationsDao, $this->dbAdapter))->handle($postData);
 
                 case 'create_missing_variations':
-                    return (new CreateMissingVariationsAction($this->variationsDao, $this->productAttributesDao, $this->dbAdapter))->handle($postData);
+                    return (new CreateMissingVariationsAction($this->variationsDao, $this->productAttributesDao, $this->dbAdapter, $this->shippingAttributesDao))->handle($postData);
 
                 case 'assign_parent':
                     return (new AssignParentAction($this->variationsDao, $this->dbAdapter))->handle($postData);
@@ -104,6 +105,12 @@ class ActionHandler
                 case 'upsert_shipping_attributes':
                     if ($this->shippingAttributesDao !== null) {
                         return (new UpsertShippingAttributesAction($this->shippingAttributesDao))->handle($postData);
+                    }
+                    return null;
+
+                case 'clone_shipping_to_variations':
+                    if ($this->shippingAttributesDao !== null) {
+                        return (new CloneShippingToVariationsAction($this->shippingAttributesDao))->handle($postData);
                     }
                     return null;
 
