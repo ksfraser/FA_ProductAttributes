@@ -11,8 +11,7 @@
          verbose="true">
     <testsuites>
         <testsuite name="root">
-            <directory>tests</directory>
-            <exclude>tests/composer-lib</exclude>
+            <directory>plugin-tests</directory>
         </testsuite>
         <testsuite name="composer-lib">
             <directory>composer-lib/tests</directory>
