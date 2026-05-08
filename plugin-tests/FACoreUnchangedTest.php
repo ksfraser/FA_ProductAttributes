@@ -31,7 +31,6 @@ class FACoreUnchangedTest extends TestCase
         'src',
         'plugin-tests',
         'tests',
-        'composer-lib',
         'famock',
         'ksf_Rest_API',
         'ksf_SchemaManager',

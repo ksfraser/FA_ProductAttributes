@@ -1,4 +1,5 @@
 /vendor/
+/tests/.phpunit.cache/
 /data/
 /public/.phpunit.result.cache
 fa_product_attributes_variations/

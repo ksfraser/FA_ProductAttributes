@@ -3,11 +3,11 @@
 // Standalone admin entry point.
 // Run: php -S localhost:8000 -t public
 
-$autoload = __DIR__ . '/../composer-lib/vendor/autoload.php';
+$autoload = __DIR__ . '/../vendor/autoload.php';
 if (!is_file($autoload)) {
     header('Content-Type: text/plain; charset=utf-8');
     echo "Missing composer dependencies.\n\n";
-    echo "Run:\n  cd composer-lib\n  composer install\n";
+  echo "Run:\n  composer install\n";
     exit(1);
 }
 require_once $autoload;

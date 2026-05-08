@@ -210,6 +210,9 @@ if (!function_exists('fa_hooks')) {
         // Mock hook manager for testing
         if (!isset($GLOBALS['mock_fa_hooks'])) {
             $GLOBALS['mock_fa_hooks'] = new class {
+                private $filters = [];
+                private $actions = [];
+
                 public function apply_filters($filter, $value, ...$args) {
                     return $value; // Return unchanged for testing
                 }
@@ -217,10 +220,48 @@ if (!function_exists('fa_hooks')) {
                     // Do nothing for testing
                 }
                 public function add_filter($filter, $callback, $priority = 10) {
-                    // Do nothing for testing
+                    if (!isset($this->filters[$filter])) {
+                        $this->filters[$filter] = [];
+                    }
+                    if (!isset($this->filters[$filter][$priority])) {
+                        $this->filters[$filter][$priority] = [];
+                    }
+                    $this->filters[$filter][$priority][] = $callback;
                 }
                 public function add_action($action, $callback, $priority = 10) {
-                    // Do nothing for testing
+                    if (!isset($this->actions[$action])) {
+                        $this->actions[$action] = [];
+                    }
+                    if (!isset($this->actions[$action][$priority])) {
+                        $this->actions[$action][$priority] = [];
+                    }
+                    $this->actions[$action][$priority][] = $callback;
+                }
+                public function has_filter($filter, $callback) {
+                    if (!isset($this->filters[$filter])) {
+                        return false;
+                    }
+                    foreach ($this->filters[$filter] as $callbacks) {
+                        foreach ($callbacks as $registered) {
+                            if ($registered === $callback) {
+                                return true;
+                            }
+                        }
+                    }
+                    return false;
+                }
+                public function has_action($action, $callback) {
+                    if (!isset($this->actions[$action])) {
+                        return false;
+                    }
+                    foreach ($this->actions[$action] as $callbacks) {
+                        foreach ($callbacks as $registered) {
+                            if ($registered === $callback) {
+                                return true;
+                            }
+                        }
+                    }
+                    return false;
                 }
                 public function call_hook($hook_name, ...$args) {
                     // Return the first argument (value) unchanged, or null if no args

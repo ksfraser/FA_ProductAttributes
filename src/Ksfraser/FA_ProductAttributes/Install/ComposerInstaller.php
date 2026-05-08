@@ -3,24 +3,24 @@
 namespace Ksfraser\FA_ProductAttributes\Install;
 
 /**
- * Single Responsibility: Checks and runs Composer installation for the module's composer-lib directory.
+ * Single Responsibility: Checks and runs Composer installation for the module root.
  */
 class ComposerInstaller
 {
     /** @var string Absolute path to the module root */
     private $modulePath;
 
-    /** @var string Path to the composer.json inside composer-lib/ */
+    /** @var string Path to the composer.json inside the module root */
     private $composerJsonPath;
 
-    /** @var string Path to the vendor/ directory inside composer-lib/ */
+    /** @var string Path to the vendor/ directory inside the module root */
     private $vendorPath;
 
     public function __construct(string $modulePath)
     {
         $this->modulePath       = $modulePath;
-        $this->composerJsonPath = $modulePath . DIRECTORY_SEPARATOR . 'composer-lib' . DIRECTORY_SEPARATOR . 'composer.json';
-        $this->vendorPath       = $modulePath . DIRECTORY_SEPARATOR . 'composer-lib' . DIRECTORY_SEPARATOR . 'vendor';
+        $this->composerJsonPath = $modulePath . DIRECTORY_SEPARATOR . 'composer.json';
+        $this->vendorPath       = $modulePath . DIRECTORY_SEPARATOR . 'vendor';
     }
 
     /**
@@ -48,7 +48,7 @@ class ComposerInstaller
     }
 
     /**
-     * Run "composer install" inside the composer-lib directory.
+    * Run "composer install" inside the module root directory.
      *
      * @return array{success: bool, message: string, output: string}
      */

@@ -18,8 +18,8 @@ tests/
 ## Running Tests
 
 ```bash
-# From composer-lib directory
-./phpunit.phar
+# From repository root
+php vendor/bin/phpunit
 
 # Or if phpunit is installed globally
 phpunit

@@ -455,8 +455,7 @@ The module includes comprehensive test coverage with 140+ unit tests for the mai
 
 ```bash
 # Run main module tests
-cd composer-lib
-php vendor/bin/phpunit tests/
+php vendor/bin/phpunit
 
 # Run extended hook system tests
 cd ../fa-hooks
@@ -466,7 +465,7 @@ php test_containers.php  # Manual validation tests
 php vendor/bin/phpunit tests/ProductAttributesDaoTest.php
 
 # Run with coverage report
-php vendor/bin/phpunit tests/ --coverage-html coverage/
+php vendor/bin/phpunit --coverage-html coverage/
 ```
 
 ### Test Structure

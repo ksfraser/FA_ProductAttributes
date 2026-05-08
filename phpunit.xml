@@ -12,9 +12,7 @@
     <testsuites>
         <testsuite name="root">
             <directory>plugin-tests</directory>
-        </testsuite>
-        <testsuite name="composer-lib">
-            <directory>composer-lib/tests</directory>
+            <directory>tests</directory>
         </testsuite>
     </testsuites>
 

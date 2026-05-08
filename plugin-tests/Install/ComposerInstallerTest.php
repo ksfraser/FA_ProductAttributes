@@ -22,12 +22,8 @@ class ComposerInstallerTest extends TestCase
         $this->tempDir = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'fa_product_attributes_test_' . uniqid();
         mkdir($this->tempDir);
 
-        // Create composer-lib subdirectory
-        $composerLibDir = $this->tempDir . DIRECTORY_SEPARATOR . 'composer-lib';
-        mkdir($composerLibDir);
-
         // Create a basic composer.json
-        $this->composerJsonPath = $composerLibDir . DIRECTORY_SEPARATOR . 'composer.json';
+        $this->composerJsonPath = $this->tempDir . DIRECTORY_SEPARATOR . 'composer.json';
         file_put_contents($this->composerJsonPath, json_encode([
             'name' => 'ksfraser/fa-product-attributes',
             'description' => 'Test package',
