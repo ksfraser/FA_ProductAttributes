@@ -21,8 +21,16 @@ if (!defined('SS_PRODUCT_ATTRIBUTES')) {
     define('SS_PRODUCT_ATTRIBUTES', 115 << 8);
 }
 
+if (!defined('SS_FA_ProductAttributes')) {
+    define('SS_FA_ProductAttributes', SS_PRODUCT_ATTRIBUTES);
+}
+
 if (!defined('SA_PRODUCT_ATTRIBUTES')) {
     define('SA_PRODUCT_ATTRIBUTES', SS_PRODUCT_ATTRIBUTES | 1);
+}
+
+if (!defined('SA_FA_ProductAttributes')) {
+    define('SA_FA_ProductAttributes', SA_PRODUCT_ATTRIBUTES);
 }
 
 class hooks_FA_ProductAttributes extends hooks
@@ -30,13 +38,9 @@ class hooks_FA_ProductAttributes extends hooks
     /** @var string */
     var $module_name = 'FA_ProductAttributes';
 
-    /** @var bool */
-    private static $bootstrapped = false;
-
     public function __construct()
     {
         $this->load_autoloader();
-        $this->bootstrap_hooks();
     }
 
     public function install()
@@ -64,6 +68,7 @@ class hooks_FA_ProductAttributes extends hooks
     {
         $security_areas = array(
             'SA_PRODUCT_ATTRIBUTES' => array(SS_PRODUCT_ATTRIBUTES | 1, _('Product Attributes')),
+            'SA_FA_ProductAttributes' => array(SS_PRODUCT_ATTRIBUTES | 1, _('Product Attributes')),
         );
         $security_sections = array(
             SS_PRODUCT_ATTRIBUTES => _('Product Attributes'),
@@ -74,14 +79,14 @@ class hooks_FA_ProductAttributes extends hooks
 
     public function activate()
     {
-        $this->bootstrap_hooks();
+        $this->register_hooks();
         return true;
     }
 
     public function activate_extension($company, $check_only = true)
     {
         if (!$check_only) {
-            $this->bootstrap_hooks();
+            $this->register_hooks();
         }
 
         return true;
@@ -90,33 +95,72 @@ class hooks_FA_ProductAttributes extends hooks
     public function deactivate()
     {
         unset($GLOBALS['fa_product_attributes_services_cache']);
-        self::$bootstrapped = false;
         return true;
     }
 
-    public function item_display_tab_headers($tabCollection, $stockId = '')
+    public function register_hooks()
     {
-        if (!is_object($tabCollection) || !method_exists($tabCollection, 'createTab')) {
-            return $tabCollection;
-        }
-
-        return $this->get_items_integration()->addTabHeaders($tabCollection, (string)$stockId);
+        // FA hook_invoke_all() calls hook methods directly on this class.
+        // Keep this lifecycle method for parity with the historical implementation.
     }
 
-    public function item_display_tab_content($current, $stockId = '', $tab = '')
+    public function item_display_tab_headers($tabs, $stockId = '')
     {
-        $handled = $this->get_items_integration()->getTabContent((string)$stockId, (string)$tab);
-        if ($handled && is_bool($current)) {
-            return true;
+        if ($this->can_check_access() && !$this->has_product_attributes_access()) {
+            return $tabs;
         }
 
-        return $current;
+        if (is_object($tabs) && method_exists($tabs, 'createTab')) {
+            return $this->get_items_integration()->addTabHeaders($tabs, (string)$stockId);
+        }
+
+        if (!is_array($tabs)) {
+            return $tabs;
+        }
+
+        $resolvedStockId = $stockId;
+        if ($resolvedStockId === '' && isset($_POST['stock_id'])) {
+            $resolvedStockId = (string)$_POST['stock_id'];
+        }
+
+        $tabs['product_attributes'] = array(
+            _('Product Attributes'),
+            $resolvedStockId
+        );
+
+        return $tabs;
+    }
+
+    public function item_display_tab_content($stockId = '', $selectedTab = '')
+    {
+        $this->load_plugins_on_demand();
+
+        if (!preg_match('/^product_attributes/', (string)$selectedTab)) {
+            return false;
+        }
+        if ($this->can_check_access() && !$this->has_product_attributes_access()) {
+            return false;
+        }
+
+        $this->get_items_integration()->getTabContent((string)$stockId, (string)$selectedTab);
+
+        return true;
     }
 
     public function pre_item_write($itemData, $stockId = '')
     {
+        $this->load_plugins_on_demand();
+
+        if ($this->can_check_access() && !$this->has_product_attributes_access()) {
+            return is_array($itemData) ? $itemData : array();
+        }
+
         if (!is_array($itemData)) {
             $itemData = array();
+        }
+
+        if ($stockId === '' && isset($itemData['stock_id'])) {
+            $stockId = (string)$itemData['stock_id'];
         }
 
         return $this->get_product_attributes_handler()
@@ -125,8 +169,16 @@ class hooks_FA_ProductAttributes extends hooks
 
     public function pre_item_delete($stockId = '')
     {
+        $this->load_plugins_on_demand();
+
+        if ($this->can_check_access() && !$this->has_product_attributes_access()) {
+            return null;
+        }
+
         $this->get_product_attributes_handler()
             ->handle_product_attributes_delete((string)$stockId);
+
+        return null;
     }
 
     private function load_autoloader()
@@ -140,29 +192,22 @@ class hooks_FA_ProductAttributes extends hooks
         }
     }
 
-    private function bootstrap_hooks()
+    private function load_plugins_on_demand()
     {
-        if (self::$bootstrapped) {
-            return;
-        }
-
-        if (function_exists('fa_hooks')) {
-            $hooksManager = fa_hooks();
-            if (is_object($hooksManager)
-                && method_exists($hooksManager, 'add_filter')
-                && method_exists($hooksManager, 'add_action')) {
-                $hooksManager->add_filter('item_display_tab_headers', array($this, 'item_display_tab_headers'), 10);
-                $hooksManager->add_filter('item_display_tab_content', array($this, 'item_display_tab_content'), 10);
-                $hooksManager->add_filter('pre_item_write', array($this, 'pre_item_write'), 10);
-                $hooksManager->add_action('pre_item_delete', array($this, 'pre_item_delete'), 10);
-            }
-        }
-
         if (class_exists(PluginLoader::class)) {
             PluginLoader::getInstance()->loadPluginsOnDemand();
         }
+    }
 
-        self::$bootstrapped = true;
+    private function can_check_access()
+    {
+        return function_exists('user_check_access');
+    }
+
+    private function has_product_attributes_access()
+    {
+        return user_check_access('SA_PRODUCT_ATTRIBUTES')
+            || user_check_access('SA_FA_ProductAttributes');
     }
 
     private function get_items_integration()
