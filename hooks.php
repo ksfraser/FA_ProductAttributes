@@ -5,6 +5,7 @@ use Ksfraser\FA_ProductAttributes\Dao\ShippingAttributesDao;
 use Ksfraser\FA_ProductAttributes\Dao\ProductIdentifiersDao;
 use Ksfraser\FA_ProductAttributes\Dao\ProductLifecycleDao;
 use Ksfraser\FA_ProductAttributes\Dao\ProductMediaDao;
+use Ksfraser\FA_ProductAttributes\Dao\MediaAttachmentsDao;
 use Ksfraser\FA_ProductAttributes\Dao\ProductWarrantyDao;
 use Ksfraser\FA_ProductAttributes\Dao\LifecycleFlagDefsDao;
 use Ksfraser\FA_ProductAttributes\Handler\ProductAttributesHandler;
@@ -262,6 +263,7 @@ class hooks_FA_ProductAttributes extends hooks
         $services['identifiers_dao']->delete((string)$stockId);
         $services['lifecycle_dao']->delete((string)$stockId);
         $services['warranty_dao']->delete((string)$stockId);
+        $services['media_attachments_dao']->deleteByStockId((string)$stockId);
         $services['lifecycle_flag_defs_dao']->deleteAssignments((string)$stockId);
 
         return null;
@@ -435,102 +437,76 @@ class hooks_FA_ProductAttributes extends hooks
 
     private function render_media_tab(string $stockId): void
     {
-        $services  = $this->get_services();
-        $mediaDao  = $services['media_dao'];
+        $services      = $this->get_services();
+        $attachmentsDao = $services['media_attachments_dao'];
 
         // Handle media POST actions
         if ($_SERVER['REQUEST_METHOD'] === 'POST' && $stockId !== '') {
             $action = $_POST['action'] ?? '';
-            if ($action === 'add_product_media') {
+            if ($action === 'add_media_attachment') {
                 $url = trim((string)($_POST['url'] ?? ''));
                 if ($url !== '') {
-                    $altText     = trim((string)($_POST['alt_text'] ?? ''));
-                    $sortOrder   = (int)($_POST['sort_order'] ?? 0);
-                    $rawType     = (string)($_POST['media_type'] ?? 'image');
-                    $validTypes  = ['image', 'video', 'document'];
-                    $mediaType   = in_array($rawType, $validTypes, true) ? $rawType : 'image';
-                    $isPrimary   = (bool)($_POST['is_primary'] ?? false);
-                    $downloadUrl = trim((string)($_POST['download_url'] ?? ''));
-                    $downloadUrl = $downloadUrl !== '' ? $downloadUrl : null;
-
-                    $mediaDao->addMedia($stockId, $url, $altText, $sortOrder, $mediaType, $isPrimary, $downloadUrl);
+                    $description = trim((string)($_POST['description'] ?? ''));
+                    $attachmentsDao->add($stockId, $url, $description);
                 }
-                // Redirect to avoid re-submit
                 header('Location: ' . $_SERVER['REQUEST_URI']);
                 exit;
             }
-            if ($action === 'delete_product_media') {
-                $mediaId = (int)($_POST['media_id'] ?? 0);
-                if ($mediaId > 0) {
-                    $mediaDao->deleteMedia($mediaId);
+            if ($action === 'delete_media_attachment') {
+                $attachId = (int)($_POST['attachment_id'] ?? 0);
+                if ($attachId > 0) {
+                    $attachmentsDao->delete($attachId);
                 }
                 header('Location: ' . $_SERVER['REQUEST_URI']);
                 exit;
             }
         }
 
-        $items = ($stockId !== '') ? $mediaDao->getProductMedia($stockId) : [];
+        $items = ($stockId !== '') ? $attachmentsDao->listByStockId($stockId) : [];
 
-        echo '<fieldset><legend>' . _('Media Gallery') . '</legend>';
+        echo '<fieldset><legend>' . _('Media Attachments') . '</legend>';
 
         if (empty($items)) {
-            echo '<p>' . _('No media added yet.') . '</p>';
+            echo '<p>' . _('No attachments added yet.') . '</p>';
         } else {
+            echo '<table class="tablestyle2">';
+            echo '<tr><th>' . _('URL') . '</th><th>' . _('Description') . '</th>'
+                . '<th>' . _('Date') . '</th><th></th></tr>';
             foreach ($items as $item) {
-                $mediaId   = (int)($item['id'] ?? 0);
-                $url       = htmlspecialchars((string)($item['url'] ?? ''));
-                $altText   = htmlspecialchars((string)($item['alt_text'] ?? ''));
-                $mediaType = htmlspecialchars((string)($item['media_type'] ?? 'image'));
-                $isPrimary = !empty($item['is_primary']);
-                $dlUrl     = htmlspecialchars((string)($item['download_url'] ?? ''));
-
-                echo '<div style="border:1px solid #ccc;padding:8px;margin-bottom:8px;">';
-                echo '<strong>' . strtoupper($mediaType) . '</strong>';
-                if ($isPrimary) {
-                    echo ' &nbsp;<span style="color:green;">&#9733; ' . _('Primary') . '</span>';
-                }
-                echo '<br><a href="' . $url . '" target="_blank">' . $url . '</a>';
-                if ($altText !== '') {
-                    echo '<br><em>' . $altText . '</em>';
-                }
-                if ($dlUrl !== '') {
-                    echo '<br>' . _('Download') . ': <a href="' . $dlUrl . '" target="_blank">' . $dlUrl . '</a>';
-                }
-                echo '<form method="post" action="" style="margin-top:4px;">';
-                echo '<input type="hidden" name="action"   value="delete_product_media">';
-                echo '<input type="hidden" name="media_id" value="' . $mediaId . '">';
+                $id   = (int)($item['id'] ?? 0);
+                $url  = htmlspecialchars((string)($item['url'] ?? ''));
+                $desc = htmlspecialchars((string)($item['description'] ?? ''));
+                $date = htmlspecialchars((string)($item['created_date'] ?? ''));
+                echo '<tr>';
+                echo '<td><a href="' . $url . '" target="_blank">' . $url . '</a></td>';
+                echo '<td>' . $desc . '</td>';
+                echo '<td>' . $date . '</td>';
+                echo '<td><form method="post" action="" style="display:inline">';
+                echo '<input type="hidden" name="action" value="delete_media_attachment">';
+                echo '<input type="hidden" name="attachment_id" value="' . $id . '">';
                 echo '<input type="submit" value="' . _('Delete') . '" style="color:red" '
-                    . 'onclick="return confirm(\'' . _('Delete this media item?') . '\')">';
-                echo '</form>';
-                echo '</div>';
+                    . 'onclick="return confirm(\'' . _('Delete this attachment?') . '\')">';
+                echo '</form></td>';
+                echo '</tr>';
             }
+            echo '</table>';
         }
 
         echo '</fieldset>';
 
-        echo '<fieldset><legend>' . _('Add Media') . '</legend>';
+        echo '<fieldset><legend>' . _('Add Attachment') . '</legend>';
         echo '<form method="post" action="">';
-        echo '<input type="hidden" name="action"   value="add_product_media">';
+        echo '<input type="hidden" name="action"   value="add_media_attachment">';
         echo '<input type="hidden" name="stock_id" value="' . htmlspecialchars($stockId) . '">';
         echo '<table class="tablestyle_noborder">';
         echo '<tr><td>' . _('URL') . ' <span style="color:red">*</span></td>';
-        echo '<td><input type="url" name="url" required maxlength="2048" style="width:100%" placeholder="https://..."></td></tr>';
-        echo '<tr><td>' . _('Alt Text') . '</td>';
-        echo '<td><input type="text" name="alt_text" maxlength="255" style="width:100%"></td></tr>';
-        echo '<tr><td>' . _('Download URL') . '</td>';
-        echo '<td><input type="url" name="download_url" maxlength="2048" style="width:100%" placeholder="https://..."></td></tr>';
-        echo '<tr><td>' . _('Type') . '</td>';
-        echo '<td><select name="media_type">';
-        echo '<option value="image">' . _('Image') . '</option>';
-        echo '<option value="video">' . _('Video') . '</option>';
-        echo '<option value="document">' . _('Document') . '</option>';
-        echo '</select></td></tr>';
-        echo '<tr><td>' . _('Sort Order') . '</td>';
-        echo '<td><input type="number" name="sort_order" value="0" min="0" style="width:80px"></td></tr>';
-        echo '<tr><td>' . _('Primary') . '</td>';
-        echo '<td><input type="checkbox" name="is_primary" value="1"></td></tr>';
+        echo '<td><input type="url" name="url" required maxlength="2048" style="width:100%" '
+            . 'placeholder="https://youtube.com/watch?v=... or https://..."></td></tr>';
+        echo '<tr><td>' . _('Description') . '</td>';
+        echo '<td><input type="text" name="description" maxlength="255" style="width:100%" '
+            . 'placeholder="Product demo video, installation guide, etc."></td></tr>';
         echo '</table>';
-        echo '<p><input type="submit" value="' . _('Add Media') . '"></p>';
+        echo '<p><input type="submit" value="' . _('Add Attachment') . '"></p>';
         echo '</form></fieldset>';
     }
 
@@ -711,6 +687,7 @@ class hooks_FA_ProductAttributes extends hooks
         $mediaDao = new ProductMediaDao($db);
         $warrantyDao = new ProductWarrantyDao($db);
         $lifecycleFlagDefsDao = new LifecycleFlagDefsDao($db);
+        $mediaAttachmentsDao = new MediaAttachmentsDao($db);
         $service = new ProductAttributesService($dao, $db);
 
         $GLOBALS['fa_product_attributes_services_cache'] = array(
@@ -720,6 +697,7 @@ class hooks_FA_ProductAttributes extends hooks
             'identifiers_dao' => $identifiersDao,
             'lifecycle_dao' => $lifecycleDao,
             'media_dao' => $mediaDao,
+            'media_attachments_dao' => $mediaAttachmentsDao,
             'warranty_dao' => $warrantyDao,
             'lifecycle_flag_defs_dao' => $lifecycleFlagDefsDao,
         );

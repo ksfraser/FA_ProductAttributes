@@ -224,6 +224,22 @@ CREATE TABLE IF NOT EXISTS 0_product_media_variation_links (
   KEY idx_variation (variation_stock_id)
 );
 
+-- ─── Product Media Attachments ────────────────────────────────────────────────
+-- Simple URL-based attachments: YouTube videos, images, documents, etc.
+-- One row per URL. No type classification, no sort order — just a list.
+
+CREATE TABLE IF NOT EXISTS 0_product_media_attachments (
+  id          INT UNSIGNED  NOT NULL AUTO_INCREMENT,
+  stock_id    VARCHAR(32)   NOT NULL,
+  url         VARCHAR(2048) NOT NULL,
+  description VARCHAR(255)  NULL,
+  created_date DATE         NOT NULL DEFAULT (CURRENT_DATE),
+  updated_ts  TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP
+                                     ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  KEY idx_stock_id (stock_id)
+);
+
 -- ─── Product Warranty ─────────────────────────────────────────────────────────
 -- Per-product warranty information with type and duration.
 
