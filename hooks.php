@@ -161,6 +161,11 @@ class hooks_FA_ProductAttributes extends hooks
             $resolvedStockId
         );
 
+        $tabs['product_urls'] = array(
+            _('URLs'),
+            $resolvedStockId
+        );
+
         $tabs['product_warranty'] = array(
             _('Warranty'),
             $resolvedStockId
@@ -203,7 +208,12 @@ class hooks_FA_ProductAttributes extends hooks
         }
 
         if ($selectedTab === 'product_media') {
-            $this->render_media_tab((string)$resolvedStockId);
+            $this->render_local_media_tab((string)$resolvedStockId);
+            return true;
+        }
+
+        if ($selectedTab === 'product_urls') {
+            $this->render_urls_tab((string)$resolvedStockId);
             return true;
         }
 
@@ -264,6 +274,7 @@ class hooks_FA_ProductAttributes extends hooks
         $services['lifecycle_dao']->delete((string)$stockId);
         $services['warranty_dao']->delete((string)$stockId);
         $services['media_attachments_dao']->deleteByStockId((string)$stockId);
+        $this->delete_all_media_files((string)$stockId);
         $services['lifecycle_flag_defs_dao']->deleteAssignments((string)$stockId);
 
         return null;
@@ -435,7 +446,262 @@ class hooks_FA_ProductAttributes extends hooks
         echo '</form>';
     }
 
-    private function render_media_tab(string $stockId): void
+    private function render_local_media_tab(string $stockId): void
+    {
+        $services = $this->get_services();
+        $mediaDao = $services['media_dao'];
+
+        // Handle file upload actions
+        if ($_SERVER['REQUEST_METHOD'] === 'POST' && $stockId !== '') {
+            $action = $_POST['action'] ?? '';
+
+            if ($action === 'upload_media_image' && isset($_FILES['media_file'])) {
+                $this->handle_image_upload($stockId, $_FILES['media_file']);
+                header('Location: ' . $_SERVER['REQUEST_URI']);
+                exit;
+            }
+
+            if ($action === 'delete_media_item') {
+                $mediaId = (int)($_POST['media_id'] ?? 0);
+                if ($mediaId > 0) {
+                    $mediaItem = $mediaDao->getMediaItem($mediaId);
+                    if ($mediaItem && $mediaItem['stock_id'] === $stockId) {
+                        // Delete the file from disk if it's a local image
+                        $this->delete_media_file((string)($mediaItem['url'] ?? ''));
+                        $mediaDao->deleteMedia($mediaId);
+                    }
+                }
+                header('Location: ' . $_SERVER['REQUEST_URI']);
+                exit;
+            }
+        }
+
+        $mediaItems = ($stockId !== '') ? $mediaDao->getProductMedia($stockId) : [];
+        $imageDir = $this->get_image_dir();
+
+        // Show primary image from FA filesystem
+        echo '<fieldset><legend>' . _('Primary Image') . '</legend>';
+        $primaryFile = $this->find_primary_image($stockId);
+        if ($primaryFile) {
+            $url = $this->get_image_url($primaryFile);
+            echo '<p><img src="' . $url . '" style="max-width:200px;max-height:200px;border:1px solid #ccc"></p>';
+            echo '<p><small>' . htmlspecialchars(basename($primaryFile)) . '</small></p>';
+        } else {
+            echo '<p>' . _('No primary image set.') . '</p>';
+            echo '<p><small>' . _('Upload via Inventory → Items → edit the item.') . '</small></p>';
+        }
+        echo '</fieldset>';
+
+        // Show additional images
+        echo '<fieldset><legend>' . _('Additional Images & Media') . '</legend>';
+
+        if (empty($mediaItems)) {
+            echo '<p>' . _('No additional images or media uploaded yet.') . '</p>';
+        } else {
+            echo '<table class="tablestyle2">';
+            echo '<tr><th>' . _('Preview') . '</th><th>' . _('Type') . '</th>'
+                . '<th>' . _('Alt Text') . '</th><th>' . _('Order') . '</th><th></th></tr>';
+            foreach ($mediaItems as $item) {
+                $id   = (int)($item['id'] ?? 0);
+                $url  = (string)($item['url'] ?? '');
+                $type = htmlspecialchars((string)($item['media_type'] ?? 'image'));
+                $alt  = htmlspecialchars((string)($item['alt_text'] ?? ''));
+                $sort = (int)($item['sort_order'] ?? 0);
+                $isPrimary = (int)($item['is_primary'] ?? 0);
+
+                echo '<tr>';
+                if ($type === 'image') {
+                    $imgUrl = $this->resolve_media_url($url, $imageDir);
+                    echo '<td><img src="' . $imgUrl . '" style="max-width:80px;max-height:80px;border:1px solid #ccc"></td>';
+                } else {
+                    echo '<td><small>' . $url . '</small></td>';
+                }
+                $typeLabel = $isPrimary ? $type . ' ★' : $type;
+                echo '<td>' . $typeLabel . '</td>';
+                echo '<td>' . $alt . '</td>';
+                echo '<td>' . $sort . '</td>';
+                echo '<td><form method="post" action="" style="display:inline">';
+                echo '<input type="hidden" name="action" value="delete_media_item">';
+                echo '<input type="hidden" name="media_id" value="' . $id . '">';
+                echo '<input type="submit" value="' . _('Delete') . '" style="color:red" '
+                    . 'onclick="return confirm(\'' . _('Delete this media item and its file?') . '\')">';
+                echo '</form></td>';
+                echo '</tr>';
+            }
+            echo '</table>';
+        }
+
+        echo '</fieldset>';
+
+        // Upload form
+        echo '<fieldset><legend>' . _('Upload Image') . '</legend>';
+        echo '<form method="post" action="" enctype="multipart/form-data">';
+        echo '<input type="hidden" name="action"   value="upload_media_image">';
+        echo '<input type="hidden" name="stock_id" value="' . htmlspecialchars($stockId) . '">';
+        echo '<table class="tablestyle_noborder">';
+        echo '<tr><td>' . _('File') . '</td>';
+        echo '<td><input type="file" name="media_file" accept="image/jpeg,image/png,image/gif"></td></tr>';
+        echo '<tr><td>' . _('Alt Text') . '</td>';
+        echo '<td><input type="text" name="alt_text" maxlength="255" style="width:100%" '
+            . 'placeholder="Describe the image for accessibility"></td></tr>';
+        echo '<tr><td>' . _('Sort Order') . '</td>';
+        echo '<td><input type="number" name="sort_order" min="0" value="0"></td></tr>';
+        echo '</table>';
+        echo '<p><small>' . _('Accepted formats: JPEG, PNG, GIF. File will be saved to the company images directory.') . '</small></p>';
+        echo '<p><input type="submit" value="' . _('Upload Image') . '"></p>';
+        echo '</form></fieldset>';
+    }
+
+    /**
+     * Handle file upload for product media image.
+     */
+    private function handle_image_upload(string $stockId, array $file): void
+    {
+        if ($file['error'] !== UPLOAD_ERR_OK || $file['size'] <= 0) {
+            display_error(_('File upload failed or empty.'));
+            return;
+        }
+
+        $allowedTypes = ['image/jpeg' => 'jpg', 'image/png' => 'png', 'image/gif' => 'gif'];
+        $finfo = new \finfo(FILEINFO_MIME_TYPE);
+        $mimeType = $finfo->file($file['tmp_name']);
+
+        if (!isset($allowedTypes[$mimeType])) {
+            display_error(_('Only JPEG, PNG, and GIF images are accepted.'));
+            return;
+        }
+
+        global $SysPrefs;
+        $maxSize = isset($SysPrefs->max_image_size) ? (int)$SysPrefs->max_image_size : 500000;
+        if ($file['size'] > $maxSize) {
+            display_error(_('File exceeds maximum image size.'));
+            return;
+        }
+
+        $imageDir = $this->get_image_dir();
+        if (!is_dir($imageDir)) {
+            @mkdir($imageDir, 0755, true);
+        }
+
+        $ext = $allowedTypes[$mimeType];
+        $cleanStockId = item_img_name($stockId);
+        $filename = $cleanStockId . '-' . $this->next_image_index($imageDir, $cleanStockId) . '.' . $ext;
+        $dest = $imageDir . '/' . $filename;
+
+        if (!move_uploaded_file($file['tmp_name'], $dest)) {
+            display_error(_('Failed to save uploaded file.'));
+            return;
+        }
+
+        $services = $this->get_services();
+        $altText = trim((string)($_POST['alt_text'] ?? ''));
+        $sortOrder = (int)($_POST['sort_order'] ?? 0);
+
+        $services['media_dao']->addMedia(
+            $stockId,
+            'images/' . $filename,
+            'image',
+            $altText,
+            $sortOrder,
+            false,
+            ''
+        );
+
+        display_notification(_('Image uploaded successfully.'));
+    }
+
+    /**
+     * Determine the next numeric index for additional images.
+     */
+    private function next_image_index(string $imageDir, string $cleanStockId): int
+    {
+        $index = 1;
+        while (glob($imageDir . '/' . $cleanStockId . '-' . $index . '.*') !== false
+               && count(glob($imageDir . '/' . $cleanStockId . '-' . $index . '.*')) > 0) {
+            $index++;
+        }
+        return $index;
+    }
+
+    /**
+     * Delete a media file from disk if it's a local path.
+     */
+    private function delete_media_file(string $url): void
+    {
+        if ($url === '' || preg_match('#^https?://#i', $url)) {
+            return;
+        }
+        $path = $this->get_image_dir() . '/' . basename($url);
+        if (is_file($path)) {
+            @unlink($path);
+        }
+    }
+
+    /**
+     * Find the primary image file for an item in the company images directory.
+     */
+    private function find_primary_image(string $stockId): ?string
+    {
+        $imageDir = $this->get_image_dir();
+        $cleanName = item_img_name($stockId);
+        foreach (['jpg', 'png', 'gif'] as $ext) {
+            $path = $imageDir . '/' . $cleanName . '.' . $ext;
+            if (is_file($path)) {
+                return $path;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Get the absolute path to the company images directory.
+     */
+    private function get_image_dir(): string
+    {
+        return company_path() . '/images';
+    }
+
+    /**
+     * Build a URL for an image path.
+     */
+    private function get_image_url(string $absolutePath): string
+    {
+        global $path_to_root;
+        $companyPath = company_path();
+        $relative = str_replace($companyPath, '', $absolutePath);
+        return $path_to_root . '/company' . $relative;
+    }
+
+    /**
+     * Delete all media files and DB records for a stock item.
+     */
+    private function delete_all_media_files(string $stockId): void
+    {
+        $services = $this->get_services();
+        $mediaDao = $services['media_dao'];
+        $mediaItems = $mediaDao->getProductMedia($stockId);
+        foreach ($mediaItems as $item) {
+            $this->delete_media_file((string)($item['url'] ?? ''));
+            $mediaDao->deleteMedia((int)($item['id'] ?? 0));
+        }
+    }
+
+    /**
+     * Resolve a media URL (stored as relative) to a full URL for display.
+     */
+    private function resolve_media_url(string $url, string $imageDir): string
+    {
+        if (preg_match('#^https?://#i', $url)) {
+            return $url;
+        }
+        $path = $imageDir . '/' . basename($url);
+        if (is_file($path)) {
+            return $this->get_image_url($path);
+        }
+        return $url;
+    }
+
+    private function render_urls_tab(string $stockId): void
     {
         $services      = $this->get_services();
         $attachmentsDao = $services['media_attachments_dao'];
