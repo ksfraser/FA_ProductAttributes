@@ -1,6 +1,8 @@
 <?php
 
 use Ksfraser\FA_ProductAttributes\Dao\ProductAttributesDao;
+use Ksfraser\FA_ProductAttributes\Dao\ShippingAttributesDao;
+use Ksfraser\FA_ProductAttributes\Dao\ProductIdentifiersDao;
 use Ksfraser\FA_ProductAttributes\Handler\ProductAttributesHandler;
 use Ksfraser\FA_ProductAttributes\Integration\ItemsIntegration;
 use Ksfraser\FA_ProductAttributes\Plugin\PluginLoader;
@@ -128,6 +130,16 @@ class hooks_FA_ProductAttributes extends hooks
             $resolvedStockId
         );
 
+        $tabs['shipping_attributes'] = array(
+            _('Shipping'),
+            $resolvedStockId
+        );
+
+        $tabs['product_identifiers'] = array(
+            _('Identifiers'),
+            $resolvedStockId
+        );
+
         return $tabs;
     }
 
@@ -135,16 +147,36 @@ class hooks_FA_ProductAttributes extends hooks
     {
         $this->load_plugins_on_demand();
 
-        if (!preg_match('/^product_attributes/', (string)$selectedTab)) {
-            return false;
-        }
         if ($this->can_check_access() && !$this->has_product_attributes_access()) {
             return false;
         }
 
-        $this->get_items_integration()->getTabContent((string)$stockId, (string)$selectedTab);
+        $resolvedStockId = $stockId;
+        if ($resolvedStockId === '' && isset($_POST['stock_id'])) {
+            $resolvedStockId = (string)$_POST['stock_id'];
+        }
 
-        return true;
+        if ($selectedTab === 'product_attributes') {
+            $this->get_items_integration()->getTabContent((string)$resolvedStockId, (string)$selectedTab);
+            return true;
+        }
+
+        if ($selectedTab === 'shipping_attributes') {
+            $this->render_shipping_tab((string)$resolvedStockId);
+            return true;
+        }
+
+        if ($selectedTab === 'product_identifiers') {
+            $this->render_identifiers_tab((string)$resolvedStockId);
+            return true;
+        }
+
+        if (preg_match('/^product_attributes/', (string)$selectedTab)) {
+            $this->get_items_integration()->getTabContent((string)$resolvedStockId, (string)$selectedTab);
+            return true;
+        }
+
+        return false;
     }
 
     public function pre_item_write($itemData, $stockId = '')
@@ -163,8 +195,13 @@ class hooks_FA_ProductAttributes extends hooks
             $stockId = (string)$itemData['stock_id'];
         }
 
-        return $this->get_product_attributes_handler()
+        $this->get_product_attributes_handler()
             ->handle_product_attributes_save($itemData, (string)$stockId);
+
+        $this->save_shipping_from_post((string)$stockId);
+        $this->save_identifiers_from_post((string)$stockId);
+
+        return $itemData;
     }
 
     public function pre_item_delete($stockId = '')
@@ -177,6 +214,10 @@ class hooks_FA_ProductAttributes extends hooks
 
         $this->get_product_attributes_handler()
             ->handle_product_attributes_delete((string)$stockId);
+
+        $services = $this->get_services();
+        $services['shipping_dao']->delete((string)$stockId);
+        $services['identifiers_dao']->delete((string)$stockId);
 
         return null;
     }
@@ -197,6 +238,141 @@ class hooks_FA_ProductAttributes extends hooks
         if (class_exists(PluginLoader::class)) {
             PluginLoader::getInstance()->loadPluginsOnDemand();
         }
+    }
+
+    private function render_shipping_tab(string $stockId): void
+    {
+        $services = $this->get_services();
+        $shippingDao = $services['shipping_dao'];
+        $data = ($stockId !== '') ? ($shippingDao->get($stockId) ?? []) : [];
+
+        echo '<form method="post" action="">';
+        echo '<input type="hidden" name="action"   value="upsert_shipping_attributes">';
+        echo '<input type="hidden" name="stock_id" value="' . htmlspecialchars($stockId) . '">';
+
+        $this->render_fieldset(_('Package Dimensions'), [
+            'Length'  => $this->input_number('length', $data, 'number', '0.001'),
+            'Width'   => $this->input_number('width', $data, 'number', '0.001'),
+            'Height'  => $this->input_number('height', $data, 'number', '0.001'),
+            'Unit'    => $this->select_field('dim_unit', ['cm' => 'cm', 'in' => 'in'], $data, 'cm'),
+        ]);
+
+        $this->render_fieldset(_('Weight / Mass'), [
+            'Weight' => $this->input_number('weight', $data, 'number', '0.001'),
+            'Unit'   => $this->select_field('weight_unit', ['kg' => 'kg', 'lb' => 'lb', 'g' => 'g', 'oz' => 'oz'], $data, 'kg'),
+        ]);
+
+        echo '<fieldset><legend>' . _('Handling Requirements') . '</legend>';
+        echo '<p><label><input type="checkbox" name="is_hazardous" value="1"'
+            . $this->checked($data, 'is_hazardous') . '> '
+            . _('Hazardous / Dangerous Goods') . '</label></p>';
+        echo '<p><label><input type="checkbox" name="is_fragile" value="1"'
+            . $this->checked($data, 'is_fragile') . '> '
+            . _('Fragile') . '</label></p>';
+        echo '<p><label><input type="checkbox" name="is_stackable" value="1"'
+            . $this->checked($data, 'is_stackable', true) . '> '
+            . _('Stackable') . '</label></p>';
+        echo '<p><label><input type="checkbox" name="is_oversize" value="1"'
+            . $this->checked($data, 'is_oversize') . '> '
+            . _('Oversize') . '</label></p>';
+        echo '<p><label><input type="checkbox" name="is_perishable" value="1"'
+            . $this->checked($data, 'is_perishable') . '> '
+            . _('Perishable') . '</label></p>';
+        echo '</fieldset>';
+
+        $this->render_fieldset(_('Customs / International Trade'), [
+            'HS Code'    => $this->input_text('hs_code', $data),
+            'Origin'     => $this->input_text('country_of_origin', $data),
+            'Declared $' => $this->input_number('declared_value', $data, 'number', '0.01'),
+        ]);
+
+        echo '<p><input type="submit" value="' . _('Save Shipping Attributes') . '"></p>';
+        echo '</form>';
+    }
+
+    private function render_identifiers_tab(string $stockId): void
+    {
+        $services = $this->get_services();
+        $identifiersDao = $services['identifiers_dao'];
+        $data = ($stockId !== '') ? ($identifiersDao->get($stockId) ?? []) : [];
+
+        echo '<form method="post" action="">';
+        echo '<input type="hidden" name="action"   value="upsert_identifiers">';
+        echo '<input type="hidden" name="stock_id" value="' . htmlspecialchars($stockId) . '">';
+
+        $this->render_fieldset(_('Brand & Manufacturer'), [
+            'Brand'        => $this->input_text('brand', $data),
+            'Manufacturer' => $this->input_text('manufacturer', $data),
+            'Model No.'    => $this->input_text('model_no', $data),
+        ]);
+
+        $this->render_fieldset(_('Barcodes & Global Trade IDs'), [
+            'MPN'             => $this->input_text('mpn', $data),
+            'GTIN-14'         => $this->input_text('gtin', $data),
+            'EAN-13'          => $this->input_text('ean', $data),
+            'UPC-A'           => $this->input_text('upc', $data),
+            'ISBN-13'         => $this->input_text('isbn', $data),
+            'ASIN (Amazon)'   => $this->input_text('asin', $data),
+            'Internal Barcode' => $this->input_text('internal_barcode', $data),
+        ]);
+
+        $this->render_fieldset(_('Sourcing References'), [
+            'Supplier Part No.' => $this->input_text('supplier_part_no', $data),
+        ]);
+
+        echo '<p><input type="submit" value="' . _('Save Identifiers') . '"></p>';
+        echo '</form>';
+    }
+
+    /**
+     * Render a fieldset with label-input rows.
+     *
+     * @param array<string, string> $fields  label => HTML input element
+     */
+    private function render_fieldset(string $legend, array $fields): void
+    {
+        echo '<fieldset><legend>' . $legend . '</legend>';
+        echo '<table class="tablestyle_noborder">';
+        foreach ($fields as $label => $input) {
+            echo '<tr>';
+            echo '<td>' . $label . '</td>';
+            echo '<td>' . $input . '</td>';
+            echo '</tr>';
+        }
+        echo '</table></fieldset>';
+    }
+
+    private function input_text(string $name, array $data): string
+    {
+        $val = htmlspecialchars((string)($data[$name] ?? ''));
+        return '<input type="text" name="' . $name . '" value="' . $val . '" maxlength="128">';
+    }
+
+    private function input_number(string $name, array $data, string $type = 'number', string $step = '1'): string
+    {
+        $val = $data[$name] ?? null;
+        $str = ($val !== null && $val !== '') ? (string)((float)$val) : '';
+        return '<input type="' . $type . '" step="' . $step . '" min="0" name="' . $name . '" value="'
+            . htmlspecialchars($str) . '">';
+    }
+
+    private function select_field(string $name, array $options, array $data, string $default): string
+    {
+        $current = (string)($data[$name] ?? $default);
+        $html    = '<select name="' . $name . '">';
+        foreach ($options as $val => $label) {
+            $sel   = ((string)$val === $current) ? ' selected' : '';
+            $html .= '<option value="' . htmlspecialchars((string)$val) . '"' . $sel . '>'
+                . htmlspecialchars($label) . '</option>';
+        }
+        $html .= '</select>';
+        return $html;
+    }
+
+    private function checked(array $data, string $key, bool $default = false): string
+    {
+        $val = isset($data[$key]) ? (bool)$data[$key] : $default;
+        return $val ? ' checked' : '';
     }
 
     private function can_check_access()
@@ -232,13 +408,65 @@ class hooks_FA_ProductAttributes extends hooks
         $tablePrefix = defined('TB_PREF') ? (string)TB_PREF : '0_';
         $db = new FrontAccountingDbAdapter($tablePrefix);
         $dao = new ProductAttributesDao($db);
+        $shippingDao = new ShippingAttributesDao($db);
+        $identifiersDao = new ProductIdentifiersDao($db);
         $service = new ProductAttributesService($dao, $db);
 
         $GLOBALS['fa_product_attributes_services_cache'] = array(
-            'integration' => new ItemsIntegration($service),
+            'integration' => new ItemsIntegration($service, $shippingDao, $identifiersDao),
             'handler' => new ProductAttributesHandler($service),
+            'shipping_dao' => $shippingDao,
+            'identifiers_dao' => $identifiersDao,
         );
 
         return $GLOBALS['fa_product_attributes_services_cache'];
+    }
+
+    private function save_shipping_from_post(string $stockId): void
+    {
+        if ($stockId === '') {
+            return;
+        }
+        $shippingKeys = [
+            'length', 'width', 'height', 'dim_unit',
+            'weight', 'weight_unit',
+            'is_hazardous', 'hazmat_class', 'un_number', 'proper_shipping_name', 'packing_group',
+            'is_fragile', 'is_stackable', 'is_oversize', 'is_perishable',
+            'temperature_sensitive', 'temp_min', 'temp_max', 'temp_unit',
+            'hs_code', 'country_of_origin', 'customs_description', 'declared_value',
+        ];
+        $data = [];
+        foreach ($shippingKeys as $key) {
+            if (array_key_exists($key, $_POST)) {
+                $data[$key] = $_POST[$key];
+            }
+        }
+        if (empty($data)) {
+            return;
+        }
+        $services = $this->get_services();
+        $services['shipping_dao']->upsert($stockId, $data);
+    }
+
+    private function save_identifiers_from_post(string $stockId): void
+    {
+        if ($stockId === '') {
+            return;
+        }
+        $identifierKeys = [
+            'brand', 'manufacturer', 'mpn', 'gtin', 'ean', 'upc',
+            'isbn', 'asin', 'internal_barcode', 'supplier_part_no', 'model_no',
+        ];
+        $data = [];
+        foreach ($identifierKeys as $key) {
+            if (array_key_exists($key, $_POST)) {
+                $data[$key] = $_POST[$key];
+            }
+        }
+        if (empty($data)) {
+            return;
+        }
+        $services = $this->get_services();
+        $services['identifiers_dao']->upsert($stockId, $data);
     }
 }

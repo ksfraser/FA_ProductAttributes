@@ -5,6 +5,8 @@ namespace Ksfraser\FA_ProductAttributes\Test\Integration;
 use PHPUnit\Framework\TestCase;
 use Ksfraser\FA_ProductAttributes\Integration\ItemsIntegration;
 use Ksfraser\FA_ProductAttributes\Service\ProductAttributesService;
+use Ksfraser\FA_ProductAttributes\Dao\ShippingAttributesDao;
+use Ksfraser\FA_ProductAttributes\Dao\ProductIdentifiersDao;
 
 /**
  * Test ItemsIntegration class
@@ -29,9 +31,8 @@ class ItemsIntegrationTest extends TestCase
         $tabCollection = $this->getMockBuilder('stdClass')
             ->addMethods(['createTab'])
             ->getMock();
-        $tabCollection->expects($this->once())
+        $tabCollection->expects($this->exactly(3))
             ->method('createTab')
-            ->with('product_attributes', 'Product Attributes')
             ->willReturnSelf();
 
         $stockId = 'TEST001';
@@ -55,6 +56,44 @@ class ItemsIntegrationTest extends TestCase
         $this->assertTrue($result);
     }
 
+    public function testGetTabContentReturnsFalseForShippingWhenNoDao()
+    {
+        $result = $this->integration->getTabContent('TEST001', 'shipping_attributes');
+        $this->assertFalse($result);
+    }
+
+    public function testGetTabContentReturnsFalseForIdentifiersWhenNoDao()
+    {
+        $result = $this->integration->getTabContent('TEST001', 'product_identifiers');
+        $this->assertFalse($result);
+    }
+
+    public function testGetTabContentRendersShippingTab()
+    {
+        $shippingDao = $this->createMock(ShippingAttributesDao::class);
+        $shippingDao->method('get')->willReturn(null);
+
+        $integration = new ItemsIntegration($this->service, $shippingDao);
+
+        $this->expectOutputRegex('/shipping_attributes/');
+        $result = $integration->getTabContent('TEST001', 'shipping_attributes');
+
+        $this->assertTrue($result);
+    }
+
+    public function testGetTabContentRendersIdentifiersTab()
+    {
+        $identifiersDao = $this->createMock(ProductIdentifiersDao::class);
+        $identifiersDao->method('get')->willReturn(null);
+
+        $integration = new ItemsIntegration($this->service, null, $identifiersDao);
+
+        $this->expectOutputRegex('/upsert_identifiers/');
+        $result = $integration->getTabContent('TEST001', 'product_identifiers');
+
+        $this->assertTrue($result);
+    }
+
     public function testGetTabContentReturnsUnchangedContentForOtherTabs()
     {
         $result = $this->integration->getTabContent('TEST001', 'other_tab');
@@ -70,8 +109,6 @@ class ItemsIntegrationTest extends TestCase
 
         $itemData = ['field1' => 'value1'];
 
-        // Skip the complex FA hooks part for now - focus on core functionality
-        // The FA hooks require full FA environment which is not available in unit tests
         $result = $this->integration->handlePreSave($itemData, 'TEST001');
 
         $this->assertEquals($itemData, $result);
@@ -83,7 +120,6 @@ class ItemsIntegrationTest extends TestCase
             ->method('deleteProductAttributes')
             ->with('TEST001');
 
-        // Skip the complex FA hooks part for now - focus on core functionality
         $this->integration->handlePreDelete('TEST001');
 
         $this->assertTrue(true);

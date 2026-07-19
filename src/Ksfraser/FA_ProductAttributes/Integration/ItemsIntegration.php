@@ -2,7 +2,11 @@
 
 namespace Ksfraser\FA_ProductAttributes\Integration;
 
+use Ksfraser\FA_ProductAttributes\Dao\ShippingAttributesDao;
+use Ksfraser\FA_ProductAttributes\Dao\ProductIdentifiersDao;
 use Ksfraser\FA_ProductAttributes\Service\ProductAttributesService;
+use Ksfraser\FA_ProductAttributes\UI\ShippingAttributesTab;
+use Ksfraser\FA_ProductAttributes\UI\ProductIdentifiersTab;
 
 /**
  * Single Responsibility: Bridges the FA items screen with the product-attributes module via tab hooks.
@@ -12,13 +16,24 @@ class ItemsIntegration
     /** @var ProductAttributesService */
     private $service;
 
-    public function __construct(ProductAttributesService $service)
-    {
-        $this->service = $service;
+    /** @var ShippingAttributesDao|null */
+    private $shippingDao;
+
+    /** @var ProductIdentifiersDao|null */
+    private $identifiersDao;
+
+    public function __construct(
+        ProductAttributesService $service,
+        ?ShippingAttributesDao $shippingDao = null,
+        ?ProductIdentifiersDao $identifiersDao = null
+    ) {
+        $this->service       = $service;
+        $this->shippingDao   = $shippingDao;
+        $this->identifiersDao = $identifiersDao;
     }
 
     /**
-     * Add the "Product Attributes" tab header to the FA items tab collection.
+     * Add tab headers to the FA items tab collection.
      *
      * @param  mixed  $tabCollection  FA tab collection object (must support createTab)
      * @param  string $stockId
@@ -27,6 +42,8 @@ class ItemsIntegration
     public function addTabHeaders($tabCollection, string $stockId)
     {
         $tabCollection->createTab('product_attributes', _('Product Attributes'));
+        $tabCollection->createTab('shipping_attributes', _('Shipping'));
+        $tabCollection->createTab('product_identifiers', _('Identifiers'));
         return $tabCollection;
     }
 
@@ -39,13 +56,25 @@ class ItemsIntegration
      */
     public function getTabContent(string $stockId, string $tab): bool
     {
-        if ($tab !== 'product_attributes') {
-            return false;
+        if ($tab === 'product_attributes') {
+            $html = $this->service->renderProductAttributesTab($stockId);
+            echo $html;
+            return true;
         }
 
-        $html = $this->service->renderProductAttributesTab($stockId);
-        echo $html;
-        return true;
+        if ($tab === 'shipping_attributes' && $this->shippingDao !== null) {
+            $tabUi = new ShippingAttributesTab($this->shippingDao);
+            $tabUi->render($stockId);
+            return true;
+        }
+
+        if ($tab === 'product_identifiers' && $this->identifiersDao !== null) {
+            $tabUi = new ProductIdentifiersTab($this->identifiersDao);
+            $tabUi->render($stockId);
+            return true;
+        }
+
+        return false;
     }
 
     /**
