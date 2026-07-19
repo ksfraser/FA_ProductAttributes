@@ -60,7 +60,8 @@ class ProductMediaDao
         string $altText,
         int $sortOrder,
         string $mediaType,
-        bool $isPrimary
+        bool $isPrimary,
+        ?string $downloadUrl = null
     ): int {
         $p         = $this->db->getTablePrefix();
         $validTypes = ['image', 'video', 'document'];
@@ -76,15 +77,16 @@ class ProductMediaDao
 
         $this->db->execute(
             'INSERT INTO `' . $p . 'product_media`'
-            . ' (stock_id, url, alt_text, sort_order, media_type, is_primary)'
-            . ' VALUES (:stock_id, :url, :alt_text, :sort_order, :media_type, :is_primary)',
+            . ' (stock_id, url, alt_text, sort_order, media_type, is_primary, download_url)'
+            . ' VALUES (:stock_id, :url, :alt_text, :sort_order, :media_type, :is_primary, :download_url)',
             [
-                'stock_id'   => $stockId,
-                'url'        => $url,
-                'alt_text'   => $altText !== '' ? $altText : null,
-                'sort_order' => $sortOrder,
-                'media_type' => $type,
-                'is_primary' => $isPrimary ? 1 : 0,
+                'stock_id'     => $stockId,
+                'url'          => $url,
+                'alt_text'     => $altText !== '' ? $altText : null,
+                'sort_order'   => $sortOrder,
+                'media_type'   => $type,
+                'is_primary'   => $isPrimary ? 1 : 0,
+                'download_url' => $downloadUrl,
             ]
         );
 

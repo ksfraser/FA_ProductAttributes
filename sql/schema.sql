@@ -206,6 +206,7 @@ CREATE TABLE IF NOT EXISTS 0_product_media (
   sort_order  SMALLINT      NOT NULL DEFAULT 0,
   media_type  ENUM('image','video','document') NOT NULL DEFAULT 'image',
   is_primary  TINYINT(1)    NOT NULL DEFAULT 0,
+  download_url VARCHAR(2048) NULL COMMENT 'Direct download link for digital products',
   updated_ts  TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP
                                      ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (id),
@@ -221,5 +222,51 @@ CREATE TABLE IF NOT EXISTS 0_product_media_variation_links (
   variation_stock_id  VARCHAR(32)   NOT NULL,
   PRIMARY KEY (media_id, variation_stock_id),
   KEY idx_variation (variation_stock_id)
+);
+
+-- ─── Product Warranty ─────────────────────────────────────────────────────────
+-- Per-product warranty information with type and duration.
+
+CREATE TABLE IF NOT EXISTS 0_product_warranty (
+  stock_id                    VARCHAR(32)   NOT NULL,
+  warranty_type               ENUM('none','manufacturer','extended','third_party','lifetime')
+                                            NOT NULL DEFAULT 'none',
+  manufacturer_duration       INT           NULL     COMMENT 'Duration in months',
+  manufacturer_duration_unit  ENUM('days','months','years') NOT NULL DEFAULT 'months',
+  extended_duration           INT           NULL     COMMENT 'Duration in months',
+  extended_duration_unit      ENUM('days','months','years') NOT NULL DEFAULT 'months',
+  third_party_duration        INT           NULL     COMMENT 'Duration in months',
+  third_party_duration_unit   ENUM('days','months','years') NOT NULL DEFAULT 'months',
+  lifetime_notes              VARCHAR(255)  NULL     COMMENT 'Notes for lifetime warranty',
+  warranty_notes              TEXT          NULL     COMMENT 'General warranty terms / notes',
+  updated_ts                  TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP
+                                                     ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (stock_id)
+);
+
+-- ─── Lifecycle Flag Definitions ───────────────────────────────────────────────
+-- Admin-configurable list of lifecycle flags.
+-- Each flag is a checkbox on the lifecycle tab.
+-- The tab dynamically renders only flags that are active here.
+
+CREATE TABLE IF NOT EXISTS 0_product_lifecycle_flag_defs (
+  id          INT UNSIGNED  NOT NULL AUTO_INCREMENT,
+  code        VARCHAR(64)   NOT NULL  COMMENT 'Internal code, e.g. is_featured',
+  label       VARCHAR(128)  NOT NULL  COMMENT 'Display label, e.g. Featured',
+  sort_order  INT           NOT NULL DEFAULT 0,
+  active      TINYINT(1)    NOT NULL DEFAULT 1,
+  updated_ts  TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP
+                                     ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  UNIQUE KEY uk_code (code)
+);
+
+-- Per-product lifecycle flag assignments (M:N).
+
+CREATE TABLE IF NOT EXISTS 0_product_lifecycle_flag_assignments (
+  stock_id  VARCHAR(32)   NOT NULL,
+  flag_id   INT UNSIGNED  NOT NULL,
+  PRIMARY KEY (stock_id, flag_id),
+  KEY idx_flag_id (flag_id)
 );
 

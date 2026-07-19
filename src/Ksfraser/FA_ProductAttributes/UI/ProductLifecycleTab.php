@@ -3,6 +3,7 @@
 namespace Ksfraser\FA_ProductAttributes\UI;
 
 use Ksfraser\FA_ProductAttributes\Dao\ProductLifecycleDao;
+use Ksfraser\FA_ProductAttributes\Dao\LifecycleFlagDefsDao;
 
 /**
  * Single Responsibility: Renders the Product Lifecycle / Status admin tab.
@@ -10,7 +11,7 @@ use Ksfraser\FA_ProductAttributes\Dao\ProductLifecycleDao;
  * Surfaces storefront-facing status information beyond FA's own active/inactive
  * flag:
  *   - Sales / visibility status (active, draft, discontinued, archived)
- *   - Boolean flags (special order, clearance, new arrival, etc.)
+ *   - Admin-configurable boolean flags (from product_lifecycle_flag_defs)
  *   - Availability window (available_from / discontinue_on dates)
  *   - Clearance note
  */
@@ -18,6 +19,9 @@ class ProductLifecycleTab
 {
     /** @var ProductLifecycleDao */
     private $dao;
+
+    /** @var LifecycleFlagDefsDao|null */
+    private $flagDefsDao;
 
     /** @var string[] */
     private static $statusLabels = [
@@ -27,9 +31,10 @@ class ProductLifecycleTab
         'archived'     => 'Archived',
     ];
 
-    public function __construct(ProductLifecycleDao $dao)
+    public function __construct(ProductLifecycleDao $dao, ?LifecycleFlagDefsDao $flagDefsDao = null)
     {
-        $this->dao = $dao;
+        $this->dao         = $dao;
+        $this->flagDefsDao = $flagDefsDao;
     }
 
     /**
@@ -45,7 +50,7 @@ class ProductLifecycleTab
         echo '<input type="hidden" name="stock_id" value="' . htmlspecialchars($stockId) . '">';
 
         $this->renderStatus($data);
-        $this->renderFlags($data);
+        $this->renderDynamicFlags($stockId, $data);
         $this->renderDates($data);
 
         echo '<p><input type="submit" value="' . _('Save Lifecycle') . '"></p>';
@@ -72,8 +77,49 @@ class ProductLifecycleTab
         echo '</tr></table></fieldset>';
     }
 
-    /** @param array<string, mixed> $d */
-    private function renderFlags(array $d): void
+    /**
+     * Render flags dynamically from admin config.
+     * Falls back to hardcoded flags if the flag_defs DAO is not available.
+     *
+     * @param array<string, mixed> $d
+     */
+    private function renderDynamicFlags(string $stockId, array $d): void
+    {
+        if ($this->flagDefsDao === null) {
+            $this->renderHardcodedFlags($d);
+            return;
+        }
+
+        $flags = $this->flagDefsDao->listActiveFlags();
+        if (empty($flags)) {
+            return;
+        }
+
+        $assignedIds = ($stockId !== '') ? $this->flagDefsDao->getAssignedFlagIds($stockId) : [];
+        $assignedSet = array_flip(array_map('strval', $assignedIds));
+
+        echo '<fieldset><legend>' . _('Storefront Flags') . '</legend>';
+        echo '<table class="tablestyle_noborder">';
+        foreach ($flags as $flag) {
+            $flagId  = (int)($flag['id'] ?? 0);
+            $code    = htmlspecialchars((string)($flag['code'] ?? ''));
+            $label   = htmlspecialchars((string)($flag['label'] ?? ''));
+            $checked = isset($assignedSet[(string)$flagId]) ? ' checked' : '';
+            echo '<tr>';
+            echo '<td><label for="lifecycle_flag_' . $flagId . '">' . $label . '</label></td>';
+            echo '<td><input type="checkbox" id="lifecycle_flag_' . $flagId . '" '
+                . 'name="lifecycle_flags[]" value="' . $flagId . '"' . $checked . '></td>';
+            echo '</tr>';
+        }
+        echo '</table></fieldset>';
+    }
+
+    /**
+     * Fallback: render hardcoded flags when admin config is not available.
+     *
+     * @param array<string, mixed> $d
+     */
+    private function renderHardcodedFlags(array $d): void
     {
         $flags = [
             'is_special_order'       => _('Special Order (not kept in stock)'),

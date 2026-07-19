@@ -56,7 +56,10 @@ class AddProductMediaAction
 
         $isPrimary = (bool)($postData['is_primary'] ?? false);
 
-        $this->dao->addMedia($stockId, $url, $altText, $sortOrder, $mediaType, $isPrimary);
+        $downloadUrl = trim((string)($postData['download_url'] ?? ''));
+        $downloadUrl = $downloadUrl !== '' ? $downloadUrl : null;
+
+        $this->dao->addMedia($stockId, $url, $altText, $sortOrder, $mediaType, $isPrimary, $downloadUrl);
 
         return _('Media added');
     }
