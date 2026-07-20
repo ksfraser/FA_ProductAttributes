@@ -232,28 +232,13 @@ class hooks_FA_ProductAttributes extends hooks
             \KsfCommon\Utils\ComposerDependencies::ensure(__DIR__);
         }
 
-        // Try vendor autoloader first.
+        // Try vendor autoloader.
         $autoloadPath = __DIR__ . '/vendor/autoload.php';
         if (!is_file($autoloadPath)) {
             $autoloadPath = __DIR__ . '/../vendor/autoload.php';
         }
         if (is_file($autoloadPath)) {
             require_once $autoloadPath;
-            return;
-        }
-
-        // Last resort: run composer install directly from module root.
-        if (is_file(__DIR__ . '/composer.json')) {
-            $prevDir = getcwd();
-            chdir(__DIR__);
-            $output = [];
-            $rc = 0;
-            exec('composer install --no-interaction --prefer-dist 2>&1', $output, $rc);
-            chdir($prevDir);
-
-            if ($rc === 0 && is_file(__DIR__ . '/vendor/autoload.php')) {
-                require_once __DIR__ . '/vendor/autoload.php';
-            }
         }
     }
 
