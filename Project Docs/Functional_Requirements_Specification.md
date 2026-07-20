@@ -1,328 +1,222 @@
-# Functional Requirements Specification (FRS)
+# Functional Requirements Specification
 
-## Introduction
-This document details the functional behavior of the FA_ProductAttributes system, consisting of a core module providing generic attribute infrastructure and a plugin architecture for extensible functionality.
+## 1. Overview
 
-## System Components
+This document specifies the functional behavior of the Product Attributes module for FrontAccounting 2.4, covering all UI tabs, data operations, and integration points.
 
-### Core Module (FA_ProductAttributes)
-**Purpose**: Provides generic attribute management infrastructure and extension points for plugins.
+## 2. Tab: Product Attributes (EAV)
 
-**Core Functionality:**
-- Attribute category and value management
-- Product-to-attribute assignment system
-- Generic attribute UI components
-- Hook-based extension system
-- Product type infrastructure
+### 2.1 Tab Display
 
-### Plugin System
-**Purpose**: Enables domain-specific attribute functionality through plugins.
+| ID | Requirement |
+|----|-------------|
+| FR-1.1 | Display assigned attribute categories and values for the current product |
+| FR-1.2 | Allow reordering of assignments via sort_order |
+| FR-1.3 | Show parent product (if this product is a variation) |
+| FR-1.4 | Allow assignment of new category-value pairs |
+| FR-1.5 | Allow removal of existing assignments |
 
-**Extension Mechanism:**
-- Plugins register extensions to core hook points
-- Core provides generic UI that plugins can extend
-- Plugins can add domain-specific services and UI
-- Clean separation of concerns between core and plugins
+### 2.2 Standalone Admin
 
-## Functional Requirements Details
+| ID | Requirement |
+|----|-------------|
+| FR-1.6 | Stock → Product Attributes menu item opens admin page |
+| FR-1.7 | Admin page has 3 sub-tabs: Categories, Values, Assignments |
+| FR-1.8 | Categories: create, edit, deactivate, sort |
+| FR-1.9 | Values: create within category, edit, deactivate, sort |
+| FR-1.10 | Assignments: bulk-update product-category-value mappings |
 
-### FR1: Core Attribute Management
-- **Trigger**: Administrator accesses Product Attributes admin interface.
-- **Process**:
-  1. Display attribute categories and values management interface.
-  2. Allow creation, editing, and deletion of categories.
-  3. Allow creation, editing, and deletion of values within categories.
-  4. Maintain Royal Order sorting for consistent attribute display.
-- **Output**: Updated attribute structure available for product assignments.
+## 3. Tab: Shipping
 
-### FR2: Product Attribute Assignment (Core)
-- **Trigger**: User navigates to Inventory > Items and selects a product.
-- **Process**:
-  1. Display existing product details.
-  2. Add "Product Attributes" TAB via hook system.
-  3. Show generic attribute assignment interface.
-  4. Allow selection of attribute categories and values.
-  5. Display assigned attributes in table format.
-  6. Show "Variations" column indicating combinatorial possibilities.
-- **Output**: Attributes associated with product, available for plugin extensions.
+### 3.1 Display
 
-### FR3: Plugin Extension System
-- **Trigger**: Plugin modules are activated.
-- **Process**:
-  1. Plugins register extensions to core hook points.
-  2. Core module loads and executes plugin extensions.
-  3. Plugins can add UI elements, save handlers, and business logic.
-  4. Extension execution follows priority-based ordering.
-- **Output**: Extended functionality without modifying core code.
+| ID | Requirement |
+|----|-------------|
+| FR-2.1 | Show Package Dimensions fieldset: Length, Width, Height, Unit (cm/in) |
+| FR-2.2 | Show Weight/Mass fieldset: Weight, Unit (kg/lb/g/oz) |
+| FR-2.3 | Show Handling Requirements: checkboxes for hazardous, fragile, stackable, oversize, perishable |
+| FR-2.4 | Show Customs/International Trade: HS Code, Country of Origin, Declared Value |
 
-### FR4: Product Type Infrastructure
-- **Trigger**: Products are managed through the system.
-- **Process**:
-  1. Support classification of products as Simple, Variable, or Variation.
-  2. Maintain parent-child relationships for variation products.
-  3. Provide infrastructure for plugins to manage product types.
-- **Output**: Consistent product type management across core and plugins.
+### 3.2 Save
 
-### FR1.1: Product Relationship Table
-- **Trigger**: User views product lists or searches for products.
-- **Process**:
-  1. Display table showing product relationships with columns:
-     - Stock ID, Description, Type (Simple/Parent/Variation), Parent Stock ID, Status
-  2. Type indicators: Simple (no parent, no children), Parent (has children), Variation (has parent)
-  3. Filter options to show only parents, only variations, or all products
-  4. Quick actions: Navigate to parent, view all variations, etc.
-  5. Visual hierarchy showing parent-child relationships
-- **Output**: Clear view of product relationships and hierarchy.
+| ID | Requirement |
+|----|-------------|
+| FR-2.5 | Upsert on save (insert if no record, update if exists) |
+| FR-2.6 | Only changed fields are updated (whitelist-based) |
 
-### FR2: Attribute Association
-- **Trigger**: User on Product Attributes TAB.
-- **Process**:
-  1. Fetch available categories and values from admin-managed data.
-  2. Allow selection via dropdowns.
-  3. Validate selections against existing data.
-  4. Save to product_attributes table.
-- **Output**: Attributes linked to product.
+## 4. Tab: Identifiers
 
-### FR3: Variation Product Creation
-- **Trigger**: User (on parent product) attaches categories/values and clicks "Create Variations" on TAB.
-- **Process**:
-  1. Generate all combinations of selected attribute values, including new ones for existing product lines.
-  2. Identify existing variations to avoid duplicates.
-  3. Check "Copy Sales Pricing" option; if yes, retrieve and copy prices from master.
-  4. For each new combination, create product:
-     - Stock_id: Parent + abbreviations in Royal Order (e.g., XYZ-L-RED).
-     - Description: Replace ${ATTRIB_CLASS} placeholders in parent description with long attribute names (e.g., "Coat - ${Size} ${Color}" becomes "Coat - Large Red").
-     - Copy other fields from master, including prices if checked.
-     - Set parent flag to false, parent_stock_id to master's stock_id.
-  5. Save to DB.
-  6. Display list of created variations.
-- **Output**: New child products created with optional price copying.
+### 4.1 Display
 
-### FR4: Admin Screen for Attribute Management
-- **Trigger**: User navigates to Inventory > Stock > Product Attributes.
-- **Process**:
-  1. Display categories in a sortable table (by Name or Royal Order).
-  2. Table includes columns: Code (Slug), Label, Description, Sort (Royal Order), Active, Actions (Edit/Delete).
-  3. Sort order displays as "3 - Size" format using Royal Order text labels.
-  4. Display values in a separate tab/table with columns: Value, Slug, Sort Order, Active, Actions (Edit/Delete).
-  5. Display assignments in a separate tab/table with columns: Category, Value, Slug, Sort Order, Actions (Delete).
-  6. Edit buttons pre-fill forms with existing data and change button text to "Update". Edit operations update existing records rather than creating duplicates.
-  7. Delete buttons show confirmation dialogs and perform different actions based on usage:
-     - If the item is NOT in use by products: Permanently delete from database
-     - If the item IS in use by products: Deactivate (soft delete) to preserve data integrity
-     - For categories: When hard deleting, all related values are also deleted
-     - Delete links use GET requests with confirmation dialogs.
-  8. Provide CRUD forms for categories and variables with validation.
-  9. Royal Order dropdown provides predefined options (Quantity, Opinion, Size, Age, Shape, Color, Proper adjective, Material, Purpose).
-- **Output**: Updated categories and variables in DB.
+| ID | Requirement |
+|----|-------------|
+| FR-3.1 | Show Brand & Manufacturer: Brand, Manufacturer, Model No. |
+| FR-3.2 | Show Barcodes & Global Trade IDs: MPN, GTIN-14, EAN-13, UPC-A, ISBN-13, ASIN, Internal Barcode |
+| FR-3.3 | Show Sourcing References: Supplier Part No. |
 
-### FR4.2: Product Category Assignments and Variation Generation
-- **Trigger**: User navigates to Inventory > Stock > Product Attributes > Assignments tab.
-- **Process**:
-  1. Enter parent product stock_id and click "Load Product".
-  2. View currently assigned categories in a table with columns: Category, Code, Description, Sort Order (Royal Order), Actions.
-  3. Add categories to the parent product using the "Add Category Assignment" form (only shows unassigned categories).
-  4. Remove category assignments using the "Remove" links with confirmation.
-  5. Click "Generate Variations" button to create all combinations of values from assigned categories.
-  6. System generates child products with:
-     - Stock_id: Parent + attribute slugs in Royal Order (e.g., TSHIRT-S-RED).
-     - Description: Parent description with attribute values appended.
-     - Parent relationship: Set parent_stock_id to parent product.
-     - All other fields copied from parent.
-  7. Skip creation if variation already exists.
-  8. Display count of created variations.
-- **Output**: Category assignments saved and/or child variation products created.
+### 4.2 Save
 
-### FR4: Product Category Management
-- **Trigger**: User needs to organize products into hierarchical categories.
-- **Process**:
-  1. Create and manage category hierarchies (parent-child relationships).
-  2. Assign products to one or multiple categories.
-  3. Support category-based filtering and organization.
-  4. Provide bulk category assignment operations.
-  5. Display category assignments in product listings.
-  6. Allow category-based reporting and analytics.
-- **Output**: Products organized by categories with hierarchical structure.
+| ID | Requirement |
+|----|-------------|
+| FR-3.4 | Upsert on save |
+| FR-3.5 | Free-text fields (no FK validation for brand/manufacturer) |
 
-### FR4.1: Category Hierarchy Management
-- **Trigger**: Administrator needs to define product categories.
-- **Process**:
-  1. Create top-level categories (e.g., Clothing, Electronics).
-  2. Create subcategories under parent categories (e.g., Shirts under Clothing).
-  3. Support unlimited nesting levels.
-  4. Maintain category sort order and display preferences.
-  5. Provide category activation/deactivation.
-- **Output**: Hierarchical category structure for product organization.
+## 5. Tab: Lifecycle
 
-### FR4.2: Product Category Assignments
-- **Trigger**: User assigns categories to products.
-- **Process**:
-  1. Display available categories in hierarchical tree view.
-  2. Allow multiple category selection per product.
-  3. Support drag-and-drop category assignment.
-  4. Validate category assignments against business rules.
-  5. Display assigned categories in product details.
-- **Output**: Products linked to appropriate categories.
+### 5.1 Display
 
-### FR4.3: Category-Based Filtering
-- **Trigger**: User needs to filter products by category.
-- **Process**:
-  1. Display category tree for filtering.
-  2. Support single or multiple category selection.
-  3. Include subcategories in parent category filters.
-  4. Apply filters to product listings and reports.
-  5. Maintain filter state across sessions.
-- **Output**: Filtered product views based on category selection.
+| ID | Requirement |
+|----|-------------|
+| FR-4.1 | Show Status dropdown: Active, Draft, Discontinued, Archived |
+| FR-4.2 | Show Storefront Flags checkboxes (dynamically loaded from flag_defs) |
+| FR-4.3 | Show Availability Window: Available From, Discontinue On (date inputs) |
+| FR-4.4 | Show Clearance Note text field |
 
-- **Trigger**: User navigates to Inventory > Stock > Product Attributes.
-- **Process**:
-  1. Display categories in a sortable table (by Name or Royal Order).
-  2. Table includes columns: Code (Slug), Label, Description, Sort (Royal Order), Active, Actions (Edit/Delete).
-  3. Sort order displays as "3 - Size" format using Royal Order text labels.
-  4. Display values in a separate tab/table with columns: Value, Slug, Sort Order, Active, Actions (Edit/Delete).
-  5. Display assignments in a separate tab/table with columns: Category, Value, Slug, Sort Order, Actions (Delete).
-  6. Edit buttons pre-fill forms with existing data and change button text to "Update". Edit operations update existing records rather than creating duplicates.
-  7. Delete buttons show confirmation dialogs and perform different actions based on usage:
-     - If the item is NOT in use by products: Permanently delete from database
-     - If the item IS in use by products: Deactivate (soft delete) to preserve data integrity
-     - For categories: When hard deleting, all related values are also deleted
-     - Delete links use GET requests with confirmation dialogs.
-  8. Provide CRUD forms for categories and variables with validation.
-  9. Royal Order dropdown provides predefined options (Quantity, Opinion, Size, Age, Shape, Color, Proper adjective, Material, Purpose).
-- **Output**: Updated categories and variables in DB.
+### 5.2 Flag Definitions Admin
 
-### FR4.1: Royal Order Helper Utility
-- **Trigger**: System needs to display or validate Royal Order information.
-- **Process**:
-  1. Provide centralized Royal Order options and labels.
-  2. Generate HTML dropdowns with proper formatting.
-  3. Validate sort order values (1-9 range).
-  4. Convert numeric sort orders to descriptive labels (e.g., 3 → "Size").
-  5. Follow Single Responsibility Principle with dedicated utility class.
-- **Output**: Consistent Royal Order handling across the application.
+| ID | Requirement |
+|----|-------------|
+| FR-4.5 | Stock → Lifecycle Flags menu item opens admin page |
+| FR-4.6 | Admin page allows create, edit, deactivate, reorder of flag definitions |
+| FR-4.7 | Flag definitions are global (shared across all products) |
+| FR-4.8 | When no definitions exist, fall back to hardcoded defaults |
 
-### FR5: Inventory and Stock Management (Already Supported by FA)
-- Variations, as individual products, have independent stock levels via FA's stock_id.
-- No additional FR needed.
+### 5.3 Save
 
-### FR6: Sales and Pricing
-- **Scope Clarification**: Individual item pricing is handled by FA core (out of scope). Variation-based pricing rules are in scope.
-- **Trigger**: User needs to apply pricing rules based on variation attributes.
-- **Process**:
-  1. Define pricing rules per attribute value (e.g., "XXL size: +$2.00", "RED color: +25%").
-  2. Support fixed amount adjustments ($X), percentage adjustments (Y%), or combined (X + Y%).
-  3. Apply rules automatically when generating variations.
-  4. Allow manual override of calculated prices.
-  5. Display price calculations with rule breakdowns.
-- **Output**: Variations created with appropriate pricing based on attribute rules.
+| ID | Requirement |
+|----|-------------|
+| FR-4.9 | Upsert lifecycle data |
+| FR-4.10 | Sync flag assignments (replace all on save) |
 
-### FR7: Bulk Operations (Core Module)
-- **Scope**: Core module provides bulk operations framework. Plugins extend with domain-specific rules.
-- **Trigger**: User needs to apply changes to multiple related products simultaneously.
-- **Process**:
-  1. Select parent product and operation type (pricing, attributes, etc.).
-  2. Choose target variations (all, filtered by attributes, etc.).
-  3. Apply bulk changes:
-     - Price adjustments (fixed amount, percentage, or combined)
-     - Attribute assignments/removals
-     - Status changes (active/inactive)
-     - Category assignments
-  4. Plugins can extend with custom bulk operations and validation rules.
-  5. Preview changes before applying.
-  6. Show confirmation with affected products count.
-- **Output**: Bulk changes applied to selected variations with plugin-specific business rules enforced.
+## 6. Tab: Media
 
-### FR9: Retroactive Application of Module
-- **Trigger**: User accesses a new screen or button (e.g., under Inventory > Stock > Retroactive Attributes).
-- **Process**:
-  1. Scan all existing stock_ids in the database.
-  2. Analyze patterns based on Royal Order and attribute abbreviations to identify potential variation groups.
-  3. For groups like BM-SG1, BM-SG2, BM-SG3, suggest creating a parent BM-SG if it doesn't exist.
-  4. For hierarchies like A-B-C (potential parent) and A-B-C-D, A-B-C-E (potential children), suggest associations.
-  5. Display suggested relationships in a list or table, with options to review and assign.
-  6. Provide a bulk edit screen where user can select multiple suggested child products and assign them to a parent at once.
-  7. For each assignment, perform sanity checks (e.g., stock_id root matching), show warnings, and allow force with confirmation.
-  8. On assignment, update parent_stock_id and parent flag accordingly.
-- **Output**: Assigned parent-child relationships, with confirmation of changes.
+### 6.1 Primary Image Display
 
-### FR10: API for External Integration
-- **Trigger**: External system makes API calls to manage attributes.
-- **Process**:
-  1. Provide endpoints for GET/POST/PUT/DELETE on categories, values, product associations.
-  2. Validate requests and permissions.
-  3. Return JSON responses.
-- **Output**: Updated data or queried information.
+| ID | Requirement |
+|----|-------------|
+| FR-5.1 | Show primary image thumbnail from `{company_path}/images/{stock_id}.{jpg\|png\|gif}` |
+| FR-5.2 | If no primary image, show "No primary image set" message |
 
-## Technical Implementation Guidelines
-- **Compatibility**: FrontAccounting 2.3.22 on PHP 7.3.
-- **Code Quality**: Follow SOLID principles (SRP, OCP, LSP, ISP, DIP) with DI. Use interfaces for contracts, parent classes/traits for DRY. Minimize If/Switch by using polymorphic SRP classes (Fowler).
-- **Testing**: Unit tests for all code covering edge cases. UAT test cases designed alongside UI.
-- **Documentation**: PHPDoc blocks/tags. UML diagrams: ERD, Message Flow, Logic Flowcharts.
+### 6.2 Additional Images
 
-## Data Flow
-- User Input → Validation → DB Update → Confirmation.
+| ID | Requirement |
+|----|-------------|
+| FR-5.3 | Show table of additional images with thumbnail, type, alt text, sort order |
+| FR-5.4 | Upload form accepts JPEG, PNG, GIF files |
+| FR-5.5 | Uploaded files saved as `{stock_id}-{N}.{ext}` in company images directory |
+| FR-5.6 | MIME type validation via finfo (not just extension) |
+| FR-5.7 | File size validation against `$SysPrefs->max_image_size` |
+| FR-5.8 | Delete removes both DB record and file from disk |
 
-## Interfaces
-- UI: HTML forms integrated into FA.
-- DB: New tables: attribute_categories, attribute_values, product_attributes.
+## 7. Tab: URLs
 
-## Error Handling
-- Invalid inputs: Display error messages.
-- DB failures: Rollback and notify user.
+### 7.1 Display
 
----
+| ID | Requirement |
+|----|-------------|
+| FR-6.1 | Show table of URL attachments with link, description, date |
+| FR-6.2 | Add form: URL (required), Description (optional) |
+| FR-6.3 | Delete button with confirmation |
 
-## Extended Attribute Tabs — v0.6 and v0.7
+### 7.2 Save
 
-### FR11: Shipping / Logistics Attributes *(v0.6.0)*
-- **Trigger**: User navigates to the "Shipping" tab on the Product Attributes screen.
-- **Process**:
-  1. Display form fields: weight (kg), length/width/height (cm), fragile flag, hazmat flag, country of origin, HS tariff code, freight class, shipping class.
-  2. Save values into `0_product_shipping_attributes` keyed on `stock_id`.
-  3. Show **Clone to Variations** panel: list all child variations with checkboxes; if no variations exist, panel is hidden. "Select All" toggling supported.
-  4. On clone submit, write parent's shipping row to each selected variation's stock_id.
-- **Output**: Shipping attributes stored per product; optionally propagated to variations.
+| ID | Requirement |
+|----|-------------|
+| FR-6.4 | POST actions redirect to avoid re-submit |
+| FR-6.5 | URL validation (must be valid URL format) |
 
-### FR12: Product Identifiers *(v0.7.0)*
-- **Trigger**: User navigates to the "Identifiers" tab.
-- **Process**:
-  1. Display three fieldset groups: Brand/Manufacturer, Barcodes (MPN, GTIN, EAN, UPC, ISBN, ASIN, internal barcode), Sourcing (supplier part number, model number).
-  2. All fields nullable; empty strings stored as NULL.
-  3. Save into `0_product_identifiers` keyed on `stock_id`.
-  4. Clone panel: propagate to selected variations (same as shipping panel pattern).
-- **Output**: Identifier data stored; optionally propagated.
+## 8. Tab: Warranty
 
-### FR13: Product Lifecycle *(v0.7.0)*
-- **Trigger**: User navigates to the "Lifecycle" tab.
-- **Process**:
-  1. Display status dropdown: active / draft / discontinued / archived.
-  2. Display boolean checkboxes: special order, clearance, out-of-stock notice, new arrival, best-seller, featured, seasonal.
-  3. Date fields: available_from (YYYY-MM-DD), discontinue_on (YYYY-MM-DD). Validated on save.
-  4. Text field: clearance note.
-  5. Save into `0_product_lifecycle` keyed on `stock_id`.
-  6. Clone panel: propagate full lifecycle row to selected variations.
-- **Output**: Lifecycle status and flags stored; optionally propagated.
+### 8.1 Display
 
-### FR14: Product Tags *(v0.7.0)*
-- **Trigger**: User navigates to the "Tags" tab.
-- **Process**:
-  1. **Global tag management section** (always visible): table of all tags with name, slug, and delete button. Add-tag form: entering a name auto-generates a slug. Delete cascades tag assignments.
-  2. **Per-product assignment section** (visible when stock_id present): checkbox list of all tags, pre-checked for tags already assigned. Changes submitted immediately per checkbox (auto-submit).
-- **Output**: Tags created/deleted globally; per-product tag assignments updated.
+| ID | Requirement |
+|----|-------------|
+| FR-7.1 | Show warranty type radio buttons: None, Manufacturer, Extended, Third-Party, Lifetime |
+| FR-7.2 | Show duration + unit fields for Manufacturer, Extended, Third-Party |
+| FR-7.3 | Show Lifetime Warranty Notes text field |
+| FR-7.4 | Show Warranty Terms / General Notes textarea |
 
-### FR15: Product Media (Multi-Photo) *(v0.7.0)*
-- **Trigger**: User navigates to the "Media" tab.
-- **Process**:
-  1. Display gallery of existing media items, each showing: thumbnail/link (URL), alt text, sort order, primary star indicator, variation-scope checkboxes, delete button.
-  2. Variation-scope checkboxes: list each child variation; checked means this media item applies to that variation. Saved via `0_product_media_variation_links`.
-  3. Add-new-media form at bottom: URL (required), alt text, sort order, media type (image/video/document), is_primary flag.
-  4. Delete: removes media row and cascades to variation links.
-- **Output**: Media gallery stored; each item optionally scoped to subset of variations.
+### 8.2 Save
 
-### FR16: Product Attributes Summary *(v0.7.0)*
-- **Trigger**: User navigates to the "Summary" tab.
-- **Process**:
-  1. Display read-only sections for each attribute group: product attributes (assigned categories/values), shipping attributes, identifiers, lifecycle, tags, and media count.
-  2. Each section shows stored data in compact form.
-  3. No edits from this tab; links navigate to the respective tab.
-- **Output**: At-a-glance view of all product attribute data.
+| ID | Requirement |
+|----|-------------|
+| FR-7.5 | Upsert on save |
+
+## 9. Tab: Tags
+
+### 9.1 Display
+
+| ID | Requirement |
+|----|-------------|
+| FR-8.1 | Show assigned tags for current product |
+| FR-8.2 | Allow adding existing tags |
+| FR-8.3 | Allow removing tag assignments |
+
+### 9.2 Admin
+
+| ID | Requirement |
+|----|-------------|
+| FR-8.4 | Create new global tags |
+| FR-8.5 | Edit tag name and slug |
+| FR-8.6 | Delete tag (cascades to assignments) |
+
+## 10. Tab: Variations
+
+### 10.1 Product Types
+
+| ID | Requirement |
+|----|-------------|
+| FR-9.1 | Product type: Simple, Variable, Variation |
+| FR-9.2 | Assign parent for variation products |
+
+### 10.2 Variation Generation
+
+| ID | Requirement |
+|----|-------------|
+| FR-9.3 | Generate all combinations from attribute assignments |
+| FR-9.4 | Create only missing variations (incremental) |
+| FR-9.5 | Create individual child product |
+| FR-9.6 | Royal Order of Adjectives for consistent sort |
+
+### 10.3 Bulk Operations
+
+| ID | Requirement |
+|----|-------------|
+| FR-9.7 | Clone shipping/identifiers/lifecycle from parent to variations |
+| FR-9.8 | Make inactive: parent + zero-stock variations |
+| FR-9.9 | Reactivate: parent + all existing variations |
+
+### 10.4 Dashboard
+
+| ID | Requirement |
+|----|-------------|
+| FR-9.10 | Paginated table of all products with type, parent, status |
+| FR-9.11 | Filter by type, parent, status |
+
+## 11. Hook Integration
+
+### 11.1 items.php Hooks
+
+| ID | Hook | Purpose |
+|----|------|---------|
+| FR-10.1 | `item_display_tab_headers` | Register all tabs in item edit screen |
+| FR-10.2 | `item_display_tab_content` | Render tab content when selected |
+| FR-10.3 | `post_item_write` | Save attributes after item update/insert |
+| FR-10.4 | `pre_item_delete` | Clean up attributes before item deletion |
+
+### 11.2 Hook Behavior
+
+| ID | Requirement |
+|----|-------------|
+| FR-10.5 | Custom tabs fall through to settings if no hook handles them |
+| FR-10.6 | post_item_write receives full $_POST data and stock_id |
+| FR-10.7 | pre_item_delete receives stock_id and cascades cleanup |
+
+## 12. Schema Installation
+
+| ID | Requirement |
+|----|-------------|
+| FR-11.1 | `install_extension()` creates all tables on module activation |
+| FR-11.2 | Tables use `0_` prefix (FA convention) |
+| FR-11.3 | Schema is idempotent (`CREATE TABLE IF NOT EXISTS`) |
+| FR-11.4 | Seed data inserts Royal Order categories on first install |

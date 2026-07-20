@@ -1,202 +1,132 @@
-# Business Requirements Document (BRD)
+# Business Requirements Document
 
-## Overview
-The FA_ProductAttributes system consists of a core module providing generic attribute infrastructure and a plugin architecture enabling extensible attribute-based functionality. The core module manages attribute categories, values, and assignments, while plugins add specific functionality like product variations.
+## 1. Executive Summary
 
-## Business Objectives
-- Provide generic attribute infrastructure for FrontAccounting products
-- Enable extensible attribute-based functionality through plugins
-- Support WooCommerce-style product variations via plugin
-- Ensure clean separation between core attributes and domain-specific features
-- Maintain backward compatibility and ease of maintenance
+The Product Attributes module extends FrontAccounting 2.4's inventory management with structured product metadata, enabling richer product information for e-commerce exports (WooCommerce, Square), catalogue generation, and internal inventory management.
 
-## Stakeholders
-- **Core Module Users**: Administrators managing attribute categories and values
-- **Plugin Users**: Inventory managers using specific attribute functionality (variations, etc.)
-- **Developers**: Creating new attribute plugins
-- **System Administrators**: Managing module dependencies and installations
+## 2. Business Objectives
 
-## System Architecture
+| ID | Objective | Priority |
+|----|-----------|----------|
+| BO-1 | Support structured product metadata beyond FA's flat `description` field | High |
+| BO-2 | Enable e-commerce integration with WooCommerce and Square by providing complete product data (dimensions, weight, brand, identifiers) | High |
+| BO-3 | Support product lifecycle management (active/draft/discontinued/archived) with configurable storefront flags | High |
+| BO-4 | Manage product media (images, videos) for e-commerce catalogues | Medium |
+| BO-5 | Track warranty information per product for customer service | Medium |
+| BO-6 | Support product variations (size × color combinations) for WooCommerce | Medium |
+| BO-7 | Maintain Royal Order of Adjectives for consistent attribute display | Low |
 
-### Core Module (FA_ProductAttributes)
-**Responsibilities:**
-- Generic attribute category and value management
-- Product-to-attribute assignment system
-- STOCK application integration via hooks
-- Extension points for plugin integration
-- Generic attribute services and UI
+## 3. Business Rules
 
-**Database Tables:**
-- `product_attribute_categories`: Attribute categories (Color, Size, Material, etc.)
-- `product_attribute_values`: Values within categories (Red, Blue, XL, etc.)
-- `product_attribute_assignments`: Links products to attributes
-- `product_attribute_product_types`: Product type classifications
-- `product_shipping_attributes`: Per-product shipping/logistics data (weight, dimensions, hazmat, customs)
-- `product_identifiers`: Brand, manufacturer, barcode, GTIN/EAN/UPC/ISBN/ASIN, supplier part numbers
-- `product_lifecycle`: Status (active/draft/discontinued/archived) and flags (special order, clearance, new arrival, etc.)
-- `product_tags`: Global tag dictionary with slugs
-- `product_tag_assignments`: Many-to-many product↔tag
-- `product_media`: Per-product photos/videos/documents with sort order and primary flag
-- `product_media_variation_links`: Scopes individual media items to a subset of variations
+### 3.1 Core Attributes (EAV)
 
-### Plugin Architecture
-**Extension Points:**
-- `attributes_tab_content`: Plugins can add UI to attributes tab
-- `attributes_save`: Plugins can handle attribute save operations
-- `product_type_management`: Plugins can extend product type functionality
+| ID | Rule |
+|----|------|
+| BR-1.1 | Each product may have zero or more attribute categories assigned |
+| BR-1.2 | Each attribute category contains zero or more values |
+| BR-1.3 | A product is linked to a category-value pair via assignments |
+| BR-1.4 | Assignments have a sort order for display sequence |
+| BR-1.5 | Categories can be soft-deactivated (not deleted) |
+| BR-1.6 | Values can be soft-deactivated (not deleted) |
+| BR-1.7 | Duplicate values within a category are prevented |
 
-**Current Plugins:**
-- **FA_ProductAttributes_Variations**: Adds WooCommerce-style product variations
-  - Parent-child product relationships
-  - Automatic variation generation
-  - Royal Order attribute sequencing
-  - Retroactive pattern analysis for existing products
-- **FA_ProductAttributes_Categories**: Adds product categorization functionality
-  - Hierarchical category structures
-  - Product-to-category assignments
-  - Category-based organization and filtering
-  - Bulk category operations
+### 3.2 Shipping Attributes
 
-## Functional Requirements
+| ID | Rule |
+|----|------|
+| BR-2.1 | Each product has at most one shipping attributes record |
+| BR-2.2 | Dimensions support cm and in units |
+| BR-2.3 | Weight supports kg, lb, g, oz units |
+| BR-2.4 | Hazardous goods flag is boolean |
+| BR-2.5 | HS Code and country of origin support international trade |
 
-1. **Items Screen Enhancement**
-   - Add a new TAB labeled "Product Attributes" to the existing FrontAccounting Items screen (accessible via Inventory > Items).
-   - This TAB will allow users to view and manage attributes associated with the selected product.
-   - Functionality on the TAB:
-     - Display a list of currently associated attributes for the product.
-     - Allow adding/removing attributes from predefined categories (e.g., color, size).
-     - For parent products (parent flag = true), include:
-       - "Create Variations" button to generate child products.
-       - "Make Inactive" button: Deactivates the parent and, by default, deactivates child variations with 0 stock. Shows warning list of variations with stock >0, but allows deactivation of 0 stock items.       - "Reactivate Variations" button: For inactive parents, rebuilds and re-activates existing variations, with option to create missing ones.
-       - "Create Missing Variations" button: Generates and creates any missing variation combinations.
-     - For non-parent products, include "Assign Parent" dropdown to designate as child of a parent product, with sanity checking (warning for mismatched stock_id roots) and force option after "are you sure" confirmation.
-     - Support saving changes to persist attribute associations with the product.
+### 3.3 Product Identifiers
 
-2. **Attribute Association**
-   - For each product, users must be able to associate specific attributes from available categories.
-   - Attributes are selected from a predefined list managed in the admin screen (see below).
-   - Ensure data integrity: Only valid attributes from existing categories can be associated.
-   - Store associations in the database, linked to the product's stock_id.
+| ID | Rule |
+|----|------|
+| BR-3.1 | Each product has at most one identifiers record |
+| BR-3.2 | Brand is a free-text field (not a FK to categories) |
+| BR-3.3 | GTIN, EAN, UPC, ISBN, ASIN are independent fields |
+| BR-3.4 | MPN (Manufacturer Part Number) is separate from internal barcode |
 
-3. **Variation Product Creation**
-   - Provide a "Create Variations" feature on the Product Attributes TAB (only visible for parent products).
-   - After attaching categories and selecting values, user clicks button to generate child products.
-   - System creates variations using all combinations of selected attribute values, including new attributes added to existing product lines.
-   - Include a "Copy Sales Pricing" checkbox: If checked, copies all sales prices from the master product to each variation.
-   - Use "Royal Order of adjectives" for attribute sequencing (e.g., Size before Color).
-   - Stock_id format: Parent stock_id + attribute abbreviations in order (e.g., XYZ-L-RED).
+### 3.4 Lifecycle
 
-4. **Shipping / Logistics Attributes** *(v0.6.0)*
-   - Per-product shipping attributes tab: weight (kg), dimensions (L×W×H cm), fragile flag, hazmat flag, country of origin, HS tariff code, freight class, shipping class.
-   - Cloning panel: select which variations should inherit the parent product's shipping attributes (one-click clone-to-all or selective checkbox).
+| ID | Rule |
+|----|------|
+| BR-4.1 | Each product has exactly one lifecycle record |
+| BR-4.2 | Status must be one of: active, draft, discontinued, archived |
+| BR-4.3 | Storefront flags are admin-configurable definitions |
+| BR-4.4 | A product can have zero or more flags assigned |
+| BR-4.5 | Available-from and discontinue-on dates form an availability window |
+| BR-4.6 | Clearance note is free-text for discount/markdown messaging |
 
-5. **Product Identifiers** *(v0.7.0)*
-   - Per-product identifiers tab: brand, manufacturer, MPN (manufacturer part number), GTIN, EAN, UPC, ISBN, ASIN, internal barcode, supplier part number, model number.
-   - Cloning panel: propagate identifiers to selected variations.
+### 3.5 Media
 
-6. **Product Lifecycle** *(v0.7.0)*
-   - Per-product lifecycle tab: status dropdown (active / draft / discontinued / archived), boolean flags (special order, clearance, out-of-stock notice, new arrival, best-seller, featured, seasonal), available-from date, discontinue-on date, and a clearance note.
-   - Cloning panel: propagate lifecycle settings to selected variations.
+| ID | Rule |
+|----|------|
+| BR-5.1 | One primary image exists per product in FA's filesystem |
+| BR-5.2 | Additional images are stored in the company images directory |
+| BR-5.3 | Additional images follow naming convention: `{stock_id}-{N}.{ext}` |
+| BR-5.4 | Only JPEG, PNG, GIF formats are accepted |
+| BR-5.5 | Media type is classified as image, video, or document |
+| BR-5.6 | External URLs (YouTube, etc.) are stored separately from local files |
+| BR-5.7 | Deleting an item deletes all its media files from disk |
 
-7. **Product Tags** *(v0.7.0)*
-   - Global tag management: create and delete tags (name + auto-generated slug).
-   - Per-product tag assignment: checkbox list of all tags; changes saved immediately.
+### 3.6 Warranty
 
-8. **Product Media (Multi-Photo)** *(v0.7.0)*
-   - Per-product media gallery: add image/video/document URLs with alt text, sort order, and primary flag.
-   - Per media item: variation-scoping checkboxes to restrict which variations display that media item.
-   - Delete individual media items.
-   - Short description: Replace ${ATTRIB_CLASS} placeholders in parent description with corresponding long attribute names (e.g., if parent has "Coat - ${Size} ${Color}", variation becomes "Coat - Large Red").
-   - Each variation inherits base product details but has unique stock_id and description, with parent flag set to false and parent_stock_id set to master's stock_id.
-   - Users can manually deactivate unwanted variations after creation if certain combinations are not needed.
-   - Ensure cloned products are fully functional as standalone items in FrontAccounting.
+| ID | Rule |
+|----|------|
+| BR-6.1 | Warranty type must be one of: none, manufacturer, extended, third_party, lifetime |
+| BR-6.2 | Each warranty type (except none/lifetime) has a duration and unit |
+| BR-6.3 | Duration units are: days, months, years |
+| BR-6.4 | Lifetime warranty has a notes field instead of duration |
 
-4. **Admin Screen for Attribute Management**
-   - Add a new submenu item under Inventory > Stock, titled "Product Attributes" or "Attribute Categories".
-   - This admin screen will manage:
-     - **Categories**: Create, edit, delete variable categories (e.g., "Color", "Size").
-       - Include a "Royal Order" column/field: An integer value to define the sequencing order for attributes in variations (e.g., Size=1, Color=2).
-       - Allow overriding the default order if needed.
-       - UI: Table view with columns for Category Name, Royal Order (editable input field), and Actions (Edit/Delete).
-       - Viewing: Sortable table with options to sort by Name or Royal Order (ascending/descending).
-     - **Variables**: For each category, add, edit, delete specific values (e.g., "Red", "Large").
-   - Use a hierarchical interface: List categories (sortable by Royal Order), and under each, list associated variables.
-   - Include validation to prevent deletion of categories/variables if they are in use by products.
-   - Persist data in dedicated database tables (e.g., attribute_categories and attribute_values).
+### 3.7 Product Variations
 
-5. **Inventory and Stock Management** (Already Supported by FA)
-   - Variations, as individual products, inherit FA's independent stock levels per stock_id.
-   - No additional development needed; ensure variations are created as separate products.
+| ID | Rule |
+|----|------|
+| BR-7.1 | A parent product can have multiple child variations |
+| BR-7.2 | Variation combinations are generated from attribute assignments |
+| BR-7.3 | Child stock IDs follow pattern: `{parent}-{attr1}-{attr2}` |
+| BR-7.4 | Royal Order of Adjectives determines sort sequence |
+| BR-7.5 | Pricing rules support fixed amount or percentage adjustments |
+| BR-7.6 | Make Inactive deactivates parent and zero-stock variations |
+| BR-7.7 | Reactivate restores parent and all existing variations |
 
-6. **Sales and Pricing**
-   - **Scope**: Individual item pricing handled by FA core (out of scope). Variation-based pricing rules are in scope.
-   - Define pricing rules per attribute value (e.g., "XXL size: +$2.00", "RED color: +25%").
-   - Support fixed amount adjustments ($X), percentage adjustments (Y%), or combined (X + Y%).
-   - Apply rules automatically when generating variations.
-   - Allow manual override of calculated prices.
-   - Display price calculations with rule breakdowns.
-   - Provide bulk pricing operations through core module framework.
+### 3.8 Tags
 
-7. **Reporting and Analytics**
-   - Since attributes are new to FA, existing reports lack filters.
-   - Add new custom reports or modify key existing reports (e.g., Inventory Report, Sales Report) to include attribute filters (e.g., filter by Color or Size).
-   - Ensure variations are listed with their attributes in report outputs.
-   - Include validation report: Identify inactive parents with active 0-stock variations for cleanup.
+| ID | Rule |
+|----|------|
+| BR-8.1 | Tags are global (not per-product) |
+| BR-8.2 | A product can have zero or more tags |
+| BR-8.3 | Tag assignment is idempotent |
+| BR-8.4 | Deleting a tag removes all its assignments |
 
-8. **Bulk Operations (Core Module)**
-   - **Scope**: Core module provides bulk operations framework. Plugins extend with domain-specific rules.
-   - Allow bulk editing of multiple variations simultaneously:
-     - Price adjustments (fixed amount, percentage, or combined)
-     - Attribute assignments/removals
-     - Status changes (active/inactive)
-     - Category assignments
-   - Plugins can extend with custom bulk operations and validation rules.
-   - Preview changes before applying.
-   - Show confirmation with affected products count.
+### 3.9 Categories
 
-9. **Retroactive Application of Module**
-   - Provide functionality to analyze existing products and suggest parent-child relationships based on stock_id patterns.
-   - Scan all stock_ids for groups that match variation creation rules (using Royal Order and attribute abbreviations).
-   - Suggest creation of parent products for identified variation groups (e.g., if BM-SG1, BM-SG2, BM-SG3 exist, suggest BM-SG as parent).
-   - Suggest parent-child associations for existing products where patterns indicate hierarchy (e.g., A-B-C as parent for A-B-C-D and A-B-C-E).
-   - Include a bulk edit screen to review suggested assignments and assign multiple child products to parents at once.
-   - Ensure sanity checks and confirmation dialogs for assignments.
+| ID | Rule |
+|----|------|
+| BR-9.1 | Products can have sub-category assignments |
+| BR-9.2 | Category assignments are synced (add/remove in bulk) |
 
-10. **API for External Integration**
-   - Provide REST API endpoints for CRUD operations on attribute categories, values, and product associations.
-   - Allow external systems to query and manage product attributes programmatically.
-   - Ensure API follows FA's security model and authentication.
+## 4. Integration Requirements
 
-## Non-Functional Requirements
-- **Integration**: Seamlessly integrate with FrontAccounting's existing UI and database schema without disrupting core functionality.
-- **Security**: Ensure only authorized users (e.g., with appropriate permissions) can access and modify attributes and variations. Grey out buttons for unauthorized users, similar to FA's unavailable menus. Honor FA's system preference for showing/hiding unavailable choices.
-- **Performance**: Attribute loading and saving should be efficient, even for products with multiple attributes.
-- **Usability**: Intuitive UI elements (e.g., dropdowns for attribute selection, confirmation dialogs for cloning). Include tooltips for buttons and fields, and confirmation dialogs for destructive actions (e.g., deactivation, creation).
-- **Data Persistence**: Use the existing FrontAccounting database structure; extend with new tables if necessary (as per the provided schema.sql). Add parent_stock_id field to track parent-child relationships; products with parent flag = true are variable masters, false are simple or variations.
-- **Data Integrity**: "Make Inactive" button for parents: Deactivates parent and, by default, deactivates variations with 0 stock. Warning list for variations with stock >0, but allows deactivation of 0 stock items.
-- **Compatibility**: 
-  - FrontAccounting version: 2.3.22
-  - PHP version: 7.3
-- **Code Quality**: Adhere to SOLID principles (Single Responsibility, Open-Closed, Liskov Substitution, Interface Segregation, Dependency Inversion), including Dependency Injection (DI) and Single Responsibility Principle (SRP). Use interfaces (contracts) where appropriate, parent classes or traits for DRY (Don't Repeat Yourself). Avoid If/Switch statements where possible by using SRP classes as described by Fowler.
-- **Testing**: Write unit tests for ALL code, aiming to cover all edge cases. Design UAT (User Acceptance Testing) test cases since UI is being designed concurrently.
-- **Documentation**: Include PHPDoc tags/blocks for all code. Provide UML diagrams including ERD (Entity-Relationship Diagram), Message Flow, flow charts (logic), etc.
+| ID | Requirement | Source System |
+|----|-------------|---------------|
+| IR-1 | Tab rendering in FA items.php | FrontAccounting 2.4 |
+| IR-2 | Save/delete lifecycle via hooks | FrontAccounting 2.4 |
+| IR-3 | Image export to Square | ksf_FA_Square |
+| IR-4 | Product data export to WooCommerce | ksf_FA_Woocommerce |
+| IR-5 | Attribute data in catalogue generation | ksf_generate_catalogue |
+| IR-6 | Schema installation via module activation | FrontAccounting 2.4 |
 
-## Assumptions
-- FrontAccounting version compatibility: Confirmed as 2.3.22.
-- PHP version: 7.3 (ensure code uses compatible syntax and features).
-- Database: Leverage existing PDO/MySQL setup; new tables will be defined in schema.sql.
-- Products have a "parent" flag: Boolean field indicating if a product is a master/parent (true) or a variation/child (false). Only parent products display the "Create Variations" button.
-- User Roles: Admin access for category management; standard users for product attribute association.
-- Technical Standards: Code follows SOLID principles with DI and SRP; comprehensive unit testing; PHPDoc documentation; UML diagrams (ERD, Message Flow, flowcharts); UAT test cases designed with UI.
+## 5. Non-Functional Requirements
 
-## Constraints
-- Must not alter core FA files directly; use hooks and extensions.
-- Database changes limited to new tables.
-
-## Acceptance Criteria
-- All functional requirements implemented and tested.
-- No performance degradation in FA.
-- Admin and user interfaces intuitive and error-free.
-
-## Approval
-[To be signed off by stakeholders]
+| ID | Requirement | Target |
+|----|-------------|--------|
+| NFR-1 | PHP 7.3+ compatibility | FrontAccounting 2.4 environment |
+| NFR-2 | No direct stock_master alterations | Use xref tables only |
+| NFR-3 | PSR-4 autoloading | Composer standard |
+| NFR-4 | All DB queries parameterized | SQL injection prevention |
+| NFR-5 | File upload size validation | Server configuration limit |
+| NFR-6 | CSRF protection via FA's form system | `start_form()` / `hidden()` |
