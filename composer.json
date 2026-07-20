@@ -16,7 +16,9 @@
     "ksfraser/fa-hooks": "^1.0 || dev-main",
     "ksfraser/ksf-modules-dao": "^0.3",
     "ksfraser/ksf-schemamanager": "*",
-    "ksfraser/ksf-rest-api": "*"
+    "ksfraser/ksf-rest-api": "*",
+    "ksfraser/ksf-fa-common": "*",
+    "ksfraser/fa-product-attributes-core": "*"
   },
   "require-dev": {
     "phpunit/phpunit": "^9.5.0",
