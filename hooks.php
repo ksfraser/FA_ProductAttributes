@@ -225,6 +225,13 @@ class hooks_FA_ProductAttributes extends hooks
 
     private function load_autoloader()
     {
+        // Shared utility: ensure Composer dependencies are installed (runs once).
+        $composerDepsPath = dirname(__DIR__) . '/ksf_FA_Common/src/Utils/ComposerDependencies.php';
+        if (file_exists($composerDepsPath)) {
+            require_once $composerDepsPath;
+            \KsfCommon\Utils\ComposerDependencies::ensure(__DIR__);
+        }
+
         $autoloadPath = __DIR__ . '/vendor/autoload.php';
         if (!is_file($autoloadPath)) {
             $autoloadPath = __DIR__ . '/../vendor/autoload.php';
