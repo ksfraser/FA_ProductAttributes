@@ -31,7 +31,7 @@ class ModuleHooksRegistrationTest extends TestCase
         $this->assertTrue(method_exists($moduleHooks, 'install_access'));
         $this->assertTrue(method_exists($moduleHooks, 'item_display_tab_headers'));
         $this->assertTrue(method_exists($moduleHooks, 'item_display_tab_content'));
-        $this->assertTrue(method_exists($moduleHooks, 'pre_item_write'));
+        $this->assertTrue(method_exists($moduleHooks, 'post_item_write'));
         $this->assertTrue(method_exists($moduleHooks, 'pre_item_delete'));
 
         $tabs = array('details' => array('Details', 'ITEM-1'));

@@ -230,7 +230,7 @@ class hooks_FA_ProductAttributes extends hooks
         return false;
     }
 
-    public function pre_item_write($itemData, $stockId = '')
+    public function post_item_write($itemData, $stockId = '')
     {
         $this->load_plugins_on_demand();
 

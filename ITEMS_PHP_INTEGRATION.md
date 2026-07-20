@@ -98,7 +98,7 @@ Find the item save/update logic (usually in the POST handling section) and add:
 ```php
 // Call pre-save hooks
 if (isset($hooks)) {
-    $hooks->call_hook('pre_item_write', $item_data, $stock_id);
+    $hooks->call_hook('post_item_write', $item_data, $stock_id);
 }
 ```
 
@@ -128,7 +128,7 @@ if (isset($hooks)) {
 
 - `item_display_tab_headers`: Receives `TabCollection` object, returns modified `TabCollection`
 - `item_display_tab_content`: Provide content for specific tabs (receives $stock_id and $selected_tab parameters)
-- `pre_item_write`: Modify item data before saving to database
+- `post_item_write`: Save additional attributes after item save to database
 - `pre_item_delete`: Handle cleanup before item deletion
 
 ## Extended Architecture Support
