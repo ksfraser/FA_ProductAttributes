@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "fd40b055076832095703099b8a581a39",
+    "content-hash": "c888e2e27374aec7a93a101bdb3d1c49",
     "packages": [
         {
             "name": "ksfraser/exceptions",
@@ -95,11 +95,17 @@
         },
         {
             "name": "ksfraser/fa-product-attributes-core",
-            "version": "dev-main",
+            "version": "1.0.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/ksfraser/FA_ProductAttributes_Core.git",
+                "reference": "357f34896cd322b2674a26f7369e180b39d667ce"
+            },
             "dist": {
-                "type": "path",
-                "url": "../FA_ProductAttributes_Core",
-                "reference": "f2f9cbf1e3e84c170ede652e1b482dcfc7eda2e5"
+                "type": "zip",
+                "url": "https://api.github.com/repos/ksfraser/FA_ProductAttributes_Core/zipball/357f34896cd322b2674a26f7369e180b39d667ce",
+                "reference": "357f34896cd322b2674a26f7369e180b39d667ce",
+                "shasum": ""
             },
             "require": {
                 "ksfraser/ksf-fa-common": "*",
@@ -115,16 +121,7 @@
                     "FrontAccounting\\ProductAttributes\\": "src/FrontAccounting/ProductAttributes/"
                 }
             },
-            "autoload-dev": {
-                "psr-4": {
-                    "FrontAccounting\\ProductAttributes\\Test\\": "tests/"
-                }
-            },
-            "scripts": {
-                "test": [
-                    "phpunit"
-                ]
-            },
+            "notification-url": "https://packagist.org/downloads/",
             "license": [
                 "MIT"
             ],
@@ -135,18 +132,25 @@
                 }
             ],
             "description": "Business logic for FA Product Attributes - DAOs, Services, and domain models",
-            "transport-options": {
-                "symlink": true,
-                "relative": true
-            }
+            "support": {
+                "issues": "https://github.com/ksfraser/FA_ProductAttributes_Core/issues",
+                "source": "https://github.com/ksfraser/FA_ProductAttributes_Core/tree/1.0.0"
+            },
+            "time": "2026-07-20T05:46:10+00:00"
         },
         {
             "name": "ksfraser/ksf-fa-common",
             "version": "dev-main",
-            "dist": {
-                "type": "path",
-                "url": "../ksf_FA_Common",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/ksfraser/ksf_FA_Common.git",
                 "reference": "9e6dc7dafde84795d67c2ce39842c651ea4c2501"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/ksfraser/ksf_FA_Common/zipball/9e6dc7dafde84795d67c2ce39842c651ea4c2501",
+                "reference": "9e6dc7dafde84795d67c2ce39842c651ea4c2501",
+                "shasum": ""
             },
             "require": {
                 "ksfraser/exceptions": "^1.3",
@@ -155,6 +159,7 @@
             "require-dev": {
                 "phpunit/phpunit": "^10.0"
             },
+            "default-branch": true,
             "type": "library",
             "extra": {
                 "ksf": {
@@ -162,26 +167,23 @@
                 }
             },
             "autoload": {
-                "psr-4": {
-                    "KsfCommon\\": "src/"
-                },
                 "files": [
                     "src/logging_functions.php"
-                ]
-            },
-            "autoload-dev": {
+                ],
                 "psr-4": {
-                    "KsfCommon\\Test\\": "tests/"
+                    "KsfCommon\\": "src/"
                 }
             },
+            "notification-url": "https://packagist.org/downloads/",
             "license": [
                 "proprietary"
             ],
             "description": "Shared FrontAccounting platform utilities, contracts, and extension points for the KSF ecosystem",
-            "transport-options": {
-                "symlink": true,
-                "relative": true
-            }
+            "support": {
+                "issues": "https://github.com/ksfraser/ksf_FA_Common/issues",
+                "source": "https://github.com/ksfraser/ksf_FA_Common/tree/main"
+            },
+            "time": "2026-07-20T05:14:40+00:00"
         },
         {
             "name": "ksfraser/ksf-modules-dao",
@@ -209,11 +211,7 @@
                     "Ksfraser\\ModulesDAO\\": "src/"
                 }
             },
-            "autoload-dev": {
-                "psr-4": {
-                    "Ksfraser\\ModulesDAO\\Tests\\": "tests/"
-                }
-            },
+            "notification-url": "https://packagist.org/downloads/",
             "license": [
                 "MIT"
             ],
@@ -224,56 +222,10 @@
             ],
             "description": "Cross-platform DAO abstraction (DB, WordPress, SuiteCRM, FrontAccounting, CSV, XML)",
             "support": {
-                "source": "https://github.com/ksfraser/ksf_ModulesDAO/tree/v0.3.4",
-                "issues": "https://github.com/ksfraser/ksf_ModulesDAO/issues"
+                "issues": "https://github.com/ksfraser/ksf_ModulesDAO/issues",
+                "source": "https://github.com/ksfraser/ksf_ModulesDAO/tree/v0.3.4"
             },
             "time": "2026-02-06T23:58:40+00:00"
-        },
-        {
-            "name": "ksfraser/ksf-rest-api",
-            "version": "dev-main",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/ksfraser/ksf_RestAPI.git",
-                "reference": "a6f3262833f3733ada1be6e9b041feb5bb890368"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/ksfraser/ksf_RestAPI/zipball/a6f3262833f3733ada1be6e9b041feb5bb890368",
-                "reference": "a6f3262833f3733ada1be6e9b041feb5bb890368",
-                "shasum": ""
-            },
-            "require": {
-                "ksfraser/fa-product-attributes": "*",
-                "ksfraser/ksf-modules-dao": "^0.3",
-                "php": ">=7.3"
-            },
-            "require-dev": {
-                "phpunit/phpunit": "^9.5.0"
-            },
-            "default-branch": true,
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "Ksfraser\\Rest_API\\": "src/Ksfraser/Rest_API/"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Kevin Fraser",
-                    "email": "kevin@ksfraser.com"
-                }
-            ],
-            "description": "REST API Library",
-            "support": {
-                "issues": "https://github.com/ksfraser/ksf_RestAPI/issues",
-                "source": "https://github.com/ksfraser/ksf_RestAPI/tree/main"
-            },
-            "time": "2026-02-07T22:08:23+00:00"
         },
         {
             "name": "ksfraser/ksf-schemamanager",
@@ -281,12 +233,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/ksfraser/ksf_SchemaManager.git",
-                "reference": "04d70f0e7fb3c7bb14be991b4bd0af139fa3ab3b"
+                "reference": "f703f31ba69af92d04333798bf1c390511bd064b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/ksfraser/ksf_SchemaManager/zipball/04d70f0e7fb3c7bb14be991b4bd0af139fa3ab3b",
-                "reference": "04d70f0e7fb3c7bb14be991b4bd0af139fa3ab3b",
+                "url": "https://api.github.com/repos/ksfraser/ksf_SchemaManager/zipball/f703f31ba69af92d04333798bf1c390511bd064b",
+                "reference": "f703f31ba69af92d04333798bf1c390511bd064b",
                 "shasum": ""
             },
             "require": {
@@ -318,7 +270,7 @@
                 "issues": "https://github.com/ksfraser/ksf_SchemaManager/issues",
                 "source": "https://github.com/ksfraser/ksf_SchemaManager/tree/main"
             },
-            "time": "2026-02-07T22:07:42+00:00"
+            "time": "2026-02-10T21:11:23+00:00"
         }
     ],
     "packages-dev": [
@@ -994,25 +946,25 @@
         },
         {
             "name": "phpunit/phpunit",
-            "version": "9.6.34",
+            "version": "9.6.35",
             "source": {
                 "type": "git",
                 "url": "https://github.com/sebastianbergmann/phpunit.git",
-                "reference": "b36f02317466907a230d3aa1d34467041271ef4a"
+                "reference": "0edba2f3a0c48df3553cb9b640810b30df60302b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/sebastianbergmann/phpunit/zipball/b36f02317466907a230d3aa1d34467041271ef4a",
-                "reference": "b36f02317466907a230d3aa1d34467041271ef4a",
+                "url": "https://api.github.com/repos/sebastianbergmann/phpunit/zipball/0edba2f3a0c48df3553cb9b640810b30df60302b",
+                "reference": "0edba2f3a0c48df3553cb9b640810b30df60302b",
                 "shasum": ""
             },
             "require": {
                 "doctrine/instantiator": "^1.5.0 || ^2",
                 "ext-dom": "*",
+                "ext-filter": "*",
                 "ext-json": "*",
                 "ext-libxml": "*",
                 "ext-mbstring": "*",
-                "ext-xml": "*",
                 "ext-xmlwriter": "*",
                 "myclabs/deep-copy": "^1.13.4",
                 "phar-io/manifest": "^2.0.4",
@@ -1077,31 +1029,15 @@
             "support": {
                 "issues": "https://github.com/sebastianbergmann/phpunit/issues",
                 "security": "https://github.com/sebastianbergmann/phpunit/security/policy",
-                "source": "https://github.com/sebastianbergmann/phpunit/tree/9.6.34"
+                "source": "https://github.com/sebastianbergmann/phpunit/tree/9.6.35"
             },
             "funding": [
                 {
-                    "url": "https://phpunit.de/sponsors.html",
-                    "type": "custom"
-                },
-                {
-                    "url": "https://github.com/sebastianbergmann",
-                    "type": "github"
-                },
-                {
-                    "url": "https://liberapay.com/sebastianbergmann",
-                    "type": "liberapay"
-                },
-                {
-                    "url": "https://thanks.dev/u/gh/sebastianbergmann",
-                    "type": "thanks_dev"
-                },
-                {
-                    "url": "https://tidelift.com/funding/github/packagist/phpunit/phpunit",
-                    "type": "tidelift"
+                    "url": "https://phpunit.de/sponsoring.html",
+                    "type": "other"
                 }
             ],
-            "time": "2026-01-27T05:45:00+00:00"
+            "time": "2026-07-06T14:48:07+00:00"
         },
         {
             "name": "sebastian/cli-parser",
@@ -2168,9 +2104,7 @@
     "aliases": [],
     "minimum-stability": "dev",
     "stability-flags": {
-        "ksfraser/fa-hooks": 20,
-        "ksfraser/ksf-fa-common": 20,
-        "ksfraser/fa-product-attributes-core": 20
+        "ksfraser/fa-hooks": 20
     },
     "prefer-stable": true,
     "prefer-lowest": false,
