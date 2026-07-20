@@ -4,8 +4,51 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "4ccdbe52e9c495c3d241538e2cb3c23d",
+    "content-hash": "fd40b055076832095703099b8a581a39",
     "packages": [
+        {
+            "name": "ksfraser/exceptions",
+            "version": "v1.3.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/ksfraser/Exceptions.git",
+                "reference": "04052a8ac7cb595df427dfb68c229e163cbe401c"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/ksfraser/Exceptions/zipball/04052a8ac7cb595df427dfb68c229e163cbe401c",
+                "reference": "04052a8ac7cb595df427dfb68c229e163cbe401c",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=7.3"
+            },
+            "require-dev": {
+                "phpunit/phpunit": "^9.0"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Ksfraser\\Exceptions\\": "src/Ksfraser/Exceptions/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Kevin Fraser",
+                    "email": "ksfraser@example.com"
+                }
+            ],
+            "description": "A comprehensive exception library for ksfraser projects with factory methods for domain-specific errors.",
+            "support": {
+                "issues": "https://github.com/ksfraser/Exceptions/issues",
+                "source": "https://github.com/ksfraser/Exceptions/tree/v1.3.0"
+            },
+            "time": "2026-05-09T22:11:29+00:00"
+        },
         {
             "name": "ksfraser/fa-hooks",
             "version": "dev-main",
@@ -49,6 +92,96 @@
                 "source": "https://github.com/ksfraser/FA_Hooks/tree/main"
             },
             "time": "2026-02-06T21:43:54+00:00"
+        },
+        {
+            "name": "ksfraser/fa-product-attributes-core",
+            "version": "dev-main",
+            "dist": {
+                "type": "path",
+                "url": "../FA_ProductAttributes_Core",
+                "reference": "f2f9cbf1e3e84c170ede652e1b482dcfc7eda2e5"
+            },
+            "require": {
+                "ksfraser/ksf-fa-common": "*",
+                "ksfraser/ksf-modules-dao": "*",
+                "php": ">=7.3"
+            },
+            "require-dev": {
+                "phpunit/phpunit": "^9.5.0"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "FrontAccounting\\ProductAttributes\\": "src/FrontAccounting/ProductAttributes/"
+                }
+            },
+            "autoload-dev": {
+                "psr-4": {
+                    "FrontAccounting\\ProductAttributes\\Test\\": "tests/"
+                }
+            },
+            "scripts": {
+                "test": [
+                    "phpunit"
+                ]
+            },
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Kevin Fraser",
+                    "email": "kevin@ksfraser.com"
+                }
+            ],
+            "description": "Business logic for FA Product Attributes - DAOs, Services, and domain models",
+            "transport-options": {
+                "symlink": true,
+                "relative": true
+            }
+        },
+        {
+            "name": "ksfraser/ksf-fa-common",
+            "version": "dev-main",
+            "dist": {
+                "type": "path",
+                "url": "../ksf_FA_Common",
+                "reference": "9e6dc7dafde84795d67c2ce39842c651ea4c2501"
+            },
+            "require": {
+                "ksfraser/exceptions": "^1.3",
+                "php": ">=7.4"
+            },
+            "require-dev": {
+                "phpunit/phpunit": "^10.0"
+            },
+            "type": "library",
+            "extra": {
+                "ksf": {
+                    "module-type": "platform-common"
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "KsfCommon\\": "src/"
+                },
+                "files": [
+                    "src/logging_functions.php"
+                ]
+            },
+            "autoload-dev": {
+                "psr-4": {
+                    "KsfCommon\\Test\\": "tests/"
+                }
+            },
+            "license": [
+                "proprietary"
+            ],
+            "description": "Shared FrontAccounting platform utilities, contracts, and extension points for the KSF ecosystem",
+            "transport-options": {
+                "symlink": true,
+                "relative": true
+            }
         },
         {
             "name": "ksfraser/ksf-modules-dao",
@@ -2035,16 +2168,18 @@
     "aliases": [],
     "minimum-stability": "dev",
     "stability-flags": {
-        "ksfraser/fa-hooks": 20
+        "ksfraser/fa-hooks": 20,
+        "ksfraser/ksf-fa-common": 20,
+        "ksfraser/fa-product-attributes-core": 20
     },
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {
         "php": ">=7.3"
     },
-    "platform-dev": {},
+    "platform-dev": [],
     "platform-overrides": {
         "php": "7.4.0"
     },
-    "plugin-api-version": "2.6.0"
+    "plugin-api-version": "2.3.0"
 }

@@ -18,6 +18,9 @@ use Ksfraser\FA_ProductAttributes\Tabs\LifecycleTab;
 use Ksfraser\FA_ProductAttributes\Tabs\MediaTab;
 use Ksfraser\FA_ProductAttributes\Tabs\UrlsTab;
 use Ksfraser\FA_ProductAttributes\Tabs\WarrantyTab;
+use Ksfraser\FA_ProductAttributes\Tabs\VariationsTab;
+use FrontAccounting\ProductAttributes\Variations\Dao\VariationsDao;
+use FrontAccounting\ProductAttributes\Variations\Service\FrontAccountingVariationService;
 use Ksfraser\ModulesDAO\Db\FrontAccountingDbAdapter;
 use FrontAccounting\ProductAttributes\Plugin\TabRegistry;
 
@@ -255,6 +258,7 @@ class hooks_FA_ProductAttributes extends hooks
         $registry->register(new MediaTab($services['media_dao']));
         $registry->register(new UrlsTab($services['media_attachments_dao']));
         $registry->register(new WarrantyTab($services['warranty_dao']));
+        $registry->register(new VariationsTab($services['variations_dao']));
 
         $GLOBALS['fa_product_attributes_tab_registry'] = $registry;
         return $registry;
@@ -288,6 +292,7 @@ class hooks_FA_ProductAttributes extends hooks
         $warrantyDao = new ProductWarrantyDao($db);
         $lifecycleFlagDefsDao = new LifecycleFlagDefsDao($db);
         $mediaAttachmentsDao = new MediaAttachmentsDao($db);
+        $variationsDao = new VariationsDao($db, new \FrontAccounting\ProductAttributes\Dao\ProductAttributesDao($db));
         $service = new ProductAttributesService($dao, $db);
         $handler = new ProductAttributesHandler($service);
 
@@ -301,6 +306,7 @@ class hooks_FA_ProductAttributes extends hooks
             'media_attachments_dao' => $mediaAttachmentsDao,
             'warranty_dao' => $warrantyDao,
             'lifecycle_flag_defs_dao' => $lifecycleFlagDefsDao,
+            'variations_dao' => $variationsDao,
         );
 
         return $GLOBALS['fa_product_attributes_services_cache'];

@@ -2,42 +2,47 @@
 
 namespace Ksfraser\FA_ProductAttributes\Actions;
 
-use Ksfraser\FA_ProductAttributes\Dao\ProductAttributesDao;
-use Ksfraser\ModulesDAO\Db\DbAdapterInterface;
+use FrontAccounting\ProductAttributes\Variations\Dao\VariationsDao;
 
 /**
- * Single Responsibility: Proxy/stub that delegates child-product creation to
- * the fa_product_attributes_variations plugin action class.
+ * Action to create a child product (variation)
  */
 class CreateChildAction
 {
-    /** @var ProductAttributesDao */
+    /** @var VariationsDao */
     private $dao;
 
-    /** @var DbAdapterInterface */
-    private $dbAdapter;
-
-    public function __construct(ProductAttributesDao $dao, DbAdapterInterface $dbAdapter)
+    public function __construct(VariationsDao $dao)
     {
-        $this->dao       = $dao;
-        $this->dbAdapter = $dbAdapter;
+        $this->dao = $dao;
     }
 
-    /**
-     * @param array<string, mixed> $postData  Expects 'parent_stock_id' and 'child_stock_id'
-     * @return string Result message
-     */
-    public function handle(array $postData): string
+    public function handle(array $postData): ?string
     {
-        if (class_exists('Ksfraser\FA_ProductAttributes\Variations\Actions\CreateChildAction')) {
-            /** @var object $delegate */
-            $delegate = new \Ksfraser\FA_ProductAttributes\Variations\Actions\CreateChildAction(
-                $this->dao,
-                $this->dbAdapter
-            );
-            return $delegate->handle($postData);
+        $stockId = trim($postData['stock_id'] ?? '');
+
+        if (empty($stockId)) {
+            throw new \InvalidArgumentException("Stock ID is required");
         }
 
-        return _("Variations plugin is not loaded");
+        // Generate child stock ID (parent + timestamp for uniqueness)
+        $childStockId = $stockId . '-VAR-' . time();
+
+        // Get parent product data
+        $parentData = $this->dao->getParentProductData($stockId);
+        if (!$parentData) {
+            throw new \InvalidArgumentException("Parent product '$stockId' not found");
+        }
+
+        // Create child product
+        $this->dao->createChildProduct($childStockId, $parentData);
+
+        // Copy parent's category assignments to child
+        $this->dao->copyParentCategoryAssignments($childStockId, $stockId);
+
+        // Set parent relationship
+        $this->dao->setParentRelationship($childStockId, $stockId);
+
+        return "Child product '$childStockId' created successfully from parent '$stockId'";
     }
 }

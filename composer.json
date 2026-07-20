@@ -11,14 +11,26 @@
       "name": "KS Fraser"
     }
   ],
+  "repositories": [
+    {
+      "type": "path",
+      "url": "../FA_ProductAttributes_Core",
+      "options": { "symlink": true }
+    },
+    {
+      "type": "path",
+      "url": "../ksf_FA_Common",
+      "options": { "symlink": true }
+    }
+  ],
   "require": {
     "php": ">=7.3",
     "ksfraser/fa-hooks": "^1.0 || dev-main",
     "ksfraser/ksf-modules-dao": "^0.3",
     "ksfraser/ksf-schemamanager": "*",
     "ksfraser/ksf-rest-api": "*",
-    "ksfraser/ksf-fa-common": "*",
-    "ksfraser/fa-product-attributes-core": "*"
+    "ksfraser/ksf-fa-common": "@dev",
+    "ksfraser/fa-product-attributes-core": "@dev"
   },
   "require-dev": {
     "phpunit/phpunit": "^9.5.0",
