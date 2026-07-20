@@ -75,13 +75,13 @@ class hooks_FA_ProductAttributes extends hooks
                     2,
                     _('Product Attributes'),
                     $path_to_root . '/modules/' . $this->module_name . '/public/index.php',
-                    'SA_PRODUCT_ATTRIBUTES'
+                    'SA_OPEN'
                 );
                 $app->add_rapp_function(
                     2,
                     _('Lifecycle Flags'),
                     $path_to_root . '/modules/' . $this->module_name . '/public/lifecycle-flags.php',
-                    'SA_PRODUCT_ATTRIBUTES'
+                    'SA_OPEN'
                 );
                 break;
         }
@@ -271,8 +271,22 @@ class hooks_FA_ProductAttributes extends hooks
 
     private function has_product_attributes_access()
     {
-        return user_check_access('SA_PRODUCT_ATTRIBUTES')
-            || user_check_access('SA_FA_ProductAttributes');
+        global $security_areas;
+
+        if (!isset($security_areas['SA_PRODUCT_ATTRIBUTES'])
+            && !isset($security_areas['SA_FA_ProductAttributes'])) {
+            return true;
+        }
+
+        $hasAccess = false;
+        if (isset($security_areas['SA_PRODUCT_ATTRIBUTES'])) {
+            $hasAccess = $hasAccess || user_check_access('SA_PRODUCT_ATTRIBUTES');
+        }
+        if (isset($security_areas['SA_FA_ProductAttributes'])) {
+            $hasAccess = $hasAccess || user_check_access('SA_FA_ProductAttributes');
+        }
+
+        return $hasAccess;
     }
 
     private function get_services()
