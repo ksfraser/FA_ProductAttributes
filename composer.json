@@ -11,12 +11,11 @@
       "name": "KS Fraser"
     }
   ],
-  "repositories": [
-    {
-      "type": "path",
-      "url": "../FA_ProductAttributes_Core",
-      "options": { "symlink": true }
-    },
+  "require": {
+    "php": ">=7.3",
+    "ksfraser/ksf-modules-dao": "^0.3",
+    "ksfraser/fa-product-attributes-core": "*"
+  },
     {
       "type": "path",
       "url": "../ksf_FA_Common",
