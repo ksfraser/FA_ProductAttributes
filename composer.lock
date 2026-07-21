@@ -140,16 +140,16 @@
         },
         {
             "name": "ksfraser/ksf-fa-common",
-            "version": "1.0.2",
+            "version": "1.0.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/ksfraser/ksf_FA_Common.git",
-                "reference": "e18e4f55317d800570cdfff7924126dd958b61a2"
+                "reference": "7178c414635861c49e9cc38b279d4cbee867ed14"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/ksfraser/ksf_FA_Common/zipball/e18e4f55317d800570cdfff7924126dd958b61a2",
-                "reference": "e18e4f55317d800570cdfff7924126dd958b61a2",
+                "url": "https://api.github.com/repos/ksfraser/ksf_FA_Common/zipball/7178c414635861c49e9cc38b279d4cbee867ed14",
+                "reference": "7178c414635861c49e9cc38b279d4cbee867ed14",
                 "shasum": ""
             },
             "require": {
@@ -180,9 +180,9 @@
             "description": "Shared FrontAccounting platform utilities, contracts, and extension points for the KSF ecosystem",
             "support": {
                 "issues": "https://github.com/ksfraser/ksf_FA_Common/issues",
-                "source": "https://github.com/ksfraser/ksf_FA_Common/tree/1.0.2"
+                "source": "https://github.com/ksfraser/ksf_FA_Common/tree/1.0.3"
             },
-            "time": "2026-07-21T00:00:17+00:00"
+            "time": "2026-07-21T00:26:55+00:00"
         },
         {
             "name": "ksfraser/ksf-modules-dao",
