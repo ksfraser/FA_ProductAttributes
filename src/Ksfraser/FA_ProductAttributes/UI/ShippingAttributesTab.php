@@ -42,6 +42,8 @@ class ShippingAttributesTab
         $this->renderHandling($data);
         $this->renderTemperature($data);
         $this->renderCustoms($data);
+
+        echo '<p><input type="submit" name="addupdate" value="' . _('Save') . '"></p>';
     }
 
     // ──────────────────────────────────────────────────────────────────────────

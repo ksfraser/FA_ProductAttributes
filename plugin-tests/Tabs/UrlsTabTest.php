@@ -44,7 +44,7 @@ class UrlsTabTest extends TestCase
         $this->tab->renderTabContent('');
         $output = ob_get_clean();
 
-        $this->assertStringContainsString('Media Attachments', $output);
+        $this->assertStringContainsString('URLs', $output);
     }
 
     public function testRenderTabContentWithItems(): void

@@ -3,13 +3,14 @@
 namespace Ksfraser\FA_ProductAttributes\UI;
 
 use Ksfraser\FA_ProductAttributes\Dao\ProductIdentifiersDao;
+use Ksfraser\FA_ProductAttributes\Dao\IdentifierLookupsDao;
 
 /**
  * Single Responsibility: Renders the Product Identifiers admin tab.
  *
  * Covers industry-standard product codes used by retailers, suppliers,
  * and logistics systems:
- *   - Brand / manufacturer
+ *   - Brand / manufacturer (DDL from lookup table)
  *   - MPN, GTIN, EAN, UPC, ISBN, ASIN
  *   - Internal barcode, supplier part number, model number
  */
@@ -18,9 +19,13 @@ class ProductIdentifiersTab
     /** @var ProductIdentifiersDao */
     private $dao;
 
-    public function __construct(ProductIdentifiersDao $dao)
+    /** @var IdentifierLookupsDao|null */
+    private $lookupsDao;
+
+    public function __construct(ProductIdentifiersDao $dao, IdentifierLookupsDao $lookupsDao = null)
     {
-        $this->dao = $dao;
+        $this->dao        = $dao;
+        $this->lookupsDao = $lookupsDao;
     }
 
     /**
@@ -36,6 +41,8 @@ class ProductIdentifiersTab
         $this->renderBrandSection($data);
         $this->renderBarcodeSection($data);
         $this->renderSourcingSection($data);
+
+        echo '<p><input type="submit" name="addupdate" value="' . _('Save') . '"></p>';
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -45,9 +52,16 @@ class ProductIdentifiersTab
     {
         echo '<fieldset><legend>' . _('Brand &amp; Manufacturer') . '</legend>';
         echo '<table class="tablestyle_noborder">';
-        $this->row(_('Brand'),        'brand',        $d);
-        $this->row(_('Manufacturer'), 'manufacturer', $d);
-        $this->row(_('Model No.'),    'model_no',     $d);
+
+        if ($this->lookupsDao !== null) {
+            $this->ddlRow(_('Brand'),        'brand',        $d, 'brand');
+            $this->ddlRow(_('Manufacturer'), 'manufacturer', $d, 'manufacturer');
+        } else {
+            $this->row(_('Brand'),        'brand',        $d);
+            $this->row(_('Manufacturer'), 'manufacturer', $d);
+        }
+
+        $this->row(_('Model No.'), 'model_no', $d);
         echo '</table></fieldset>';
     }
 
@@ -87,6 +101,45 @@ class ProductIdentifiersTab
         echo '<td><label for="ident_' . $field . '">' . $label . '</label></td>';
         echo '<td><input type="text" id="ident_' . $field . '" name="' . $field . '" '
             . 'value="' . $val . '" maxlength="128" class="form-control"></td>';
+        echo '</tr>';
+    }
+
+    /**
+     * Render a label+DDL row from the lookup table.
+     *
+     * @param array<string, mixed> $d
+     */
+    private function ddlRow(string $label, string $field, array $d, string $lookupType): void
+    {
+        $current = (string)($d[$field] ?? '');
+        $options = $this->lookupsDao->listByType($lookupType);
+
+        echo '<tr>';
+        echo '<td><label for="ident_' . $field . '">' . $label . '</label></td>';
+        echo '<td>';
+        echo '<select id="ident_' . $field . '" name="' . $field . '" class="form-control">';
+        echo '<option value="">-- ' . _('Select') . ' --</option>';
+        foreach ($options as $opt) {
+            $optName = htmlspecialchars((string)($opt['name'] ?? ''));
+            $sel     = ($optName === $current) ? ' selected' : '';
+            echo '<option value="' . $optName . '"' . $sel . '>' . $optName . '</option>';
+        }
+        // If the current value is not in the lookup list, show it as a fallback option
+        if ($current !== '' && !empty($options)) {
+            $found = false;
+            foreach ($options as $opt) {
+                if ((string)($opt['name'] ?? '') === $current) {
+                    $found = true;
+                    break;
+                }
+            }
+            if (!$found) {
+                echo '<option value="' . htmlspecialchars($current) . '" selected>'
+                    . htmlspecialchars($current) . '</option>';
+            }
+        }
+        echo '</select>';
+        echo '</td>';
         echo '</tr>';
     }
 }

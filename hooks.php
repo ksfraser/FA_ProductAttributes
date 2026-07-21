@@ -8,6 +8,8 @@ use Ksfraser\FA_ProductAttributes\Dao\ProductMediaDao;
 use Ksfraser\FA_ProductAttributes\Dao\MediaAttachmentsDao;
 use Ksfraser\FA_ProductAttributes\Dao\ProductWarrantyDao;
 use Ksfraser\FA_ProductAttributes\Dao\LifecycleFlagDefsDao;
+use Ksfraser\FA_ProductAttributes\Dao\IdentifierLookupsDao;
+use Ksfraser\FA_ProductAttributes\Dao\ProductTagsDao;
 use Ksfraser\FA_ProductAttributes\Handler\ProductAttributesHandler;
 use Ksfraser\FA_ProductAttributes\Plugin\PluginLoader;
 use Ksfraser\FA_ProductAttributes\Service\ProductAttributesService;
@@ -19,6 +21,7 @@ use Ksfraser\FA_ProductAttributes\Tabs\MediaTab;
 use Ksfraser\FA_ProductAttributes\Tabs\UrlsTab;
 use Ksfraser\FA_ProductAttributes\Tabs\WarrantyTab;
 use Ksfraser\FA_ProductAttributes\Tabs\VariationsTab;
+use Ksfraser\FA_ProductAttributes\Tabs\TagsTab;
 use FrontAccounting\ProductAttributes\Variations\Dao\VariationsDao;
 use FrontAccounting\ProductAttributes\Variations\Service\FrontAccountingVariationService;
 use Ksfraser\ModulesDAO\Db\FrontAccountingDbAdapter;
@@ -78,6 +81,12 @@ class hooks_FA_ProductAttributes extends hooks
                     $path_to_root . '/modules/' . $this->module_name . '/public/lifecycle-flags.php',
                     'SA_OPEN'
                 );
+                $app->add_rapp_function(
+                    2,
+                    _('Brands / Manufacturers'),
+                    $path_to_root . '/modules/' . $this->module_name . '/public/brands.php',
+                    'SA_OPEN'
+                );
                 break;
         }
     }
@@ -127,6 +136,8 @@ class hooks_FA_ProductAttributes extends hooks
             '14_product_warranty.sql',
             '15_product_lifecycle_flag_defs.sql',
             '16_product_lifecycle_flag_assignments.sql',
+            '17_lifecycle_flag_defs_seed.sql',
+            '18_product_identifier_lookups.sql',
         );
 
         foreach ($files as $file) {
@@ -288,12 +299,13 @@ class hooks_FA_ProductAttributes extends hooks
 
         $registry->register(new AttributesTab($services['service'], $services['handler']));
         $registry->register(new ShippingTab($services['shipping_dao']));
-        $registry->register(new IdentifiersTab($services['identifiers_dao']));
+        $registry->register(new IdentifiersTab($services['identifiers_dao'], $services['identifier_lookups_dao']));
         $registry->register(new LifecycleTab($services['lifecycle_dao'], $services['lifecycle_flag_defs_dao']));
         $registry->register(new MediaTab($services['media_dao']));
         $registry->register(new UrlsTab($services['media_attachments_dao']));
         $registry->register(new WarrantyTab($services['warranty_dao']));
         $registry->register(new VariationsTab($services['variations_dao']));
+        $registry->register(new TagsTab($services['dao'], $services['tags_dao']));
 
         $GLOBALS['fa_product_attributes_tab_registry'] = $registry;
         return $registry;
@@ -327,7 +339,8 @@ class hooks_FA_ProductAttributes extends hooks
     private function get_services()
     {
         if (isset($GLOBALS['fa_product_attributes_services_cache'])
-            && is_array($GLOBALS['fa_product_attributes_services_cache'])) {
+            && is_array($GLOBALS['fa_product_attributes_services_cache'])
+            && isset($GLOBALS['fa_product_attributes_services_cache']['tags_dao'])) {
             return $GLOBALS['fa_product_attributes_services_cache'];
         }
 
@@ -341,6 +354,8 @@ class hooks_FA_ProductAttributes extends hooks
         $warrantyDao = new ProductWarrantyDao($db);
         $lifecycleFlagDefsDao = new LifecycleFlagDefsDao($db);
         $mediaAttachmentsDao = new MediaAttachmentsDao($db);
+        $tagsDao = new ProductTagsDao($db);
+        $identifierLookupsDao = new IdentifierLookupsDao($db);
         $variationsDao = new VariationsDao($db, new \FrontAccounting\ProductAttributes\Dao\ProductAttributesDao($db));
         $service = new ProductAttributesService($dao, $db);
         $handler = new ProductAttributesHandler($service);
@@ -348,6 +363,7 @@ class hooks_FA_ProductAttributes extends hooks
         $GLOBALS['fa_product_attributes_services_cache'] = array(
             'service' => $service,
             'handler' => $handler,
+            'dao' => $dao,
             'shipping_dao' => $shippingDao,
             'identifiers_dao' => $identifiersDao,
             'lifecycle_dao' => $lifecycleDao,
@@ -355,6 +371,8 @@ class hooks_FA_ProductAttributes extends hooks
             'media_attachments_dao' => $mediaAttachmentsDao,
             'warranty_dao' => $warrantyDao,
             'lifecycle_flag_defs_dao' => $lifecycleFlagDefsDao,
+            'tags_dao' => $tagsDao,
+            'identifier_lookups_dao' => $identifierLookupsDao,
             'variations_dao' => $variationsDao,
         );
 

@@ -36,10 +36,10 @@ class UrlsTab extends AbstractTab
 
         $items = ($stockId !== '') ? $this->dao->listByStockId($stockId) : [];
 
-        echo '<fieldset><legend>' . _('Media Attachments') . '</legend>';
+        echo '<fieldset><legend>' . _('URLs') . '</legend>';
 
         if (empty($items)) {
-            echo '<p>' . _('No attachments added yet.') . '</p>';
+            echo '<p>' . _('No URLs added yet.') . '</p>';
         } else {
             echo '<table class="tablestyle2">';
             echo '<tr><th>' . _('URL') . '</th><th>' . _('Description') . '</th>'
@@ -66,7 +66,7 @@ class UrlsTab extends AbstractTab
 
         echo '</fieldset>';
 
-        echo '<fieldset><legend>' . _('Add Attachment') . '</legend>';
+        echo '<fieldset><legend>' . _('Add URL') . '</legend>';
         echo '<form method="post" action="">';
         echo '<input type="hidden" name="action"   value="add_media_attachment">';
         echo '<input type="hidden" name="stock_id" value="' . htmlspecialchars($stockId) . '">';
@@ -78,7 +78,7 @@ class UrlsTab extends AbstractTab
         echo '<td><input type="text" name="description" maxlength="255" style="width:100%" '
             . 'placeholder="Product demo video, installation guide, etc."></td></tr>';
         echo '</table>';
-        echo '<p><input type="submit" value="' . _('Add Attachment') . '"></p>';
+        echo '<p><input type="submit" value="' . _('Add URL') . '"></p>';
         echo '</form></fieldset>';
     }
 
