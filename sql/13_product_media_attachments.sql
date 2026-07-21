@@ -1,4 +1,4 @@
-CREATE TABLE IF NOT EXISTS `@TB_PREF@product_media_attachments` (
+CREATE TABLE IF NOT EXISTS `0_product_media_attachments` (
   `id`          INT UNSIGNED  NOT NULL AUTO_INCREMENT,
   `stock_id`    VARCHAR(32)   NOT NULL,
   `url`         VARCHAR(2048) NOT NULL,

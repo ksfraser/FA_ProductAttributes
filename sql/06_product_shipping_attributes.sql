@@ -1,4 +1,4 @@
-CREATE TABLE IF NOT EXISTS `@TB_PREF@product_shipping_attributes` (
+CREATE TABLE IF NOT EXISTS `0_product_shipping_attributes` (
   `stock_id`               VARCHAR(32)    NOT NULL,
   `length`                 DECIMAL(10,3)  NULL,
   `width`                  DECIMAL(10,3)  NULL,

@@ -1,4 +1,4 @@
-CREATE TABLE IF NOT EXISTS `@TB_PREF@product_lifecycle` (
+CREATE TABLE IF NOT EXISTS `0_product_lifecycle` (
   `stock_id`                VARCHAR(32)   NOT NULL,
   `status`                  ENUM('active','draft','discontinued','archived')
                                           NOT NULL DEFAULT 'active',

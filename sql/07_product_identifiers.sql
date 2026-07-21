@@ -1,4 +1,4 @@
-CREATE TABLE IF NOT EXISTS `@TB_PREF@product_identifiers` (
+CREATE TABLE IF NOT EXISTS `0_product_identifiers` (
   `stock_id`          VARCHAR(32)   NOT NULL,
   `brand`             VARCHAR(128)  NULL,
   `manufacturer`      VARCHAR(128)  NULL,

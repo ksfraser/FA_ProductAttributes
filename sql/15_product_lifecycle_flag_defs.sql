@@ -1,4 +1,4 @@
-CREATE TABLE IF NOT EXISTS `@TB_PREF@product_lifecycle_flag_defs` (
+CREATE TABLE IF NOT EXISTS `0_product_lifecycle_flag_defs` (
   `id`          INT UNSIGNED  NOT NULL AUTO_INCREMENT,
   `code`        VARCHAR(64)   NOT NULL,
   `label`       VARCHAR(128)  NOT NULL,

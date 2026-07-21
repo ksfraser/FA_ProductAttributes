@@ -1,4 +1,4 @@
-CREATE TABLE IF NOT EXISTS `@TB_PREF@product_warranty` (
+CREATE TABLE IF NOT EXISTS `0_product_warranty` (
   `stock_id`                    VARCHAR(32)   NOT NULL,
   `warranty_type`               ENUM('none','manufacturer','extended','third_party','lifetime')
                                                NOT NULL DEFAULT 'none',

@@ -1,4 +1,4 @@
-CREATE TABLE IF NOT EXISTS `@TB_PREF@product_attribute_categories` (
+CREATE TABLE IF NOT EXISTS `0_product_attribute_categories` (
   `id` INT(11) NOT NULL AUTO_INCREMENT,
   `code` VARCHAR(64) NOT NULL,
   `label` VARCHAR(64) NOT NULL,
