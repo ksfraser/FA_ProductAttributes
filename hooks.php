@@ -60,33 +60,6 @@ class hooks_FA_ProductAttributes extends hooks
         $this->load_autoloader();
     }
 
-    public function install()
-    {
-        $this->install_database();
-        return true;
-    }
-
-    public function install_database()
-    {
-        $path = __DIR__ . '/sql/schema.sql';
-        if (!file_exists($path)) {
-            return;
-        }
-
-        $sql = file_get_contents($path);
-        $prefix = defined('TB_PREF') ? TB_PREF : '0_';
-        $sql = str_replace('0_', $prefix, $sql);
-
-        $statements = explode(';', $sql);
-        foreach ($statements as $statement) {
-            $statement = trim($statement);
-            if ($statement === '') {
-                continue;
-            }
-            db_query($statement, 'Could not create product attributes table');
-        }
-    }
-
     public function install_options($app)
     {
         global $path_to_root;
@@ -132,6 +105,38 @@ class hooks_FA_ProductAttributes extends hooks
     {
         if (!$check_only) {
             $this->register_hooks();
+        }
+
+        $updates = array();
+
+        $sqlDir = __DIR__ . '/sql';
+        $files = array(
+            '01_product_attribute_categories.sql',
+            '02_product_attribute_values.sql',
+            '03_product_attribute_assignments.sql',
+            '04_product_attribute_category_assignments.sql',
+            '05_product_hierarchy.sql',
+            '06_product_shipping_attributes.sql',
+            '07_product_identifiers.sql',
+            '08_product_lifecycle.sql',
+            '09_product_tags.sql',
+            '10_product_tag_assignments.sql',
+            '11_product_media.sql',
+            '12_product_media_variation_links.sql',
+            '13_product_media_attachments.sql',
+            '14_product_warranty.sql',
+            '15_product_lifecycle_flag_defs.sql',
+            '16_product_lifecycle_flag_assignments.sql',
+        );
+
+        foreach ($files as $file) {
+            if (file_exists($sqlDir . '/' . $file)) {
+                $updates[$file] = array($this->module_name);
+            }
+        }
+
+        if (!empty($updates)) {
+            return $this->update_databases($company, $updates, $check_only);
         }
 
         return true;
