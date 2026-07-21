@@ -62,7 +62,29 @@ class hooks_FA_ProductAttributes extends hooks
 
     public function install()
     {
+        $this->install_database();
         return true;
+    }
+
+    public function install_database()
+    {
+        $path = __DIR__ . '/sql/schema.sql';
+        if (!file_exists($path)) {
+            return;
+        }
+
+        $sql = file_get_contents($path);
+        $prefix = defined('TB_PREF') ? TB_PREF : '0_';
+        $sql = str_replace('0_', $prefix, $sql);
+
+        $statements = explode(';', $sql);
+        foreach ($statements as $statement) {
+            $statement = trim($statement);
+            if ($statement === '') {
+                continue;
+            }
+            db_query($statement, 'Could not create product attributes table');
+        }
     }
 
     public function install_options($app)
