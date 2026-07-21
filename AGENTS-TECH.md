@@ -1,3 +1,30 @@
+# UAT Infrastructure Bind Mounts
+
+## IMPORTANT: Where to find the REAL installed_extensions.php
+
+**DO NOT** check `~/Documents/ksf_Infrastructure/fa_modules/installed_extensions.php` or `~/Documents/ksf_Infrastructure/fa_modules/company/0/installed_extensions.php` — those are artifacts from a bad rsync that copied FA root files into the modules directory. The bind mount is ONLY for `modules/`.
+
+To check which modules are actually installed in the UAT container:
+```
+podman exec ksf-fa cat /var/www/html/company/0/installed_extensions.php
+podman exec ksf-fa cat /var/www/html/installed_extensions.php
+```
+
+## UAT Access Patterns
+
+- **Container**: `podman exec ksf-fa <command>` (MariaDB: `ksf-mariadb`)
+- **Web**: `curl http://localhost:8080/` (FA_PORT=8090 in .env but actual is 8080)
+- **Login**: POST to `/index.php` with `user_name_entry_field=admin`, `password=admin`, `company_login_name=0`, `SubmitUser=Login`
+- **Modules**: Bind mount at `~/Documents/ksf_Infrastructure/fa_modules/` maps to `/var/www/html/modules/` in container
+- **Missing vendor/**: If a module's hooks.php uses namespace classes but has no `vendor/`, it causes a fatal error (white screen with footer). Fix: `composer install --no-dev` in the module's bind mount directory.
+
+## UAT Bind Point for FA_ProductAttributes
+
+| Path | Purpose |
+|------|---------|
+| `~/Documents/FA_ProductAttributes` | Devel tree — all development, testing, commits |
+| `~/Documents/ksf_Infrastructure/fa_modules/FA_ProductAttributes` | UAT bind point — deployment target |
+
 # Technical Requirements
 
 ## Platform and Environment

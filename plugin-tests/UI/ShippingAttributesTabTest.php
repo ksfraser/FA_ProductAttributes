@@ -30,9 +30,6 @@ class ShippingAttributesTabTest extends TestCase
         $this->tab->render('SKU001');
         $html = ob_get_clean();
 
-        $this->assertStringContainsString('<form', $html);
-        $this->assertStringContainsString('name="action"', $html);
-        $this->assertStringContainsString('value="upsert_shipping_attributes"', $html);
         $this->assertStringContainsString('name="stock_id"', $html);
         $this->assertStringContainsString('value="SKU001"', $html);
     }

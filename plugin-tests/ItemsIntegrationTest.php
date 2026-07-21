@@ -75,7 +75,7 @@ class ItemsIntegrationTest extends TestCase
 
         $integration = new ItemsIntegration($this->service, $shippingDao);
 
-        $this->expectOutputRegex('/shipping_attributes/');
+        $this->expectOutputRegex('/Package Dimensions/');
         $result = $integration->getTabContent('TEST001', 'shipping_attributes');
 
         $this->assertTrue($result);
@@ -88,7 +88,7 @@ class ItemsIntegrationTest extends TestCase
 
         $integration = new ItemsIntegration($this->service, null, $identifiersDao);
 
-        $this->expectOutputRegex('/upsert_identifiers/');
+        $this->expectOutputRegex('/name="stock_id"/');
         $result = $integration->getTabContent('TEST001', 'product_identifiers');
 
         $this->assertTrue($result);

@@ -232,7 +232,7 @@ class ProductAttributesDaoTest extends TestCase
         $db->expects($this->once())
             ->method('query')
             ->with(
-                "SELECT c.* FROM `fa_product_attribute_categories` c\r\n             INNER JOIN `fa_product_attribute_category_assignments` pca ON c.id = pca.category_id\r\n             WHERE pca.stock_id = :stock_id\r\n             ORDER BY c.sort_order, c.code",
+                "SELECT c.* FROM `fa_product_attribute_categories` c\n             INNER JOIN `fa_product_attribute_category_assignments` pca ON c.id = pca.category_id\n             WHERE pca.stock_id = :stock_id\n             ORDER BY c.sort_order, c.code",
                 ['stock_id' => 'ABC123']
             )
             ->willReturn([

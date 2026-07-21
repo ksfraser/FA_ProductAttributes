@@ -107,7 +107,7 @@ class WarrantyTab extends AbstractTab
     public function handleSave(string $stockId, array $postData): void
     {
         $action = new UpsertWarrantyAction($this->dao);
-        $action->handle($postData);
+        $action->handle($stockId, $postData);
     }
 
     public function handleDelete(string $stockId): void

@@ -32,7 +32,6 @@ class ProductAttributesTabUI
         $allProducts = $this->dao->getAllProducts();
 
         $html = "<h4>Product Hierarchy:</h4>";
-        $html .= "<form method='post' action='' target='_self' style='display: inline;'>";
         $html .= "<input type='hidden' name='stock_id' value='" . htmlspecialchars($stock_id) . "'>";
 
         // Parent selector
@@ -49,9 +48,6 @@ class ProductAttributesTabUI
                 . "</option>";
         }
         $html .= "</select></label> ";
-
-        $html .= "<input type='submit' name='update_product_config' value='Update'>";
-        $html .= "</form>";
 
         $html .= "<h4>Current Assignments:</h4>";
         if (empty($assignments)) {

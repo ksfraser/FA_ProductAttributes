@@ -11,6 +11,14 @@ if (file_exists(__DIR__ . '/../vendor/ksfraser/famock/php/FAMock.php')) {
     require_once __DIR__ . '/FAMock.php';
 }
 
+// FA Filesystem Functions (global namespace — used by tabs like MediaTab)
+if (!function_exists('company_path')) {
+    function company_path() { return '/tmp/company'; }
+}
+if (!function_exists('item_img_name')) {
+    function item_img_name($id) { return preg_replace('/[^a-zA-Z0-9_-]/', '', $id); }
+}
+
 // Simple autoload for testing
 $files = [
     __DIR__ . '/../src/Ksfraser/FA_ProductAttributes/Db/DbAdapterInterface.php',

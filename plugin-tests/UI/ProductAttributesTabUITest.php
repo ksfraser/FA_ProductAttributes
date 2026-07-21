@@ -28,8 +28,7 @@ class ProductAttributesTabUITest extends TestCase
         $ui = new ProductAttributesTabUI($dao);
         $html = $ui->renderMainTab('SKU001');
 
-        $this->assertStringContainsString('<form', $html);
-        $this->assertStringContainsString('update_product_config', $html);
+        $this->assertStringContainsString('parent_stock_id', $html);
         $this->assertStringContainsString('SKU001', $html);
     }
 

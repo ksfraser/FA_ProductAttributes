@@ -16,8 +16,8 @@ class VariationsDaoTest extends TestCase
         $db->expects($this->exactly(2))
             ->method('execute')
             ->withConsecutive(
-                ["\r\n                ALTER TABLE `fa_product_attribute_assignments`\r\n                ADD COLUMN `parent_stock_id` VARCHAR(50) NULL DEFAULT NULL\r\n            "],
-                ["\r\n                ALTER TABLE `fa_product_attribute_assignments`\r\n                ADD INDEX `idx_parent_stock_id` (`parent_stock_id`)\r\n            "],
+                ["\n                ALTER TABLE `fa_product_attribute_assignments`\n                ADD COLUMN `parent_stock_id` VARCHAR(50) NULL DEFAULT NULL\n            "],
+                ["\n                ALTER TABLE `fa_product_attribute_assignments`\n                ADD INDEX `idx_parent_stock_id` (`parent_stock_id`)\n            "],
             );
 
         $coreDao = $this->createMock(ProductAttributesDao::class);

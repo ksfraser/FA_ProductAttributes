@@ -36,8 +36,6 @@ class ProductWarrantyTab
     {
         $data = ($stockId !== '') ? ($this->dao->get($stockId) ?? []) : [];
 
-        echo '<form method="post" action="">';
-        echo '<input type="hidden" name="action"   value="upsert_warranty">';
         echo '<input type="hidden" name="stock_id" value="' . htmlspecialchars($stockId) . '">';
 
         $this->renderWarrantyType($data);
@@ -46,9 +44,6 @@ class ProductWarrantyTab
         $this->renderThirdPartyDuration($data);
         $this->renderLifetimeNotes($data);
         $this->renderWarrantyNotes($data);
-
-        echo '<p><input type="submit" value="' . _('Save Warranty') . '"></p>';
-        echo '</form>';
     }
 
     // ─────────────────────────────────────────────────────────────────────────

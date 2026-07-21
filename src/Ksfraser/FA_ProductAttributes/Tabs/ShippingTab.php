@@ -40,7 +40,7 @@ class ShippingTab extends AbstractTab
     public function handleSave(string $stockId, array $postData): void
     {
         $action = new UpsertShippingAttributesAction($this->dao);
-        $action->handle($postData);
+        $action->handle($stockId, $postData);
     }
 
     public function handleDelete(string $stockId): void

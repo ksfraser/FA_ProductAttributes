@@ -26,7 +26,7 @@ class UpsertShippingAttributesActionTest extends TestCase
     {
         $this->dao->expects($this->never())->method('upsert');
 
-        $result = $this->action->handle([]);
+        $result = $this->action->handle('', []);
 
         $this->assertSame('Invalid stock ID', $result);
     }
@@ -35,7 +35,7 @@ class UpsertShippingAttributesActionTest extends TestCase
     {
         $this->dao->expects($this->never())->method('upsert');
 
-        $result = $this->action->handle(['stock_id' => '   ']);
+        $result = $this->action->handle("   ", []);
 
         $this->assertSame('Invalid stock ID', $result);
     }
@@ -48,13 +48,10 @@ class UpsertShippingAttributesActionTest extends TestCase
             ->method('upsert')
             ->with('SKU001', $this->isType('array'));
 
-        $result = $this->action->handle([
-            'stock_id' => 'SKU001',
-            'length'   => '30',
+        $result = $this->action->handle('SKU001', ['length'   => '30',
             'width'    => '20',
             'height'   => '10',
-            'weight'   => '1.5',
-        ]);
+            'weight'   => '1.5',]);
 
         $this->assertSame('Shipping attributes saved', $result);
     }
@@ -69,7 +66,7 @@ class UpsertShippingAttributesActionTest extends TestCase
                 return true;
             }));
 
-        $this->action->handle(['stock_id' => 'SKU001']);
+        $this->action->handle('SKU001', []);
 
         $this->assertSame('cm', $captured['dim_unit']);
         $this->assertSame('kg', $captured['weight_unit']);
@@ -85,7 +82,7 @@ class UpsertShippingAttributesActionTest extends TestCase
                 return true;
             }));
 
-        $this->action->handle(['stock_id' => 'SKU001', 'dim_unit' => 'furlong']);
+        $this->action->handle('SKU001', ['dim_unit' => 'furlong']);
 
         $this->assertSame('cm', $captured['dim_unit']);
     }
@@ -99,7 +96,7 @@ class UpsertShippingAttributesActionTest extends TestCase
                 return true;
             }));
 
-        $this->action->handle(['stock_id' => 'SKU001', 'weight_unit' => 'stone']);
+        $this->action->handle('SKU001', ['weight_unit' => 'stone']);
 
         $this->assertSame('kg', $captured['weight_unit']);
     }
@@ -116,14 +113,11 @@ class UpsertShippingAttributesActionTest extends TestCase
                 return true;
             }));
 
-        $this->action->handle([
-            'stock_id'             => 'SKU001',
-            'is_hazardous'         => '1',
+        $this->action->handle('SKU001', ['is_hazardous'         => '1',
             'hazmat_class'         => '3',
             'un_number'            => '1170',
             'proper_shipping_name' => 'Ethanol',
-            'packing_group'        => 'II',
-        ]);
+            'packing_group'        => 'II',]);
 
         $this->assertSame(1,         $captured['is_hazardous']);
         $this->assertSame('3',       $captured['hazmat_class']);
@@ -141,7 +135,7 @@ class UpsertShippingAttributesActionTest extends TestCase
                 return true;
             }));
 
-        $this->action->handle(['stock_id' => 'SKU001', 'packing_group' => 'IV']);
+        $this->action->handle('SKU001', ['packing_group' => 'IV']);
 
         $this->assertNull($captured['packing_group']);
     }
@@ -158,13 +152,10 @@ class UpsertShippingAttributesActionTest extends TestCase
                 return true;
             }));
 
-        $this->action->handle([
-            'stock_id'              => 'SKU001',
-            'temperature_sensitive' => '1',
+        $this->action->handle('SKU001', ['temperature_sensitive' => '1',
             'temp_min'              => '-18',
             'temp_max'              => '4',
-            'temp_unit'             => 'C',
-        ]);
+            'temp_unit'             => 'C',]);
 
         $this->assertSame(1,    $captured['temperature_sensitive']);
         $this->assertSame(-18.0, $captured['temp_min']);
@@ -182,11 +173,8 @@ class UpsertShippingAttributesActionTest extends TestCase
                 return true;
             }));
 
-        $this->action->handle([
-            'stock_id' => 'SKU001',
-            'length'   => '',
-            'hs_code'  => '   ',
-        ]);
+        $this->action->handle('SKU001', ['length'   => '',
+            'hs_code'  => '   ',]);
 
         $this->assertNull($captured['length']);
         $this->assertNull($captured['hs_code']);
@@ -204,13 +192,10 @@ class UpsertShippingAttributesActionTest extends TestCase
                 return true;
             }));
 
-        $this->action->handle([
-            'stock_id'            => 'SKU001',
-            'hs_code'             => '6109.10.00',
+        $this->action->handle('SKU001', ['hs_code'             => '6109.10.00',
             'country_of_origin'   => 'Canada',
             'customs_description' => 'Cotton T-shirt',
-            'declared_value'      => '15.99',
-        ]);
+            'declared_value'      => '15.99',]);
 
         $this->assertSame('6109.10.00',    $captured['hs_code']);
         $this->assertSame('Canada',         $captured['country_of_origin']);
@@ -229,13 +214,10 @@ class UpsertShippingAttributesActionTest extends TestCase
                 return true;
             }));
 
-        $this->action->handle([
-            'stock_id'     => 'SKU001',
-            'is_fragile'   => '1',
+        $this->action->handle('SKU001', ['is_fragile'   => '1',
             'is_stackable' => '0',
             'is_oversize'  => '1',
-            'is_perishable'=> '1',
-        ]);
+            'is_perishable'=> '1',]);
 
         $this->assertSame(1, $captured['is_fragile']);
         $this->assertSame(0, $captured['is_stackable']);

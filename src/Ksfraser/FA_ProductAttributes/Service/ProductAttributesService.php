@@ -35,7 +35,6 @@ class ProductAttributesService
         $assignedCategories  = $this->dao->getAssignedCategoriesForProduct($stockId);
 
         $html  = '<h4>' . _('Product Attributes') . '</h4>';
-        $html .= '<form method="post" action="">';
         $html .= '<input type="hidden" name="stock_id" value="' . htmlspecialchars($stockId) . '">';
 
         if (empty($assignments)) {
@@ -102,9 +101,6 @@ class ProductAttributesService
             $html .= '<option value="' . (int)$cat['id'] . '">' . htmlspecialchars((string)$cat['label']) . '</option>';
         }
         $html .= '</select>';
-
-        $html .= '<input type="submit" name="save_product_attributes" value="' . _('Save') . '">';
-        $html .= '</form>';
 
         return $html;
     }

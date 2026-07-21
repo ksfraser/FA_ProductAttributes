@@ -31,16 +31,11 @@ class ProductIdentifiersTab
     {
         $data = ($stockId !== '') ? ($this->dao->get($stockId) ?? []) : [];
 
-        echo '<form method="post" action="">';
-        echo '<input type="hidden" name="action"   value="upsert_identifiers">';
         echo '<input type="hidden" name="stock_id" value="' . htmlspecialchars($stockId) . '">';
 
         $this->renderBrandSection($data);
         $this->renderBarcodeSection($data);
         $this->renderSourcingSection($data);
-
-        echo '<p><input type="submit" value="' . _('Save Identifiers') . '"></p>';
-        echo '</form>';
     }
 
     // ─────────────────────────────────────────────────────────────────────────

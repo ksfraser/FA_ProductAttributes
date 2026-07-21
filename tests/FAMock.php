@@ -199,9 +199,18 @@ if (!isset($_SESSION['wa_current_user'])) {
     };
 }
 
+// FA Filesystem Functions
+if (!function_exists('company_path')) {
+    function company_path() { return '/tmp/company'; }
+}
+
+if (!function_exists('item_img_name')) {
+    function item_img_name($id) { return preg_replace('/[^a-zA-Z0-9_-]/', '', $id); }
+}
+
 // Database Constants
 if (!defined('TB_PREF')) {
-    define('TB_PREF', 'fa_');
+    define('TB_PREF', '0_');
 }
 
 // Hook System Functions

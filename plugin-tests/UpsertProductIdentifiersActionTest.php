@@ -24,7 +24,7 @@ class UpsertProductIdentifiersActionTest extends TestCase
     {
         $this->dao->expects($this->never())->method('upsert');
 
-        $result = $this->action->handle([]);
+        $result = $this->action->handle('', []);
 
         $this->assertSame('Invalid stock ID', $result);
     }
@@ -33,7 +33,7 @@ class UpsertProductIdentifiersActionTest extends TestCase
     {
         $this->dao->expects($this->never())->method('upsert');
 
-        $result = $this->action->handle(['stock_id' => '   ']);
+        $result = $this->action->handle("   ", []);
 
         $this->assertSame('Invalid stock ID', $result);
     }
@@ -44,7 +44,7 @@ class UpsertProductIdentifiersActionTest extends TestCase
             ->method('upsert')
             ->with('SKU001', $this->anything());
 
-        $this->action->handle(['stock_id' => 'SKU001', 'brand' => 'Acme']);
+        $this->action->handle('SKU001', ['brand' => 'Acme']);
     }
 
     public function testHandleConvertsEmptyFieldsToNull(): void
@@ -57,7 +57,7 @@ class UpsertProductIdentifiersActionTest extends TestCase
                 return true;
             }));
 
-        $this->action->handle(['stock_id' => 'SKU001', 'brand' => '', 'mpn' => 'X']);
+        $this->action->handle('SKU001', ['brand' => '', 'mpn' => 'X']);
 
         $this->assertNull($captured['brand']);
         $this->assertSame('X', $captured['mpn']);
@@ -65,7 +65,7 @@ class UpsertProductIdentifiersActionTest extends TestCase
 
     public function testHandleReturnsSavedMessage(): void
     {
-        $result = $this->action->handle(['stock_id' => 'SKU001', 'brand' => 'Acme']);
+        $result = $this->action->handle('SKU001', ['brand' => 'Acme']);
 
         $this->assertSame('Identifiers saved', $result);
     }
@@ -80,7 +80,7 @@ class UpsertProductIdentifiersActionTest extends TestCase
                 return true;
             }));
 
-        $this->action->handle(['stock_id' => 'SKU001', 'brand' => '  Acme  ']);
+        $this->action->handle('SKU001', ['brand' => '  Acme  ']);
 
         $this->assertSame('Acme', $captured['brand']);
     }

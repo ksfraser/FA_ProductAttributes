@@ -24,7 +24,7 @@ class UpsertProductLifecycleActionTest extends TestCase
     {
         $this->dao->expects($this->never())->method('upsert');
 
-        $result = $this->action->handle([]);
+        $result = $this->action->handle('', []);
 
         $this->assertSame('Invalid stock ID', $result);
     }
@@ -33,7 +33,7 @@ class UpsertProductLifecycleActionTest extends TestCase
     {
         $this->dao->expects($this->never())->method('upsert');
 
-        $result = $this->action->handle(['stock_id' => '']);
+        $result = $this->action->handle('', []);
 
         $this->assertSame('Invalid stock ID', $result);
     }
@@ -48,7 +48,7 @@ class UpsertProductLifecycleActionTest extends TestCase
                 return true;
             }));
 
-        $this->action->handle(['stock_id' => 'SKU001', 'status' => 'discontinued']);
+        $this->action->handle('SKU001', ['status' => 'discontinued']);
 
         $this->assertSame('discontinued', $captured['status']);
     }
@@ -63,7 +63,7 @@ class UpsertProductLifecycleActionTest extends TestCase
                 return true;
             }));
 
-        $this->action->handle(['stock_id' => 'SKU001', 'status' => 'invalid_value']);
+        $this->action->handle('SKU001', ['status' => 'invalid_value']);
 
         $this->assertSame('active', $captured['status']);
     }
@@ -78,7 +78,7 @@ class UpsertProductLifecycleActionTest extends TestCase
                 return true;
             }));
 
-        $this->action->handle(['stock_id' => 'SKU001', 'is_featured' => '1', 'is_clearance' => '']);
+        $this->action->handle('SKU001', ['is_featured' => '1', 'is_clearance' => '']);
 
         $this->assertSame(1, $captured['is_featured']);
         $this->assertSame(0, $captured['is_clearance']);
@@ -94,11 +94,8 @@ class UpsertProductLifecycleActionTest extends TestCase
                 return true;
             }));
 
-        $this->action->handle([
-            'stock_id'       => 'SKU001',
-            'available_from' => '2025-01-01',
-            'discontinue_on' => '2025-12-31',
-        ]);
+        $this->action->handle('SKU001', ['available_from' => '2025-01-01',
+            'discontinue_on' => '2025-12-31',]);
 
         $this->assertSame('2025-01-01', $captured['available_from']);
         $this->assertSame('2025-12-31', $captured['discontinue_on']);
@@ -114,11 +111,8 @@ class UpsertProductLifecycleActionTest extends TestCase
                 return true;
             }));
 
-        $this->action->handle([
-            'stock_id'       => 'SKU001',
-            'available_from' => 'not-a-date',
-            'discontinue_on' => '01/01/2025',
-        ]);
+        $this->action->handle('SKU001', ['available_from' => 'not-a-date',
+            'discontinue_on' => '01/01/2025',]);
 
         $this->assertNull($captured['available_from']);
         $this->assertNull($captured['discontinue_on']);
@@ -126,7 +120,7 @@ class UpsertProductLifecycleActionTest extends TestCase
 
     public function testHandleReturnsSavedMessage(): void
     {
-        $result = $this->action->handle(['stock_id' => 'SKU001']);
+        $result = $this->action->handle('SKU001', []);
 
         $this->assertSame('Lifecycle saved', $result);
     }

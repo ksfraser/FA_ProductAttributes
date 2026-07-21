@@ -40,7 +40,7 @@ class IdentifiersTab extends AbstractTab
     public function handleSave(string $stockId, array $postData): void
     {
         $action = new UpsertProductIdentifiersAction($this->dao);
-        $action->handle($postData);
+        $action->handle($stockId, $postData);
     }
 
     public function handleDelete(string $stockId): void

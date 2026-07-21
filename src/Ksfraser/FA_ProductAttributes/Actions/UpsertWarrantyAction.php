@@ -30,13 +30,13 @@ class UpsertWarrantyAction
     }
 
     /**
+     * @param string $stockId
      * @param array<string, mixed> $postData
      * @return string Result message
      */
-    public function handle(array $postData): string
+    public function handle(string $stockId, array $postData): string
     {
-        $stockId = trim((string)($postData['stock_id'] ?? ''));
-        if ($stockId === '') {
+        if (trim($stockId) === '') {
             return 'Invalid stock ID';
         }
 

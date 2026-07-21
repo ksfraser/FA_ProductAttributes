@@ -46,8 +46,6 @@ class LifecycleTab extends AbstractTab
         $statusCurrent = (string)($data['status'] ?? 'active');
         $statuses = ['active' => 'Active', 'draft' => 'Draft', 'discontinued' => 'Discontinued', 'archived' => 'Archived'];
 
-        echo '<form method="post" action="">';
-        echo '<input type="hidden" name="action"   value="upsert_lifecycle">';
         echo '<input type="hidden" name="stock_id" value="' . htmlspecialchars($stockId) . '">';
 
         echo '<fieldset><legend>' . _('Status') . '</legend>';

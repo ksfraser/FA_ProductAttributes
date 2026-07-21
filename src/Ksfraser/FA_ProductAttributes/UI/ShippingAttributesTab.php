@@ -34,8 +34,6 @@ class ShippingAttributesTab
     {
         $data = ($stockId !== '') ? ($this->dao->get($stockId) ?? []) : [];
 
-        echo '<form method="post" action="">';
-        echo '<input type="hidden" name="action"   value="upsert_shipping_attributes">';
         echo '<input type="hidden" name="stock_id" value="' . htmlspecialchars($stockId) . '">';
 
         $this->renderDimensions($data);
@@ -44,9 +42,6 @@ class ShippingAttributesTab
         $this->renderHandling($data);
         $this->renderTemperature($data);
         $this->renderCustoms($data);
-
-        echo '<p><input type="submit" value="' . _('Save Shipping Attributes') . '"></p>';
-        echo '</form>';
     }
 
     // ──────────────────────────────────────────────────────────────────────────
@@ -101,7 +96,7 @@ class ShippingAttributesTab
             . _('This product is classified as hazardous / dangerous goods') . '</label></p>';
         echo '<table class="tablestyle_noborder">';
         echo '<tr>';
-        echo '<td>' . _('Hazmat Class (1–9)') . '</td>';
+        echo '<td>' . _('Hazmat Class (1-9)') . '</td>';
         echo '<td><input type="text" name="hazmat_class" maxlength="8" value="'
             . $this->v($d, 'hazmat_class') . '" placeholder="e.g. 3"></td>';
         echo '<td>' . _('UN Number') . '</td>';
