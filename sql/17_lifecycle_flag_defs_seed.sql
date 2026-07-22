@@ -7,4 +7,5 @@ INSERT IGNORE INTO `{TB_PREF}product_lifecycle_flag_defs` (`code`, `label`, `sor
 ('featured',            'Featured',             60, 1),
 ('seasonal',            'Seasonal',             70, 1),
 ('special_order',       'Special Order',        80, 1),
+('allow_backorder',     'Allow Backorder',      85, 1),
 ('out_of_stock_notice', 'Display Out-of-Stock Notice', 90, 1);
