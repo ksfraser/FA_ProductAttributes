@@ -36,6 +36,7 @@ class ProductIdentifiersTab
     {
         $data = ($stockId !== '') ? ($this->dao->get($stockId) ?? []) : [];
 
+        echo '<input type="hidden" name="action"   value="save_product_identifiers">';
         echo '<input type="hidden" name="stock_id" value="' . htmlspecialchars($stockId) . '">';
 
         $this->renderBrandSection($data);

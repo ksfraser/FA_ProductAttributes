@@ -34,6 +34,7 @@ class ShippingAttributesTab
     {
         $data = ($stockId !== '') ? ($this->dao->get($stockId) ?? []) : [];
 
+        echo '<input type="hidden" name="action"   value="save_shipping_attributes">';
         echo '<input type="hidden" name="stock_id" value="' . htmlspecialchars($stockId) . '">';
 
         $this->renderDimensions($data);

@@ -57,7 +57,7 @@ class UrlsTab extends AbstractTab
                 echo '<input type="hidden" name="action" value="delete_media_attachment">';
                 echo '<input type="hidden" name="attachment_id" value="' . $id . '">';
                 echo '<input type="submit" value="' . _('Delete') . '" style="color:red" '
-                    . 'onclick="return confirm(\'' . _('Delete this attachment?') . '\')">';
+                    . 'onclick="return confirm(\'' . _('Delete this URL?') . '\')">';
                 echo '</form></td>';
                 echo '</tr>';
             }

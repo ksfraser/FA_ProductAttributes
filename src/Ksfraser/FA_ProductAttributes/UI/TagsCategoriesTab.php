@@ -36,6 +36,7 @@ class TagsCategoriesTab
      */
     public function render(string $stockId): void
     {
+        echo '<input type="hidden" name="action"    value="save_tags_categories">';
         echo '<input type="hidden" name="stock_id" value="' . htmlspecialchars($stockId) . '">';
 
         $this->renderCategoriesSection($stockId);

@@ -80,6 +80,12 @@ class TagsTab extends AbstractTab
 
         $action = $_POST['action'] ?? '';
 
+        if ($action === 'save_tags_categories') {
+            $this->handleTagSave($stockId, $_POST);
+            header('Location: ' . $_SERVER['REQUEST_URI']);
+            exit;
+        }
+
         if ($action === 'add_category_assignment') {
             $categoryId = (int)($_POST['category_id'] ?? 0);
             if ($categoryId > 0) {
