@@ -52,6 +52,54 @@ class VariationsTabTest extends TestCase
         $this->assertStringContainsString('Variation Categories', $output);
     }
 
+    /**
+     * Regression: Verify no <form> tag is rendered (fix for nested form bug #15/#16).
+     */
+    public function testRenderDoesNotContainFormTag(): void
+    {
+        $_SERVER['REQUEST_METHOD'] = 'GET';
+        $this->dao->expects($this->once())->method('listCategories')->willReturn([]);
+        $this->dao->expects($this->once())->method('getProductParent')->willReturn(null);
+
+        ob_start();
+        $this->tab->renderTabContent('SKU001');
+        $output = ob_get_clean();
+
+        $this->assertStringNotContainsString('<form', $output);
+        $this->assertStringNotContainsString('</form>', $output);
+    }
+
+    public function testRenderShowsActionButtons(): void
+    {
+        $_SERVER['REQUEST_METHOD'] = 'GET';
+        $this->dao->expects($this->once())->method('listCategories')->willReturn([]);
+        $this->dao->expects($this->once())->method('getProductParent')->willReturn(null);
+
+        ob_start();
+        $this->tab->renderTabContent('SKU001');
+        $output = ob_get_clean();
+
+        $this->assertStringContainsString('generate_variations', $output);
+        $this->assertStringContainsString('create_child', $output);
+    }
+
+    public function testRenderShowsParentInfo(): void
+    {
+        $_SERVER['REQUEST_METHOD'] = 'GET';
+        $this->dao->expects($this->once())->method('listCategories')->willReturn([]);
+        $this->dao->expects($this->once())->method('getProductParent')->willReturn([
+            'stock_id' => 'PARENT001',
+            'description' => 'Parent Product',
+        ]);
+
+        ob_start();
+        $this->tab->renderTabContent('CHILD001');
+        $output = ob_get_clean();
+
+        $this->assertStringContainsString('PARENT001', $output);
+        $this->assertStringContainsString('Parent Product', $output);
+    }
+
     public function testHandleSaveDoesNothing(): void
     {
         $this->tab->handleSave('SKU001', []);

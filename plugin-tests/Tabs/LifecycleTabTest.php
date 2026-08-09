@@ -43,6 +43,7 @@ class LifecycleTabTest extends TestCase
 
     public function testRenderTabContentEmptyStockId(): void
     {
+        $_SERVER['REQUEST_METHOD'] = 'GET';
         $this->lifecycleDao->expects($this->never())->method('get');
         $this->flagDefsDao->expects($this->once())->method('listActiveFlags')->willReturn([]);
 
@@ -55,6 +56,7 @@ class LifecycleTabTest extends TestCase
 
     public function testRenderTabContentWithStockId(): void
     {
+        $_SERVER['REQUEST_METHOD'] = 'GET';
         $this->lifecycleDao->expects($this->once())
             ->method('get')
             ->with('SKU001')
@@ -72,6 +74,19 @@ class LifecycleTabTest extends TestCase
         $output = ob_get_clean();
 
         $this->assertStringContainsString('Active', $output);
+    }
+
+    public function testRenderDoesNotContainFormTag(): void
+    {
+        $_SERVER['REQUEST_METHOD'] = 'GET';
+        $this->flagDefsDao->expects($this->once())->method('listActiveFlags')->willReturn([]);
+
+        ob_start();
+        $this->tab->renderTabContent('SKU001');
+        $output = ob_get_clean();
+
+        $this->assertStringNotContainsString('<form', $output);
+        $this->assertStringNotContainsString('</form>', $output);
     }
 
     public function testHandleSaveCallsLifecycleUpsert(): void

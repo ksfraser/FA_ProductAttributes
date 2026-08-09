@@ -46,10 +46,6 @@ class VariationsTab extends AbstractTab
         $parentData = $this->dao->getProductParent($stockId);
         $variations = ($stockId !== '') ? $this->dao->getProductVariations($stockId) : [];
 
-        echo '<form method="post" action="">';
-        echo '<input type="hidden" name="action"   value="variations_save">';
-        echo '<input type="hidden" name="stock_id" value="' . htmlspecialchars($stockId) . '">';
-
         if ($parentData) {
             echo '<fieldset><legend>' . _('Parent Product') . '</legend>';
             echo '<p>' . _('This product is a variation of') . ' <strong>'
@@ -93,7 +89,6 @@ class VariationsTab extends AbstractTab
 
         echo '<p><input type="submit" name="generate_variations" value="' . _('Generate Variations') . '"> ';
         echo '<input type="submit" name="create_child" value="' . _('Create Child Product') . '"></p>';
-        echo '</form>';
     }
 
     public function handleSave(string $stockId, array $postData): void
@@ -121,8 +116,7 @@ class VariationsTab extends AbstractTab
                 $message = $action->handle($_POST);
                 display_notification($message);
             }
-            header('Location: ' . $_SERVER['REQUEST_URI']);
-            exit;
+            return;
         }
 
         if (isset($_POST['create_child'])) {
@@ -133,8 +127,7 @@ class VariationsTab extends AbstractTab
             } catch (\InvalidArgumentException $e) {
                 display_error($e->getMessage());
             }
-            header('Location: ' . $_SERVER['REQUEST_URI']);
-            exit;
+            return;
         }
     }
 

@@ -29,6 +29,7 @@ $files = [
     __DIR__ . '/../src/Ksfraser/FA_ProductAttributes/Dao/ProductIdentifiersDao.php',
     __DIR__ . '/../src/Ksfraser/FA_ProductAttributes/Dao/ProductLifecycleDao.php',
     __DIR__ . '/../src/Ksfraser/FA_ProductAttributes/Dao/ProductTagsDao.php',
+    __DIR__ . '/../src/Ksfraser/FA_ProductAttributes/Dao/IdentifierLookupsDao.php',
     __DIR__ . '/../src/Ksfraser/FA_ProductAttributes/Dao/ProductMediaDao.php',
     __DIR__ . '/../src/Ksfraser/FA_ProductAttributes/Service/ProductAttributesService.php',
     __DIR__ . '/../src/Ksfraser/FA_ProductAttributes/Service/BulkOperationsService.php',
@@ -106,8 +107,11 @@ $files = [
     __DIR__ . '/../src/Ksfraser/FA_ProductAttributes/Security/AccessChecker.php',
     // Controller classes (merged from FA_ProductAttributes_Core)
     __DIR__ . '/../src/Ksfraser/FA_ProductAttributes/Controller/ProductAttributesTabController.php',
+    // Tabs (merged from FA_ProductAttributes_Core)
+    __DIR__ . '/../src/Ksfraser/FA_ProductAttributes/Tabs/TagsTab.php',
     // Additional UI classes (merged from FA_ProductAttributes_Core)
     __DIR__ . '/../src/Ksfraser/FA_ProductAttributes/UI/ProductAttributesTabUI.php',
+    __DIR__ . '/../src/Ksfraser/FA_ProductAttributes/UI/TagsCategoriesTab.php',
     __DIR__ . '/../src/Ksfraser/FA_ProductAttributes/UI/ShippingAttributesTab.php',
     __DIR__ . '/../src/Ksfraser/FA_ProductAttributes/UI/ShippingClonePanel.php',
     __DIR__ . '/../src/Ksfraser/FA_ProductAttributes/UI/ProductIdentifiersTab.php',

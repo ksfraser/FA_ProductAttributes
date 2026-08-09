@@ -38,8 +38,6 @@ class LifecycleTab extends AbstractTab
 
     public function renderTabContent(string $stockId): void
     {
-        $this->handlePostActions($stockId);
-
         $data = ($stockId !== '') ? ($this->lifecycleDao->get($stockId) ?? []) : [];
         $currentFlags = ($stockId !== '') ? $this->flagDefsDao->getAssignedFlagIds($stockId) : [];
         $assignedSet  = array_flip(array_map('strval', $currentFlags));
@@ -48,7 +46,6 @@ class LifecycleTab extends AbstractTab
         $statusCurrent = (string)($data['status'] ?? 'active');
         $statuses = ['active' => 'Active', 'draft' => 'Draft', 'discontinued' => 'Discontinued', 'archived' => 'Archived'];
 
-        echo '<form method="post" action="">';
         echo '<input type="hidden" name="action"   value="save_product_lifecycle">';
         echo '<input type="hidden" name="stock_id" value="' . htmlspecialchars($stockId) . '">';
 
@@ -92,24 +89,6 @@ class LifecycleTab extends AbstractTab
         echo '<tr><td>' . _('Clearance Note') . '</td>';
         echo '<td><input type="text" name="clearance_note" maxlength="255" value="' . $note . '" style="width:100%"></td></tr>';
         echo '</table></fieldset>';
-
-        echo '<p><input type="submit" value="' . _('Save Lifecycle') . '"></p>';
-        echo '</form>';
-    }
-
-    private function handlePostActions(string $stockId): void
-    {
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST' || $stockId === '') {
-            return;
-        }
-        if (($_POST['action'] ?? '') !== 'save_product_lifecycle') {
-            return;
-        }
-
-        $this->handleSave($stockId, $_POST);
-
-        header('Location: ' . $_SERVER['REQUEST_URI']);
-        exit;
     }
 
     public function handleSave(string $stockId, array $postData): void

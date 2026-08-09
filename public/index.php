@@ -24,11 +24,13 @@ $user = getenv('DB_USER') ?: null;
 $pass = getenv('DB_PASS') ?: null;
 
 if (!$dsn) {
-    $dataDir = __DIR__ . '/../data';
-    if (!is_dir($dataDir)) {
-        mkdir($dataDir, 0777, true);
-    }
-    $dsn = 'sqlite:' . $dataDir . '/product_attributes.sqlite';
+    header('Content-Type: text/plain; charset=utf-8');
+    echo "Error: DB_DSN environment variable is not set.\n\n";
+    echo "Set the MySQL/MariaDB DSN:\n";
+    echo "  DB_DSN='mysql:host=ksf-mariadb;dbname=ksf_fa;charset=utf8'\n";
+    echo "  DB_USER=ksf_user\n";
+    echo "  DB_PASS=...\n";
+    exit(1);
 }
 
 $pdo = new PDO($dsn, $user, $pass);

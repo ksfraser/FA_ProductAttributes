@@ -138,6 +138,7 @@ class hooks_FA_ProductAttributes extends hooks
             '16_product_lifecycle_flag_assignments.sql',
             '17_lifecycle_flag_defs_seed.sql',
             '18_product_identifier_lookups.sql',
+            '19_product_attribute_categories_seed.sql',
         );
 
         foreach ($files as $file) {

@@ -51,4 +51,60 @@ class WarrantyTabTest extends TestCase
 
         $this->tab->handleDelete('SKU001');
     }
+
+    /**
+     * Regression: Verify no <form> tag is rendered (fix for nested form bug #15/#16).
+     * Tabs are rendered inside FA's main item form; an inner <form> creates invalid HTML.
+     */
+    public function testRenderDoesNotContainFormTag(): void
+    {
+        $this->dao->expects($this->once())
+            ->method('get')
+            ->with('SKU001')
+            ->willReturn([
+                'warranty_type' => 'manufacturer',
+                'manufacturer_duration' => 12,
+                'warranty_notes' => 'Test coverage',
+            ]);
+
+        ob_start();
+        $this->tab->renderTabContent('SKU001');
+        $output = ob_get_clean();
+
+        $this->assertStringNotContainsString('<form', $output, 'Tab must not render a <form> tag to avoid nested forms inside FA item form');
+        $this->assertStringNotContainsString('</form>', $output);
+    }
+
+    public function testRenderContainsWarrantyFields(): void
+    {
+        $this->dao->expects($this->once())
+            ->method('get')
+            ->with('SKU002')
+            ->willReturn([
+                'warranty_type' => 'lifetime',
+                'lifetime_notes' => 'Lifetime satisfaction guaranteed',
+            ]);
+
+        ob_start();
+        $this->tab->renderTabContent('SKU002');
+        $output = ob_get_clean();
+
+        $this->assertStringContainsString('name="warranty_type"', $output);
+        $this->assertStringContainsString('value="lifetime"', $output);
+        $this->assertStringContainsString('name="lifetime_notes"', $output);
+        $this->assertStringContainsString('Lifetime satisfaction guaranteed', $output);
+    }
+
+    public function testRenderWithEmptyStockIdShowsDefaults(): void
+    {
+        $this->dao->expects($this->never())->method('get');
+
+        ob_start();
+        $this->tab->renderTabContent('');
+        $output = ob_get_clean();
+
+        $this->assertStringContainsString('name="warranty_type"', $output);
+        $this->assertStringContainsString('value="none"', $output);
+        $this->assertStringContainsString('name="stock_id" value=""', $output);
+    }
 }

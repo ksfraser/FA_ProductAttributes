@@ -33,8 +33,6 @@ class WarrantyTab extends AbstractTab
 
     public function renderTabContent(string $stockId): void
     {
-        $this->handlePostActions($stockId);
-
         $data = ($stockId !== '') ? ($this->dao->get($stockId) ?? []) : [];
 
         $currentType = (string)($data['warranty_type'] ?? 'none');
@@ -46,7 +44,6 @@ class WarrantyTab extends AbstractTab
             'lifetime'     => 'Lifetime Warranty',
         ];
 
-        echo '<form method="post" action="">';
         echo '<input type="hidden" name="action"   value="save_product_warranty">';
         echo '<input type="hidden" name="stock_id" value="' . htmlspecialchars($stockId) . '">';
 
@@ -101,24 +98,6 @@ class WarrantyTab extends AbstractTab
         echo '<fieldset><legend>' . _('Warranty Terms / General Notes') . '</legend>';
         echo '<textarea name="warranty_notes" rows="4" style="width:100%">' . $warrantyNotes . '</textarea>';
         echo '</fieldset>';
-
-        echo '<p><input type="submit" value="' . _('Save Warranty') . '"></p>';
-        echo '</form>';
-    }
-
-    private function handlePostActions(string $stockId): void
-    {
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST' || $stockId === '') {
-            return;
-        }
-        if (($_POST['action'] ?? '') !== 'save_product_warranty') {
-            return;
-        }
-
-        $this->handleSave($stockId, $_POST);
-
-        header('Location: ' . $_SERVER['REQUEST_URI']);
-        exit;
     }
 
     public function handleSave(string $stockId, array $postData): void
