@@ -1,5 +1,6 @@
 CREATE TABLE IF NOT EXISTS `0_product_shipping_attributes` (
   `stock_id`               VARCHAR(32)    NOT NULL,
+  `shipping_class_id`      INT(11)        NULL,
   `length`                 DECIMAL(10,3)  NULL,
   `width`                  DECIMAL(10,3)  NULL,
   `height`                 DECIMAL(10,3)  NULL,

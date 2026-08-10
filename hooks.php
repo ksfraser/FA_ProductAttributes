@@ -10,6 +10,14 @@ use Ksfraser\FA_ProductAttributes\Dao\ProductWarrantyDao;
 use Ksfraser\FA_ProductAttributes\Dao\LifecycleFlagDefsDao;
 use Ksfraser\FA_ProductAttributes\Dao\IdentifierLookupsDao;
 use Ksfraser\FA_ProductAttributes\Dao\ProductTagsDao;
+use Ksfraser\FA_ProductAttributes\Dao\ProductCustomAttributesDao;
+use Ksfraser\FA_ProductAttributes\Dao\ProductModifiersDao;
+use Ksfraser\FA_ProductAttributes\Dao\ProductFulfillmentDao;
+use Ksfraser\FA_ProductAttributes\Dao\ProductCategoryHierarchyDao;
+use Ksfraser\FA_ProductAttributes\Dao\ProductShippingClassesDao;
+use Ksfraser\FA_ProductAttributes\Dao\ProductCartRulesDao;
+use Ksfraser\FA_ProductAttributes\Dao\ProductRelatedProductsDao;
+use Ksfraser\FA_ProductAttributes\Dao\ProductMeasurementUnitsDao;
 use Ksfraser\FA_ProductAttributes\Handler\ProductAttributesHandler;
 use Ksfraser\FA_ProductAttributes\Plugin\PluginLoader;
 use Ksfraser\FA_ProductAttributes\Service\ProductAttributesService;
@@ -139,11 +147,29 @@ class hooks_FA_ProductAttributes extends hooks
             '17_lifecycle_flag_defs_seed.sql',
             '18_product_identifier_lookups.sql',
             '19_product_attribute_categories_seed.sql',
+            '20_product_custom_attributes.sql',
+            '21_product_modifier_lists.sql',
+            '22_product_modifiers.sql',
+            '23_product_modifier_list_assignments.sql',
+            '24_product_fulfillment.sql',
+            '25_product_category_hierarchy.sql',
+            '26_product_shipping_classes.sql',
+            '27_product_cart_rules.sql',
+            '28_product_related_products.sql',
+            '29_product_measurement_units.sql',
+            '30_product_attribute_extras.sql',
         );
 
         foreach ($files as $file) {
             if (file_exists($sqlDir . '/' . $file)) {
-                $updates[$file] = array($this->module_name);
+                if ($file === '30_product_attribute_extras.sql') {
+                    // Probe on the first upgraded column: the ALTERs run once on
+                    // existing installs; fresh installs already get the columns
+                    // from base schema files 02/03/06 so this file is skipped.
+                    $updates[$file] = array('product_attribute_values', 'color');
+                } else {
+                    $updates[$file] = array($this->module_name);
+                }
             }
         }
 
@@ -357,6 +383,14 @@ class hooks_FA_ProductAttributes extends hooks
         $mediaAttachmentsDao = new MediaAttachmentsDao($db);
         $tagsDao = new ProductTagsDao($db);
         $identifierLookupsDao = new IdentifierLookupsDao($db);
+        $customAttributesDao = new ProductCustomAttributesDao($db);
+        $modifiersDao = new ProductModifiersDao($db);
+        $fulfillmentDao = new ProductFulfillmentDao($db);
+        $categoryHierarchyDao = new ProductCategoryHierarchyDao($db);
+        $shippingClassesDao = new ProductShippingClassesDao($db);
+        $cartRulesDao = new ProductCartRulesDao($db);
+        $relatedProductsDao = new ProductRelatedProductsDao($db);
+        $measurementUnitsDao = new ProductMeasurementUnitsDao($db);
         $variationsDao = new VariationsDao($db, new \FrontAccounting\ProductAttributes\Dao\ProductAttributesDao($db));
         $service = new ProductAttributesService($dao, $db);
         $handler = new ProductAttributesHandler($service);
@@ -375,6 +409,14 @@ class hooks_FA_ProductAttributes extends hooks
             'tags_dao' => $tagsDao,
             'identifier_lookups_dao' => $identifierLookupsDao,
             'variations_dao' => $variationsDao,
+            'custom_attributes_dao' => $customAttributesDao,
+            'modifiers_dao' => $modifiersDao,
+            'fulfillment_dao' => $fulfillmentDao,
+            'category_hierarchy_dao' => $categoryHierarchyDao,
+            'shipping_classes_dao' => $shippingClassesDao,
+            'cart_rules_dao' => $cartRulesDao,
+            'related_products_dao' => $relatedProductsDao,
+            'measurement_units_dao' => $measurementUnitsDao,
         );
 
         return $GLOBALS['fa_product_attributes_services_cache'];

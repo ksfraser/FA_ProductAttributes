@@ -161,4 +161,37 @@ class ShippingAttributesDaoTest extends TestCase
 
         $this->dao->upsert('SKU001', $fullData);
     }
+
+    public function testUpsertPersistsShippingClassId(): void
+    {
+        $this->db->expects($this->once())->method('query')->willReturn([]);
+
+        $this->db->expects($this->once())
+            ->method('execute')
+            ->with(
+                $this->stringContains('INSERT INTO'),
+                $this->callback(function ($bound) {
+                    return isset($bound['shipping_class_id']) && $bound['shipping_class_id'] === 4;
+                })
+            );
+
+        $this->dao->upsert('SKU001', ['length' => 10.0, 'shipping_class_id' => 4]);
+    }
+
+    public function testUpsertIgnoresInvalidShippingClassIdValues(): void
+    {
+        $this->db->expects($this->once())->method('query')->willReturn([]);
+
+        $this->db->expects($this->once())
+            ->method('execute')
+            ->with(
+                $this->anything(),
+                $this->callback(function ($bound) {
+                    return array_key_exists('shipping_class_id', $bound)
+                        && $bound['shipping_class_id'] === 0;
+                })
+            );
+
+        $this->dao->upsert('SKU001', ['shipping_class_id' => 'abc']);
+    }
 }

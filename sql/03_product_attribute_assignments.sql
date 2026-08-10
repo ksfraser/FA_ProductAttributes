@@ -5,6 +5,7 @@ CREATE TABLE IF NOT EXISTS `0_product_attribute_assignments` (
   `value_id` INT(11) NOT NULL,
   `parent_stock_id` VARCHAR(32) NULL,
   `sort_order` INT(11) NOT NULL DEFAULT 0,
+  `is_default` TINYINT(1) NOT NULL DEFAULT 0,
   `updated_ts` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   UNIQUE KEY `uq_stock_category_value` (`stock_id`, `category_id`, `value_id`),

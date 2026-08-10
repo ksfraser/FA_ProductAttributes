@@ -21,6 +21,7 @@ class ShippingAttributesDao
      * @var string[]
      */
     private static $columns = [
+        'shipping_class_id',
         'length', 'width', 'height', 'dim_unit',
         'weight', 'weight_unit',
         'is_hazardous', 'hazmat_class', 'un_number', 'proper_shipping_name', 'packing_group',
@@ -118,6 +119,10 @@ class ShippingAttributesDao
         $out = [];
         foreach (self::$columns as $col) {
             if (array_key_exists($col, $data)) {
+                if ($col === 'shipping_class_id') {
+                    $out[$col] = (int)$data[$col];
+                    continue;
+                }
                 $out[$col] = $data[$col];
             }
         }

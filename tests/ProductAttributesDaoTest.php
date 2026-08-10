@@ -497,4 +497,90 @@ class ProductAttributesDaoTest extends TestCase
         $result = $dao->getProductParent('CHILD001');
         $this->assertNull($result);
     }
+
+    public function testListDefaultAssignments(): void
+    {
+        $db = $this->createMock(DbAdapterInterface::class);
+        $db->method('getTablePrefix')->willReturn('fa_');
+        $db->expects($this->once())
+            ->method('query')
+            ->with(
+                "SELECT a.*, c.code AS category_code, c.label AS category_label, c.sort_order AS category_sort_order, v.value AS value_label, v.slug AS value_slug\n"
+                . "FROM `fa_product_attribute_assignments` a\n"
+                . "JOIN `fa_product_attribute_categories` c ON c.id = a.category_id\n"
+                . "JOIN `fa_product_attribute_values` v ON v.id = a.value_id\n"
+                . "WHERE a.stock_id = :stock_id AND a.is_default = 1\n"
+                . "ORDER BY a.sort_order, c.sort_order, c.code, v.sort_order, v.slug",
+                ['stock_id' => 'ABC123']
+            )
+            ->willReturn([
+                ['id' => 1, 'category_code' => 'size', 'value_label' => 'M', 'is_default' => 1],
+            ]);
+
+        $dao = new ProductAttributesDao($db);
+        $result = $dao->listDefaultAssignments('ABC123');
+
+        $this->assertCount(1, $result);
+        $this->assertSame('M', $result[0]['value_label']);
+    }
+
+    public function testSetAssignmentDefaultTrue(): void
+    {
+        $db = $this->createMock(DbAdapterInterface::class);
+        $db->method('getTablePrefix')->willReturn('fa_');
+        $db->expects($this->once())
+            ->method('execute')
+            ->with(
+                'UPDATE `fa_product_attribute_assignments` SET is_default = :is_default WHERE id = :id',
+                ['is_default' => 1, 'id' => 7]
+            );
+
+        $dao = new ProductAttributesDao($db);
+        $dao->setAssignmentDefault(7, true);
+    }
+
+    public function testSetAssignmentDefaultFalse(): void
+    {
+        $db = $this->createMock(DbAdapterInterface::class);
+        $db->method('getTablePrefix')->willReturn('fa_');
+        $db->expects($this->once())
+            ->method('execute')
+            ->with(
+                'UPDATE `fa_product_attribute_assignments` SET is_default = :is_default WHERE id = :id',
+                ['is_default' => 0, 'id' => 7]
+            );
+
+        $dao = new ProductAttributesDao($db);
+        $dao->setAssignmentDefault(7, false);
+    }
+
+    public function testUpdateValueColorSetsColor(): void
+    {
+        $db = $this->createMock(DbAdapterInterface::class);
+        $db->method('getTablePrefix')->willReturn('fa_');
+        $db->expects($this->once())
+            ->method('execute')
+            ->with(
+                'UPDATE `fa_product_attribute_values` SET color = :color WHERE id = :id',
+                ['color' => '#FF0000', 'id' => 3]
+            );
+
+        $dao = new ProductAttributesDao($db);
+        $dao->updateValueColor(3, '#FF0000');
+    }
+
+    public function testUpdateValueColorClearsColor(): void
+    {
+        $db = $this->createMock(DbAdapterInterface::class);
+        $db->method('getTablePrefix')->willReturn('fa_');
+        $db->expects($this->once())
+            ->method('execute')
+            ->with(
+                'UPDATE `fa_product_attribute_values` SET color = :color WHERE id = :id',
+                ['color' => null, 'id' => 3]
+            );
+
+        $dao = new ProductAttributesDao($db);
+        $dao->updateValueColor(3, null);
+    }
 }

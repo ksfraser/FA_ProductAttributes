@@ -218,6 +218,50 @@ class ProductAttributesDao
         );
     }
 
+    /**
+     * Default attribute assignments for a product (WooCommerce `default_attributes`).
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    public function listDefaultAssignments(string $stockId): array
+    {
+        $p = $this->db->getTablePrefix();
+        return $this->db->query(
+            "SELECT a.*, c.code AS category_code, c.label AS category_label, c.sort_order AS category_sort_order, v.value AS value_label, v.slug AS value_slug\n"
+            . "FROM `{$p}product_attribute_assignments` a\n"
+            . "JOIN `{$p}product_attribute_categories` c ON c.id = a.category_id\n"
+            . "JOIN `{$p}product_attribute_values` v ON v.id = a.value_id\n"
+            . "WHERE a.stock_id = :stock_id AND a.is_default = 1\n"
+            . "ORDER BY a.sort_order, c.sort_order, c.code, v.sort_order, v.slug",
+            ['stock_id' => $stockId]
+        );
+    }
+
+    /**
+     * Flag an assignment as the default for its category (or clear the flag).
+     */
+    public function setAssignmentDefault(int $assignmentId, bool $isDefault): void
+    {
+        $p = $this->db->getTablePrefix();
+        $this->db->execute(
+            'UPDATE `' . $p . 'product_attribute_assignments` SET is_default = :is_default WHERE id = :id',
+            ['is_default' => (int)$isDefault, 'id' => $assignmentId]
+        );
+    }
+
+    /**
+     * Set or clear the display colour of an attribute value (Square option swatch).
+     */
+    public function updateValueColor(int $valueId, ?string $color): void
+    {
+        $p = $this->db->getTablePrefix();
+        $color = ($color === null || trim($color) === '') ? null : trim($color);
+        $this->db->execute(
+            'UPDATE `' . $p . 'product_attribute_values` SET color = :color WHERE id = :id',
+            ['color' => $color, 'id' => $valueId]
+        );
+    }
+
     /** @return array<int, array<string, mixed>> */
     public function getAssignedCategoriesForProduct(string $stockId): array
     {
