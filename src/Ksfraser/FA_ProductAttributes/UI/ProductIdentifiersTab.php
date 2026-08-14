@@ -43,7 +43,7 @@ class ProductIdentifiersTab
         $this->renderBarcodeSection($data);
         $this->renderSourcingSection($data);
 
-        echo '<p><input type="submit" name="addupdate" value="' . _('Save') . '"></p>';
+        echo '<p><input type="submit" name="pa_identifiers_save" value="' . _('Save') . '"></p>';
     }
 
     // ─────────────────────────────────────────────────────────────────────────

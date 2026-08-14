@@ -51,4 +51,26 @@ class IdentifiersTabTest extends TestCase
 
         $this->tab->handleDelete('SKU001');
     }
+
+    /**
+     * Regression: POST save must persist via the tab handler without a
+     * header('Location') hard refresh.
+     */
+    public function testPostSaveIdentifiersPersistsWithoutRedirect(): void
+    {
+        $_SERVER['REQUEST_METHOD'] = 'POST';
+        $_POST = ['action' => 'save_product_identifiers', 'brand' => 'Acme'];
+
+        $this->dao->expects($this->once())
+            ->method('upsert');
+
+        ob_start();
+        $this->tab->renderTabContent('SKU001');
+        $output = ob_get_clean();
+
+        $this->assertStringContainsString('name="pa_identifiers_save"', $output);
+
+        $_SERVER['REQUEST_METHOD'] = 'GET';
+        unset($_POST);
+    }
 }

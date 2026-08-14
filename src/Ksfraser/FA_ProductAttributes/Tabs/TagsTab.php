@@ -71,6 +71,9 @@ class TagsTab extends AbstractTab
 
     /**
      * Handle inline POST actions from the tab (category add/remove, tag add/remove).
+     *
+     * Actions arrive as named submit buttons within the item form so that the
+     * currently selected product and tab are retained (no hard refresh).
      */
     private function handlePostActions(string $stockId): void
     {
@@ -78,32 +81,32 @@ class TagsTab extends AbstractTab
             return;
         }
 
-        $action = $_POST['action'] ?? '';
-
-        if ($action === 'save_tags_categories') {
-            $this->handleTagSave($stockId, $_POST);
-            header('Location: ' . $_SERVER['REQUEST_URI']);
-            exit;
-        }
-
-        if ($action === 'add_category_assignment') {
+        if (isset($_POST['pa_category_add'])) {
             $categoryId = (int)($_POST['category_id'] ?? 0);
             if ($categoryId > 0) {
                 $this->attributesDao->addCategoryAssignment($stockId, $categoryId);
                 $this->autoSyncCategoryTag($stockId, $categoryId, true);
             }
-            header('Location: ' . $_SERVER['REQUEST_URI']);
-            exit;
+            if (function_exists('display_notification')) {
+                display_notification(_('Category assigned.'));
+            }
+            return;
         }
 
-        if ($action === 'remove_category_assignment') {
-            $categoryId = (int)($_POST['category_id'] ?? 0);
+        if (isset($_POST['pa_category_remove'])) {
+            $categoryId = (int)($_POST['pa_category_remove'] ?? 0);
             if ($categoryId > 0) {
                 $this->attributesDao->removeCategoryAssignment($stockId, $categoryId);
                 // Business rule: do NOT auto-remove the tag
             }
-            header('Location: ' . $_SERVER['REQUEST_URI']);
-            exit;
+            if (function_exists('display_notification')) {
+                display_notification(_('Category assignment removed.'));
+            }
+            return;
+        }
+
+        if (($_POST['action'] ?? '') === 'save_tags_categories') {
+            $this->handleTagSave($stockId, $_POST);
         }
     }
 

@@ -89,4 +89,79 @@ class MediaTabTest extends TestCase
 
         $this->tab->handleDelete('SKU001');
     }
+
+    /**
+     * Regression: POST upload must persist via the tab handler without a
+     * header('Location') hard refresh (GitHub issue #11 / #24).
+     */
+    public function testPostUploadImageInvalidFileDoesNotAddMedia(): void
+    {
+        $_SERVER['REQUEST_METHOD'] = 'POST';
+        $_POST = ['pa_media_upload' => 'Upload Image', 'stock_id' => 'SKU001'];
+        $_FILES['media_file'] = [
+            'error'    => UPLOAD_ERR_NO_FILE,
+            'size'     => 0,
+            'name'     => '',
+            'type'     => '',
+            'tmp_name' => '',
+        ];
+
+        $this->dao->expects($this->never())
+            ->method('addMedia');
+
+        ob_start();
+        $this->tab->renderTabContent('SKU001');
+        ob_get_clean();
+
+        $this->assertContains('File upload failed or empty.', $GLOBALS['test_errors'] ?? []);
+        $GLOBALS['test_errors'] = [];
+
+        $_SERVER['REQUEST_METHOD'] = 'GET';
+        unset($_POST, $_FILES);
+    }
+
+    /**
+     * Regression: POST delete must delete via the tab handler without a
+     * header('Location') hard refresh (GitHub issue #11 / #24).
+     */
+    public function testPostDeleteMediaItemDeletesWithoutRedirect(): void
+    {
+        $_SERVER['REQUEST_METHOD'] = 'POST';
+        $_POST = ['pa_media_delete' => '1'];
+
+        $this->dao->expects($this->once())
+            ->method('getMediaItem')
+            ->with(1)
+            ->willReturn(['id' => 1, 'stock_id' => 'SKU001', 'url' => 'images/test.jpg']);
+        $this->dao->expects($this->once())
+            ->method('deleteMedia')
+            ->with(1);
+
+        ob_start();
+        $this->tab->renderTabContent('SKU001');
+        ob_get_clean();
+
+        $_SERVER['REQUEST_METHOD'] = 'GET';
+        unset($_POST);
+    }
+
+    public function testPostDeleteMediaItemSkipsForeignStockId(): void
+    {
+        $_SERVER['REQUEST_METHOD'] = 'POST';
+        $_POST = ['pa_media_delete' => '2'];
+
+        $this->dao->expects($this->once())
+            ->method('getMediaItem')
+            ->with(2)
+            ->willReturn(['id' => 2, 'stock_id' => 'OTHER', 'url' => 'images/test.jpg']);
+        $this->dao->expects($this->never())
+            ->method('deleteMedia');
+
+        ob_start();
+        $this->tab->renderTabContent('SKU001');
+        ob_get_clean();
+
+        $_SERVER['REQUEST_METHOD'] = 'GET';
+        unset($_POST);
+    }
 }

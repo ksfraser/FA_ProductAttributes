@@ -38,6 +38,8 @@ class LifecycleTab extends AbstractTab
 
     public function renderTabContent(string $stockId): void
     {
+        $this->handlePostActions($stockId);
+
         $data = ($stockId !== '') ? ($this->lifecycleDao->get($stockId) ?? []) : [];
         $currentFlags = ($stockId !== '') ? $this->flagDefsDao->getAssignedFlagIds($stockId) : [];
         $assignedSet  = array_flip(array_map('strval', $currentFlags));
@@ -89,6 +91,26 @@ class LifecycleTab extends AbstractTab
         echo '<tr><td>' . _('Clearance Note') . '</td>';
         echo '<td><input type="text" name="clearance_note" maxlength="255" value="' . $note . '" style="width:100%"></td></tr>';
         echo '</table></fieldset>';
+
+        echo '<p><input type="submit" name="pa_lifecycle_save" value="' . _('Save') . '"></p>';
+    }
+
+    /**
+     * Handle inline POST actions from the tab (lifecycle save) so the product
+     * and tab are retained after saving (no hard refresh).
+     */
+    private function handlePostActions(string $stockId): void
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST' || $stockId === '') {
+            return;
+        }
+
+        if (($_POST['action'] ?? '') === 'save_product_lifecycle' && isset($_POST['pa_lifecycle_save'])) {
+            $this->handleSave($stockId, $_POST);
+            if (function_exists('display_notification')) {
+                display_notification(_('Lifecycle details saved.'));
+            }
+        }
     }
 
     public function handleSave(string $stockId, array $postData): void

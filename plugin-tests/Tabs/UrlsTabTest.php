@@ -75,4 +75,64 @@ class UrlsTabTest extends TestCase
 
         $this->tab->handleDelete('SKU001');
     }
+
+    /**
+     * Regression: POST add must persist via the tab handler without a
+     * header('Location') hard refresh (GitHub issue #12 / #24).
+     */
+    public function testPostAddUrlPersistsWithoutRedirect(): void
+    {
+        $_SERVER['REQUEST_METHOD'] = 'POST';
+        $_POST = ['pa_url_add' => 'Add URL', 'url' => 'https://example.com', 'description' => 'Demo'];
+
+        $this->dao->expects($this->once())
+            ->method('add')
+            ->with('SKU001', 'https://example.com', 'Demo');
+
+        ob_start();
+        $this->tab->renderTabContent('SKU001');
+        $output = ob_get_clean();
+
+        $this->assertStringContainsString('URLs', $output);
+
+        $_SERVER['REQUEST_METHOD'] = 'GET';
+        unset($_POST);
+    }
+
+    /**
+     * Regression: POST delete must delete via the tab handler without a
+     * header('Location') hard refresh (GitHub issue #13 / #24).
+     */
+    public function testPostDeleteUrlDeletesWithoutRedirect(): void
+    {
+        $_SERVER['REQUEST_METHOD'] = 'POST';
+        $_POST = ['pa_url_delete' => '7'];
+
+        $this->dao->expects($this->once())
+            ->method('delete')
+            ->with(7);
+
+        ob_start();
+        $this->tab->renderTabContent('SKU001');
+        ob_get_clean();
+
+        $_SERVER['REQUEST_METHOD'] = 'GET';
+        unset($_POST);
+    }
+
+    public function testPostAddUrlIgnoresEmptyUrl(): void
+    {
+        $_SERVER['REQUEST_METHOD'] = 'POST';
+        $_POST = ['pa_url_add' => 'Add URL', 'url' => '   ', 'description' => ''];
+
+        $this->dao->expects($this->never())
+            ->method('add');
+
+        ob_start();
+        $this->tab->renderTabContent('SKU001');
+        ob_get_clean();
+
+        $_SERVER['REQUEST_METHOD'] = 'GET';
+        unset($_POST);
+    }
 }

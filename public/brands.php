@@ -1,42 +1,40 @@
 <?php
 
 /**
- * Brand / Manufacturer Lookup Admin
+ * Brand / Manufacturer Lookup Admin (FA-native).
  *
  * Manage the dropdown values for Brand and Manufacturer
  * that appear in the Product Identifiers tab.
+ *
+ * @package FA_ProductAttributes
  */
 
-$autoload = __DIR__ . '/../vendor/autoload.php';
-if (!is_file($autoload)) {
-    $autoload = __DIR__ . '/../../vendor/autoload.php';
-}
-if (!is_file($autoload)) {
-    header('Content-Type: text/plain; charset=utf-8');
-    echo "Missing composer dependencies. Run: composer install\n";
-    exit(1);
-}
-require_once $autoload;
-
-use Ksfraser\ModulesDAO\Db\PdoDbAdapter;
+use Ksfraser\ModulesDAO\Db\FrontAccountingDbAdapter;
 use Ksfraser\FA_ProductAttributes\Dao\IdentifierLookupsDao;
 
-$dsn  = getenv('DB_DSN');
-$user = getenv('DB_USER') ?: null;
-$pass = getenv('DB_PASS') ?: null;
+// Resolve all relative includes from this module directory.
+chdir(__DIR__);
 
-if (!$dsn) {
-    header('Content-Type: text/plain; charset=utf-8');
-    echo "Error: DB_DSN environment variable is not set.\n\n";
-    echo "Set the MySQL/MariaDB DSN:\n";
-    echo "  DB_DSN='mysql:host=ksf-mariadb;dbname=ksf_fa;charset=utf8'\n";
-    echo "  DB_USER=ksf_user\n";
-    echo "  DB_PASS=...\n";
-    exit(1);
+// Load the Composer autoloader.
+$vendorAutoload = __DIR__ . '/../vendor/autoload.php';
+if (!is_file($vendorAutoload)) {
+    $vendorAutoload = __DIR__ . '/../../vendor/autoload.php';
+}
+if (is_file($vendorAutoload)) {
+    require_once $vendorAutoload;
 }
 
-$pdo = new PDO($dsn, $user, $pass);
-$db  = new PdoDbAdapter($pdo, '');
+// Security area MUST be set before session.inc is included.
+$page_security = 'SA_OPEN';
+
+$path_to_root = "../../..";
+include_once($path_to_root . "/includes/session.inc");
+
+// Required for direct-access module pages using extension security areas.
+add_access_extensions();
+
+$tablePrefix = defined('TB_PREF') ? (string)TB_PREF : '0_';
+$db  = new FrontAccountingDbAdapter($tablePrefix);
 $dao = new IdentifierLookupsDao($db);
 
 $types = ['brand' => 'Brand', 'manufacturer' => 'Manufacturer'];
@@ -71,83 +69,57 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 $entries = $dao->listByType($currentType);
-?><!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Brand / Manufacturer Management</title>
-  <style>
-    body { font-family: sans-serif; margin: 20px; }
-    table { border-collapse: collapse; width: 100%; margin-bottom: 20px; }
-    th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
-    th { background: #f5f5f5; }
-    fieldset { margin-bottom: 20px; padding: 12px; }
-    legend { font-weight: bold; }
-    label { display: inline-block; min-width: 120px; }
-    input[type="text"] { padding: 4px; }
-    .nav a { margin-right: 12px; padding: 6px 12px; text-decoration: none; border: 1px solid #ccc; border-radius: 4px; }
-    .nav a.active { background: #0066cc; color: white; border-color: #0066cc; }
-    .delete-btn { color: red; background: none; border: none; cursor: pointer; text-decoration: underline; }
-  </style>
-</head>
-<body>
-<h1>Brand / Manufacturer Management</h1>
-<p>Manage the dropdown values that appear in the Product Identifiers tab.</p>
 
-<div class="nav">
-  <?php foreach ($types as $key => $label): ?>
-    <a href="?type=<?= htmlspecialchars($key) ?>"
-       class="<?= $key === $currentType ? 'active' : '' ?>"><?= htmlspecialchars($label) ?></a>
-  <?php endforeach; ?>
-</div>
+page(_('Brand / Manufacturer Management'), false, false, '', '');
 
-<table>
-  <thead>
-    <tr>
-      <th>#</th>
-      <th>Name</th>
-      <th></th>
-    </tr>
-  </thead>
-  <tbody>
-    <?php if (empty($entries)): ?>
-      <tr><td colspan="3"><em>No <?= htmlspecialchars($types[$currentType]) ?> entries defined yet.</em></td></tr>
-    <?php else: ?>
-      <?php foreach ($entries as $e): ?>
-        <tr>
-          <td><?= (int)($e['id'] ?? 0) ?></td>
-          <td><?= htmlspecialchars((string)($e['name'] ?? '')) ?></td>
-          <td>
-            <form method="post" style="display:inline">
-              <input type="hidden" name="action" value="delete_entry" />
-              <input type="hidden" name="entry_id" value="<?= (int)($e['id'] ?? 0) ?>" />
-              <input type="hidden" name="entry_type" value="<?= htmlspecialchars($currentType) ?>" />
-              <button type="submit" class="delete-btn"
-                onclick="return confirm('Delete this <?= htmlspecialchars($types[$currentType]) ?> entry?')">Delete</button>
-            </form>
-          </td>
-        </tr>
-      <?php endforeach; ?>
-    <?php endif; ?>
-  </tbody>
-</table>
+echo '<h1>' . _('Brand / Manufacturer Management') . '</h1>';
+echo '<p>' . _('Manage the dropdown values that appear in the Product Identifiers tab.') . '</p>';
 
-<fieldset>
-  <legend>Add <?= htmlspecialchars($types[$currentType]) ?></legend>
-  <form method="post">
-    <input type="hidden" name="action" value="add_entry" />
-    <input type="hidden" name="entry_type" value="<?= htmlspecialchars($currentType) ?>" />
-    <div>
-      <label for="name">Name</label>
-      <input type="text" id="name" name="name" required maxlength="128"
-        placeholder="<?= htmlspecialchars($types[$currentType]) ?> name" />
-    </div>
-    <div style="margin-top:8px">
-      <button type="submit">Add <?= htmlspecialchars($types[$currentType]) ?></button>
-    </div>
-  </form>
-</fieldset>
+echo '<div class="nav">';
+foreach ($types as $key => $label) {
+    $cls = $key === $currentType ? 'active' : '';
+    echo '<a href="?type=' . htmlspecialchars($key) . '" class="' . $cls . '">'
+        . htmlspecialchars($label) . '</a> &nbsp; ';
+}
+echo '</div>';
+echo '<br>';
 
-</body>
-</html>
+echo '<table class="tablestyle2">';
+echo '<thead><tr>';
+echo '<th>#</th><th>' . _('Name') . '</th><th></th>';
+echo '</tr></thead><tbody>';
+
+if (empty($entries)) {
+    echo '<tr><td colspan="3"><em>' . _('No entries defined yet.') . '</em></td></tr>';
+} else {
+    foreach ($entries as $e) {
+        echo '<tr>';
+        echo '<td>' . (int)($e['id'] ?? 0) . '</td>';
+        echo '<td>' . htmlspecialchars((string)($e['name'] ?? '')) . '</td>';
+        echo '<td>';
+        echo '<form method="post" style="display:inline">';
+        echo '<input type="hidden" name="action" value="delete_entry" />';
+        echo '<input type="hidden" name="entry_id" value="' . (int)($e['id'] ?? 0) . '" />';
+        echo '<input type="hidden" name="entry_type" value="' . htmlspecialchars($currentType) . '" />';
+        echo '<button type="submit" style="color:red;background:none;border:none;cursor:pointer;text-decoration:underline" '
+            . 'onclick="return confirm(\'' . _('Delete this entry?') . '\')">' . _('Delete') . '</button>';
+        echo '</form>';
+        echo '</td>';
+        echo '</tr>';
+    }
+}
+echo '</tbody></table>';
+
+echo '<fieldset>';
+echo '<legend>' . _('Add') . ' ' . htmlspecialchars($types[$currentType]) . '</legend>';
+echo '<form method="post">';
+echo '<input type="hidden" name="action" value="add_entry" />';
+echo '<input type="hidden" name="entry_type" value="' . htmlspecialchars($currentType) . '" />';
+echo '<div><label for="name">' . _('Name') . '</label>';
+echo '<input type="text" id="name" name="name" required maxlength="128" /></div>';
+echo '<div style="margin-top:8px"><button type="submit">' . _('Add') . ' '
+    . htmlspecialchars($types[$currentType]) . '</button></div>';
+echo '</form>';
+echo '</fieldset>';
+
+end_page();

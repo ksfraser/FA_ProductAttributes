@@ -33,6 +33,9 @@ class TagsCategoriesTab
 
     /**
      * Render the combined tab content.
+     *
+     * All controls live directly inside the item form (no nested <form> tags)
+     * so a submit retains the selected product and the current tab.
      */
     public function render(string $stockId): void
     {
@@ -45,7 +48,7 @@ class TagsCategoriesTab
 
         $this->renderTagsSection($stockId);
 
-        echo '<p><input type="submit" name="addupdate" value="' . _('Save') . '"></p>';
+        echo '<p><input type="submit" name="pa_tags_save" value="' . _('Save') . '"></p>';
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -80,12 +83,10 @@ class TagsCategoriesTab
                 echo '<tr>';
                 echo '<td><code>' . $code . '</code></td>';
                 echo '<td>' . $label . '</td>';
-                echo '<td><form method="post" action="" style="display:inline">';
-                echo '<input type="hidden" name="action" value="remove_category_assignment">';
-                echo '<input type="hidden" name="category_id" value="' . $catId . '">';
-                echo '<input type="submit" value="' . _('Remove') . '" style="color:red" '
-                    . 'onclick="return confirm(\'' . _('Remove this category assignment?') . '\')">';
-                echo '</form></td>';
+                echo '<td><button type="submit" name="pa_category_remove" value="' . $catId . '" '
+                    . 'style="color:red" '
+                    . 'onclick="return confirm(\'' . _('Remove this category assignment?') . '\')">'
+                    . _('Remove') . '</button></td>';
                 echo '</tr>';
             }
         } else {
@@ -107,7 +108,7 @@ class TagsCategoriesTab
             echo '<option value="' . $catId . '"' . $sel . '>' . $code . ' - ' . $label . $mark . '</option>';
         }
         echo '</select></td>';
-        echo '<td><input type="submit" name="addupdate" value="' . _('Add Category') . '"></td>';
+        echo '<td><input type="submit" name="pa_category_add" value="' . _('Add Category') . '"></td>';
         echo '</tr></table>';
 
         echo '</fieldset>';

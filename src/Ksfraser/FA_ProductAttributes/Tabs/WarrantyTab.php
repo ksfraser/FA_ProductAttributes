@@ -33,6 +33,8 @@ class WarrantyTab extends AbstractTab
 
     public function renderTabContent(string $stockId): void
     {
+        $this->handlePostActions($stockId);
+
         $data = ($stockId !== '') ? ($this->dao->get($stockId) ?? []) : [];
 
         $currentType = (string)($data['warranty_type'] ?? 'none');
@@ -98,6 +100,26 @@ class WarrantyTab extends AbstractTab
         echo '<fieldset><legend>' . _('Warranty Terms / General Notes') . '</legend>';
         echo '<textarea name="warranty_notes" rows="4" style="width:100%">' . $warrantyNotes . '</textarea>';
         echo '</fieldset>';
+
+        echo '<p><input type="submit" name="pa_warranty_save" value="' . _('Save') . '"></p>';
+    }
+
+    /**
+     * Handle inline POST actions from the tab (warranty save) so the product
+     * and tab are retained after saving (no hard refresh).
+     */
+    private function handlePostActions(string $stockId): void
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST' || $stockId === '') {
+            return;
+        }
+
+        if (($_POST['action'] ?? '') === 'save_product_warranty' && isset($_POST['pa_warranty_save'])) {
+            $this->handleSave($stockId, $_POST);
+            if (function_exists('display_notification')) {
+                display_notification(_('Warranty details saved.'));
+            }
+        }
     }
 
     public function handleSave(string $stockId, array $postData): void

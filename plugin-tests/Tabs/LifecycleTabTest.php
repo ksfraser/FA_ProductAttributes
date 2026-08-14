@@ -118,4 +118,55 @@ class LifecycleTabTest extends TestCase
 
         $this->tab->handleDelete('SKU001');
     }
+
+    /**
+     * Regression: lifecycle must save via the dedicated Save button without a
+     * hard refresh (GitHub issue #16 / #24).
+     */
+    public function testPostSaveLifecyclePersistsWithoutRedirect(): void
+    {
+        $_SERVER['REQUEST_METHOD'] = 'POST';
+        $_POST = [
+            'action'             => 'save_product_lifecycle',
+            'pa_lifecycle_save'  => 'Save',
+            'status'             => 'discontinued',
+        ];
+
+        $this->lifecycleDao->expects($this->once())
+            ->method('upsert')
+            ->with('SKU001', $this->arrayHasKey('status'));
+        $this->flagDefsDao->expects($this->once())
+            ->method('setAssignedFlags')
+            ->with('SKU001', []);
+
+        ob_start();
+        $this->tab->renderTabContent('SKU001');
+        $output = ob_get_clean();
+
+        $this->assertStringContainsString('name="pa_lifecycle_save"', $output);
+
+        $_SERVER['REQUEST_METHOD'] = 'GET';
+        unset($_POST);
+    }
+
+    public function testPostWithoutLifecycleSaveButtonDoesNotPersist(): void
+    {
+        $_SERVER['REQUEST_METHOD'] = 'POST';
+        $_POST = [
+            'action' => 'save_product_lifecycle',
+            'status' => 'draft',
+        ];
+
+        $this->lifecycleDao->expects($this->never())
+            ->method('upsert');
+        $this->flagDefsDao->expects($this->never())
+            ->method('setAssignedFlags');
+
+        ob_start();
+        $this->tab->renderTabContent('SKU001');
+        ob_get_clean();
+
+        $_SERVER['REQUEST_METHOD'] = 'GET';
+        unset($_POST);
+    }
 }

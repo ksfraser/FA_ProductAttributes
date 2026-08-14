@@ -107,4 +107,49 @@ class WarrantyTabTest extends TestCase
         $this->assertStringContainsString('value="none"', $output);
         $this->assertStringContainsString('name="stock_id" value=""', $output);
     }
+
+    /**
+     * Regression: warranty must save via the dedicated Save button without a
+     * hard refresh (GitHub issue #15 / #24).
+     */
+    public function testPostSaveWarrantyPersistsWithoutRedirect(): void
+    {
+        $_SERVER['REQUEST_METHOD'] = 'POST';
+        $_POST = [
+            'action'           => 'save_product_warranty',
+            'pa_warranty_save' => 'Save',
+            'warranty_type'    => 'manufacturer',
+        ];
+
+        $this->dao->expects($this->once())
+            ->method('upsert');
+
+        ob_start();
+        $this->tab->renderTabContent('SKU001');
+        $output = ob_get_clean();
+
+        $this->assertStringContainsString('Warranty', $output);
+
+        $_SERVER['REQUEST_METHOD'] = 'GET';
+        unset($_POST);
+    }
+
+    public function testPostWithoutWarrantySaveButtonDoesNotPersist(): void
+    {
+        $_SERVER['REQUEST_METHOD'] = 'POST';
+        $_POST = [
+            'action'        => 'save_product_warranty',
+            'warranty_type' => 'extended',
+        ];
+
+        $this->dao->expects($this->never())
+            ->method('upsert');
+
+        ob_start();
+        $this->tab->renderTabContent('SKU001');
+        ob_get_clean();
+
+        $_SERVER['REQUEST_METHOD'] = 'GET';
+        unset($_POST);
+    }
 }

@@ -45,7 +45,7 @@ class ProductWarrantyTab
         $this->renderLifetimeNotes($data);
         $this->renderWarrantyNotes($data);
 
-        echo '<p><input type="submit" name="addupdate" value="' . _('Save') . '"></p>';
+        echo '<p><input type="submit" name="pa_warranty_save" value="' . _('Save') . '"></p>';
     }
 
     // ─────────────────────────────────────────────────────────────────────────

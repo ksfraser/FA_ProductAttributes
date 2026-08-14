@@ -240,4 +240,56 @@ class TagsTabTest extends TestCase
 
         $this->tab->handleSave('SKU001', $postData);
     }
+
+    /**
+     * Regression: adding a second category must work via the dedicated
+     * Add Category button without a hard refresh (GitHub issue #23 / #24).
+     */
+    public function testPostAddCategoryAssignsWithoutRedirect(): void
+    {
+        $_SERVER['REQUEST_METHOD'] = 'POST';
+        $_POST = ['pa_category_add' => 'Add Category', 'category_id' => '5'];
+
+        $this->attributesDao->expects($this->once())
+            ->method('addCategoryAssignment')
+            ->with('SKU001', 5);
+        $this->attributesDao->method('listCategories')->willReturn([
+            ['id' => 5, 'label' => 'Color'],
+        ]);
+        $this->tagsDao->method('listTags')->willReturn([]);
+        $this->tagsDao->method('getProductTags')->willReturn([]);
+        $this->attributesDao->method('listCategoryAssignments')->willReturn([]);
+
+        ob_start();
+        $this->tab->renderTabContent('SKU001');
+        ob_get_clean();
+
+        $_SERVER['REQUEST_METHOD'] = 'GET';
+        unset($_POST);
+    }
+
+    /**
+     * Regression: Remove must actually remove the category assignment
+     * (GitHub issue #22 / #24).
+     */
+    public function testPostRemoveCategoryRemovesWithoutRedirect(): void
+    {
+        $_SERVER['REQUEST_METHOD'] = 'POST';
+        $_POST = ['pa_category_remove' => '3'];
+
+        $this->attributesDao->expects($this->once())
+            ->method('removeCategoryAssignment')
+            ->with('SKU001', 3);
+        $this->attributesDao->method('listCategories')->willReturn([]);
+        $this->attributesDao->method('listCategoryAssignments')->willReturn([]);
+        $this->tagsDao->method('listTags')->willReturn([]);
+        $this->tagsDao->method('getProductTags')->willReturn([]);
+
+        ob_start();
+        $this->tab->renderTabContent('SKU001');
+        ob_get_clean();
+
+        $_SERVER['REQUEST_METHOD'] = 'GET';
+        unset($_POST);
+    }
 }

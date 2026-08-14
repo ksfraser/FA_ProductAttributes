@@ -74,12 +74,10 @@ class MediaTab extends AbstractTab
                 echo '<td>' . $typeLabel . '</td>';
                 echo '<td>' . $alt . '</td>';
                 echo '<td>' . $sort . '</td>';
-                echo '<td><form method="post" action="" style="display:inline">';
-                echo '<input type="hidden" name="action" value="delete_media_item">';
-                echo '<input type="hidden" name="media_id" value="' . $id . '">';
-                echo '<input type="submit" value="' . _('Delete') . '" style="color:red" '
-                    . 'onclick="return confirm(\'' . _('Delete this media item and its file?') . '\')">';
-                echo '</form></td>';
+                echo '<td><button type="submit" name="pa_media_delete" value="' . $id . '" '
+                    . 'style="color:red" '
+                    . 'onclick="return confirm(\'' . _('Delete this media item and its file?') . '\')">'
+                    . _('Delete') . '</button></td>';
                 echo '</tr>';
             }
             echo '</table>';
@@ -87,8 +85,6 @@ class MediaTab extends AbstractTab
         echo '</fieldset>';
 
         echo '<fieldset><legend>' . _('Upload Image') . '</legend>';
-        echo '<form method="post" action="" enctype="multipart/form-data">';
-        echo '<input type="hidden" name="action"   value="upload_media_image">';
         echo '<input type="hidden" name="stock_id" value="' . htmlspecialchars($stockId) . '">';
         echo '<table class="tablestyle_noborder">';
         echo '<tr><td>' . _('File') . '</td>';
@@ -100,8 +96,8 @@ class MediaTab extends AbstractTab
         echo '<td><input type="number" name="sort_order" min="0" value="0"></td></tr>';
         echo '</table>';
         echo '<p><small>' . _('Accepted formats: JPEG, PNG, GIF.') . '</small></p>';
-        echo '<p><input type="submit" value="' . _('Upload Image') . '"></p>';
-        echo '</form></fieldset>';
+        echo '<p><input type="submit" name="pa_media_upload" value="' . _('Upload Image') . '"></p>';
+        echo '</fieldset>';
     }
 
     public function handleDelete(string $stockId): void
@@ -115,25 +111,24 @@ class MediaTab extends AbstractTab
             return;
         }
 
-        $action = $_POST['action'] ?? '';
-
-        if ($action === 'upload_media_image' && isset($_FILES['media_file'])) {
+        if (isset($_POST['pa_media_upload']) && isset($_FILES['media_file'])) {
             $this->handleImageUpload($stockId, $_FILES['media_file']);
-            header('Location: ' . $_SERVER['REQUEST_URI']);
-            exit;
+            return;
         }
 
-        if ($action === 'delete_media_item') {
-            $mediaId = (int)($_POST['media_id'] ?? 0);
+        if (isset($_POST['pa_media_delete'])) {
+            $mediaId = (int)$_POST['pa_media_delete'];
             if ($mediaId > 0) {
                 $mediaItem = $this->dao->getMediaItem($mediaId);
                 if ($mediaItem && $mediaItem['stock_id'] === $stockId) {
                     $this->deleteMediaFile((string)($mediaItem['url'] ?? ''));
                     $this->dao->deleteMedia($mediaId);
+                    if (function_exists('display_notification')) {
+                        display_notification(_('Media item deleted.'));
+                    }
                 }
             }
-            header('Location: ' . $_SERVER['REQUEST_URI']);
-            exit;
+            return;
         }
     }
 

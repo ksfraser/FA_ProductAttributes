@@ -53,12 +53,10 @@ class UrlsTab extends AbstractTab
                 echo '<td><a href="' . $url . '" target="_blank">' . $url . '</a></td>';
                 echo '<td>' . $desc . '</td>';
                 echo '<td>' . $date . '</td>';
-                echo '<td><form method="post" action="" style="display:inline">';
-                echo '<input type="hidden" name="action" value="delete_media_attachment">';
-                echo '<input type="hidden" name="attachment_id" value="' . $id . '">';
-                echo '<input type="submit" value="' . _('Delete') . '" style="color:red" '
-                    . 'onclick="return confirm(\'' . _('Delete this URL?') . '\')">';
-                echo '</form></td>';
+                echo '<td><button type="submit" name="pa_url_delete" value="' . $id . '" '
+                    . 'style="color:red" '
+                    . 'onclick="return confirm(\'' . _('Delete this URL?') . '\')">'
+                    . _('Delete') . '</button></td>';
                 echo '</tr>';
             }
             echo '</table>';
@@ -67,8 +65,6 @@ class UrlsTab extends AbstractTab
         echo '</fieldset>';
 
         echo '<fieldset><legend>' . _('Add URL') . '</legend>';
-        echo '<form method="post" action="">';
-        echo '<input type="hidden" name="action"   value="add_media_attachment">';
         echo '<input type="hidden" name="stock_id" value="' . htmlspecialchars($stockId) . '">';
         echo '<table class="tablestyle_noborder">';
         echo '<tr><td>' . _('URL') . ' <span style="color:red">*</span></td>';
@@ -78,8 +74,8 @@ class UrlsTab extends AbstractTab
         echo '<td><input type="text" name="description" maxlength="255" style="width:100%" '
             . 'placeholder="Product demo video, installation guide, etc."></td></tr>';
         echo '</table>';
-        echo '<p><input type="submit" value="' . _('Add URL') . '"></p>';
-        echo '</form></fieldset>';
+        echo '<p><input type="submit" name="pa_url_add" value="' . _('Add URL') . '"></p>';
+        echo '</fieldset>';
     }
 
     public function handleDelete(string $stockId): void
@@ -96,25 +92,27 @@ class UrlsTab extends AbstractTab
             return;
         }
 
-        $action = $_POST['action'] ?? '';
-
-        if ($action === 'add_media_attachment') {
+        if (isset($_POST['pa_url_add'])) {
             $url = trim((string)($_POST['url'] ?? ''));
             if ($url !== '') {
                 $description = trim((string)($_POST['description'] ?? ''));
                 $this->dao->add($stockId, $url, $description);
+                if (function_exists('display_notification')) {
+                    display_notification(_('URL added.'));
+                }
             }
-            header('Location: ' . $_SERVER['REQUEST_URI']);
-            exit;
+            return;
         }
 
-        if ($action === 'delete_media_attachment') {
-            $attachId = (int)($_POST['attachment_id'] ?? 0);
+        if (isset($_POST['pa_url_delete'])) {
+            $attachId = (int)$_POST['pa_url_delete'];
             if ($attachId > 0) {
                 $this->dao->delete($attachId);
+                if (function_exists('display_notification')) {
+                    display_notification(_('URL deleted.'));
+                }
             }
-            header('Location: ' . $_SERVER['REQUEST_URI']);
-            exit;
+            return;
         }
     }
 }

@@ -151,7 +151,7 @@ class FACoreUnchangedTest extends TestCase
 
     public function testPublicIndexPhpOnlyBootstraps(): void
     {
-        $indexFile = dirname(__DIR__, 2) . '/public/index.php';
+        $indexFile = dirname(__DIR__) . '/public/index.php';
 
         if (!is_file($indexFile)) {
             $this->markTestSkipped('public/index.php not present in this environment');
@@ -165,5 +165,47 @@ class FACoreUnchangedTest extends TestCase
             $contents,
             'public/index.php must not define FA stock_ functions'
         );
+    }
+
+    /**
+     * Regression: public admin pages must use FA's native database layer, not a
+     * standalone PDO/DB_DSN connection (GitHub issues #6 / #7 / #8 / #19 / #20 / #21).
+     */
+    public function testPublicPagesUseFANativeDatabaseLayer(): void
+    {
+        $publicDir = dirname(__DIR__) . '/public';
+
+        foreach (['index.php', 'brands.php', 'lifecycle-flags.php'] as $file) {
+            $path = $publicDir . '/' . $file;
+            $this->assertFileExists($path, "Missing public page: $file");
+
+            $contents = file_get_contents($path);
+
+            $this->assertStringNotContainsString(
+                'PdoDbAdapter',
+                $contents,
+                "public/$file must not use PdoDbAdapter"
+            );
+            $this->assertStringNotContainsString(
+                'DB_DSN',
+                $contents,
+                "public/$file must not read the DB_DSN environment variable"
+            );
+            $this->assertStringContainsString(
+                'FrontAccountingDbAdapter',
+                $contents,
+                "public/$file must use FrontAccountingDbAdapter"
+            );
+            $this->assertStringContainsString(
+                'session.inc',
+                $contents,
+                "public/$file must bootstrap through FA's session.inc"
+            );
+            $this->assertStringContainsString(
+                'add_access_extensions()',
+                $contents,
+                "public/$file must call add_access_extensions()"
+            );
+        }
     }
 }

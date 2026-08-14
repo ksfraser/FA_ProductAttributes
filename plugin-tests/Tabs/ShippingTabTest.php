@@ -51,4 +51,42 @@ class ShippingTabTest extends TestCase
 
         $this->tab->handleDelete('SKU001');
     }
+
+    /**
+     * Regression: POST save must persist via the tab handler without a
+     * header('Location') hard refresh (GitHub issue #3 / #5 / #24).
+     */
+    public function testPostSaveShippingAttributesPersistsWithoutRedirect(): void
+    {
+        $_SERVER['REQUEST_METHOD'] = 'POST';
+        $_POST = ['action' => 'save_shipping_attributes', 'length' => '30'];
+
+        $this->dao->expects($this->once())
+            ->method('upsert');
+
+        ob_start();
+        $this->tab->renderTabContent('SKU001');
+        $output = ob_get_clean();
+
+        $this->assertStringContainsString('name="pa_shipping_save"', $output);
+
+        $_SERVER['REQUEST_METHOD'] = 'GET';
+        unset($_POST);
+    }
+
+    public function testPostWithEmptyStockIdDoesNotSave(): void
+    {
+        $_SERVER['REQUEST_METHOD'] = 'POST';
+        $_POST = ['action' => 'save_shipping_attributes', 'length' => '30'];
+
+        $this->dao->expects($this->never())
+            ->method('upsert');
+
+        ob_start();
+        $this->tab->renderTabContent('');
+        ob_get_clean();
+
+        $_SERVER['REQUEST_METHOD'] = 'GET';
+        unset($_POST);
+    }
 }

@@ -51,8 +51,9 @@ class ShippingTab extends AbstractTab
         $action = new UpsertShippingAttributesAction($this->dao);
         $action->handle($stockId, $_POST);
 
-        header('Location: ' . $_SERVER['REQUEST_URI']);
-        exit;
+        if (function_exists('display_notification')) {
+            display_notification(_('Shipping attributes saved.'));
+        }
     }
 
     public function handleSave(string $stockId, array $postData): void
