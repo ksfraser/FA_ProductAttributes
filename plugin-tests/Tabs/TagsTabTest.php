@@ -292,4 +292,53 @@ class TagsTabTest extends TestCase
         $_SERVER['REQUEST_METHOD'] = 'GET';
         unset($_POST);
     }
+
+    /**
+     * Regression: the Save button (pa_tags_save) must sync tag assignments
+     * without a hard refresh (GitHub issue #24).
+     */
+    public function testPostTagsSaveSyncsAssignments(): void
+    {
+        $_SERVER['REQUEST_METHOD'] = 'POST';
+        $_POST = ['action' => 'save_tags_categories', 'pa_tags_save' => 'Save', 'product_tags' => [1, 2]];
+
+        $this->attributesDao->method('listCategories')->willReturn([]);
+        $this->attributesDao->method('listCategoryAssignments')->willReturn([]);
+        $this->tagsDao->method('listTags')->willReturn([]);
+        $this->tagsDao->method('getProductTags')->willReturn([]);
+        $this->tagsDao->expects($this->once())
+            ->method('syncAssignments')
+            ->with('SKU001', [1, 2]);
+
+        ob_start();
+        $this->tab->renderTabContent('SKU001');
+        ob_get_clean();
+
+        $_SERVER['REQUEST_METHOD'] = 'GET';
+        unset($_POST);
+    }
+
+    /**
+     * Regression: a main-form POST without the Save button (e.g. changing the
+     * product selector) must NOT sync tag assignments (GitHub issues #16 / #28).
+     */
+    public function testPostWithoutSaveButtonDoesNotSyncTags(): void
+    {
+        $_SERVER['REQUEST_METHOD'] = 'POST';
+        $_POST = ['action' => 'save_tags_categories', 'product_tags' => [1, 2], 'stock_id' => 'SKU002'];
+
+        $this->attributesDao->method('listCategories')->willReturn([]);
+        $this->attributesDao->method('listCategoryAssignments')->willReturn([]);
+        $this->tagsDao->method('listTags')->willReturn([]);
+        $this->tagsDao->method('getProductTags')->willReturn([]);
+        $this->tagsDao->expects($this->never())
+            ->method('syncAssignments');
+
+        ob_start();
+        $this->tab->renderTabContent('SKU002');
+        ob_get_clean();
+
+        $_SERVER['REQUEST_METHOD'] = 'GET';
+        unset($_POST);
+    }
 }

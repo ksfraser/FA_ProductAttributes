@@ -49,7 +49,7 @@ class IdentifiersTab extends AbstractTab
         if ($_SERVER['REQUEST_METHOD'] !== 'POST' || $stockId === '') {
             return;
         }
-        if (($_POST['action'] ?? '') !== 'save_product_identifiers') {
+        if (!isset($_POST['pa_identifiers_save'])) {
             return;
         }
 

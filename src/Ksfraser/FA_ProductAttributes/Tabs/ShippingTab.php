@@ -44,7 +44,7 @@ class ShippingTab extends AbstractTab
         if ($_SERVER['REQUEST_METHOD'] !== 'POST' || $stockId === '') {
             return;
         }
-        if (($_POST['action'] ?? '') !== 'save_shipping_attributes') {
+        if (!isset($_POST['pa_shipping_save'])) {
             return;
         }
 

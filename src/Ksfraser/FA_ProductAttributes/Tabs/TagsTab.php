@@ -105,7 +105,7 @@ class TagsTab extends AbstractTab
             return;
         }
 
-        if (($_POST['action'] ?? '') === 'save_tags_categories') {
+        if (isset($_POST['pa_tags_save'])) {
             $this->handleTagSave($stockId, $_POST);
         }
     }

@@ -11,9 +11,6 @@
 
 use Ksfraser\ModulesDAO\Db\FrontAccountingDbAdapter;
 use Ksfraser\FA_ProductAttributes\Dao\ProductAttributesDao;
-use Ksfraser\HTML\Elements\HtmlTable;
-use Ksfraser\HTML\Elements\TableBuilder;
-use Ksfraser\HTML\HtmlString;
 
 // Resolve all relative includes from this module directory.
 chdir(__DIR__);
@@ -27,6 +24,12 @@ if (is_file($vendorAutoload)) {
     require_once $vendorAutoload;
 }
 
+// Preload the FA database adapter before session.inc registers the other
+// modules' autoloaders. Some deployed modules vendor older ksf-modules-dao
+// copies that declare the same class name; preloading here guarantees this
+// module's newer implementation is the one used for the request.
+class_exists(\Ksfraser\ModulesDAO\Db\FrontAccountingDbAdapter::class);
+
 // Security area MUST be set before session.inc is included.
 $page_security = 'SA_OPEN';
 
@@ -37,8 +40,8 @@ include_once($path_to_root . "/includes/session.inc");
 add_access_extensions();
 
 $tablePrefix = defined('TB_PREF') ? (string)TB_PREF : '0_';
-$db  = new FrontAccountingDbAdapter($tablePrefix);
-$dao = new ProductAttributesDao($db);
+$dbAdapter  = new FrontAccountingDbAdapter($tablePrefix);
+$dao = new ProductAttributesDao($dbAdapter);
 
 $tab = $_GET['tab'] ?? 'categories';
 
@@ -97,18 +100,17 @@ echo '<br>';
 
 if ($tab === 'categories'):
     $cats = $dao->listCategories();
-    $table = new HtmlTable(new HtmlString(''));
-    $table->addAttribute(new \Ksfraser\HTML\HtmlAttribute('class', 'tablestyle2'));
-    $table->addNested(TableBuilder::createHeaderRow([_('Code'), _('Label'), _('Sort'), _('Active')]));
+    echo '<table class="tablestyle2">';
+    echo '<thead><tr><th>' . _('Code') . '</th><th>' . _('Label') . '</th><th>' . _('Sort') . '</th><th>' . _('Active') . '</th></tr></thead><tbody>';
     foreach ($cats as $c) {
-        $table->addNested(TableBuilder::createDataRow([
-            (string)($c['code'] ?? ''),
-            (string)($c['label'] ?? ''),
-            (string)($c['sort_order'] ?? 0),
-            (string)($c['active'] ?? 0),
-        ]));
+        echo '<tr>';
+        echo '<td>' . htmlspecialchars((string)($c['code'] ?? '')) . '</td>';
+        echo '<td>' . htmlspecialchars((string)($c['label'] ?? '')) . '</td>';
+        echo '<td>' . (int)($c['sort_order'] ?? 0) . '</td>';
+        echo '<td>' . (int)($c['active'] ?? 0) . '</td>';
+        echo '</tr>';
     }
-    $table->toHtml();
+    echo '</tbody></table>';
 ?>
 
 <fieldset>
@@ -146,18 +148,17 @@ if ($tab === 'categories'):
 
 <?php
     $values = $categoryId ? $dao->listValues($categoryId) : [];
-    $table = new HtmlTable(new HtmlString(''));
-    $table->addAttribute(new \Ksfraser\HTML\HtmlAttribute('class', 'tablestyle2'));
-    $table->addNested(TableBuilder::createHeaderRow([_('Value'), _('Slug'), _('Sort'), _('Active')]));
+    echo '<table class="tablestyle2">';
+    echo '<thead><tr><th>' . _('Value') . '</th><th>' . _('Slug') . '</th><th>' . _('Sort') . '</th><th>' . _('Active') . '</th></tr></thead><tbody>';
     foreach ($values as $v) {
-        $table->addNested(TableBuilder::createDataRow([
-            (string)($v['value'] ?? ''),
-            (string)($v['slug'] ?? ''),
-            (string)($v['sort_order'] ?? 0),
-            (string)($v['active'] ?? 0),
-        ]));
+        echo '<tr>';
+        echo '<td>' . htmlspecialchars((string)($v['value'] ?? '')) . '</td>';
+        echo '<td>' . htmlspecialchars((string)($v['slug'] ?? '')) . '</td>';
+        echo '<td>' . (int)($v['sort_order'] ?? 0) . '</td>';
+        echo '<td>' . (int)($v['active'] ?? 0) . '</td>';
+        echo '</tr>';
     }
-    $table->toHtml();
+    echo '</tbody></table>';
 ?>
 
 <fieldset>
@@ -208,18 +209,17 @@ if ($tab === 'categories'):
 
 <?php if ($stockId !== ''):
     $assignments = $dao->listAssignments($stockId);
-    $table = new HtmlTable(new HtmlString(''));
-    $table->addAttribute(new \Ksfraser\HTML\HtmlAttribute('class', 'tablestyle2'));
-    $table->addNested(TableBuilder::createHeaderRow([_('Category'), _('Value'), _('Slug'), _('Sort')]));
+    echo '<table class="tablestyle2">';
+    echo '<thead><tr><th>' . _('Category') . '</th><th>' . _('Value') . '</th><th>' . _('Slug') . '</th><th>' . _('Sort') . '</th></tr></thead><tbody>';
     foreach ($assignments as $a) {
-        $table->addNested(TableBuilder::createDataRow([
-            (string)($a['category_code'] ?? ''),
-            (string)($a['value_label'] ?? ''),
-            (string)($a['value_slug'] ?? ''),
-            (string)($a['sort_order'] ?? 0),
-        ]));
+        echo '<tr>';
+        echo '<td>' . htmlspecialchars((string)($a['category_code'] ?? '')) . '</td>';
+        echo '<td>' . htmlspecialchars((string)($a['value_label'] ?? '')) . '</td>';
+        echo '<td>' . htmlspecialchars((string)($a['value_slug'] ?? '')) . '</td>';
+        echo '<td>' . (int)($a['sort_order'] ?? 0) . '</td>';
+        echo '</tr>';
     }
-    $table->toHtml();
+    echo '</tbody></table>';
 ?>
 
 <fieldset>

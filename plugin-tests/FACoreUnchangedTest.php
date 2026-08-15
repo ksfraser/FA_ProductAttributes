@@ -187,9 +187,14 @@ class FACoreUnchangedTest extends TestCase
                 "public/$file must not use PdoDbAdapter"
             );
             $this->assertStringNotContainsString(
-                'DB_DSN',
+                'getenv(\'DB_DSN\')',
                 $contents,
                 "public/$file must not read the DB_DSN environment variable"
+            );
+            $this->assertStringNotContainsString(
+                'new PDO(',
+                $contents,
+                "public/$file must not create a raw PDO connection"
             );
             $this->assertStringContainsString(
                 'FrontAccountingDbAdapter',
@@ -205,6 +210,49 @@ class FACoreUnchangedTest extends TestCase
                 'add_access_extensions()',
                 $contents,
                 "public/$file must call add_access_extensions()"
+            );
+        }
+    }
+
+    /**
+     * Regression: public admin pages must not white-screen (GitHub issues
+     * #25 / #26 / #27). Two causes were found and must not reappear:
+     *
+     *  1. Assigning the DB adapter to a bare global-style `$db` clobbers FA's
+     *     global mysqli connection, breaking FA's own db_query() and the RBAC
+     *     FaDbAdapter on the same request.
+     *  2. Referencing the phantom `Ksfraser\HTML\*` classes, which no installed
+     *     package provides, caused a fatal "class not found" on render.
+     */
+    public function testPublicPagesDoNotClobberFADbGlobal(): void
+    {
+        $publicDir = dirname(__DIR__) . '/public';
+
+        foreach (['index.php', 'brands.php', 'lifecycle-flags.php'] as $file) {
+            $path = $publicDir . '/' . $file;
+            $this->assertFileExists($path, "Missing public page: $file");
+
+            $contents = file_get_contents($path);
+
+            $this->assertStringNotContainsString(
+                'Ksfraser\\HTML\\',
+                $contents,
+                "public/$file must not reference the phantom Ksfraser\\HTML\\ classes"
+            );
+            $this->assertStringNotContainsString(
+                'new FrontAccountingDbAdapter($tablePrefix);' . "\n" . '$db ',
+                $contents,
+                "public/$file must not assign the adapter to a bare global-style \$db"
+            );
+            $this->assertStringContainsString(
+                '$dbAdapter',
+                $contents,
+                "public/$file must assign the adapter to \$dbAdapter (not clobber FA's global \$db)"
+            );
+            $this->assertStringContainsString(
+                'class_exists(\Ksfraser\ModulesDAO\Db\FrontAccountingDbAdapter::class)',
+                $contents,
+                "public/$file must preload FrontAccountingDbAdapter before session.inc"
             );
         }
     }

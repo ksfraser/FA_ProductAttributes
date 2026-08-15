@@ -24,6 +24,12 @@ if (is_file($vendorAutoload)) {
     require_once $vendorAutoload;
 }
 
+// Preload the FA database adapter before session.inc registers the other
+// modules' autoloaders. Some deployed modules vendor older ksf-modules-dao
+// copies that declare the same class name; preloading here guarantees this
+// module's newer implementation is the one used for the request.
+class_exists(\Ksfraser\ModulesDAO\Db\FrontAccountingDbAdapter::class);
+
 // Security area MUST be set before session.inc is included.
 $page_security = 'SA_OPEN';
 
@@ -34,8 +40,8 @@ include_once($path_to_root . "/includes/session.inc");
 add_access_extensions();
 
 $tablePrefix = defined('TB_PREF') ? (string)TB_PREF : '0_';
-$db  = new FrontAccountingDbAdapter($tablePrefix);
-$dao = new IdentifierLookupsDao($db);
+$dbAdapter  = new FrontAccountingDbAdapter($tablePrefix);
+$dao = new IdentifierLookupsDao($dbAdapter);
 
 $types = ['brand' => 'Brand', 'manufacturer' => 'Manufacturer'];
 $currentType = $_GET['type'] ?? 'brand';

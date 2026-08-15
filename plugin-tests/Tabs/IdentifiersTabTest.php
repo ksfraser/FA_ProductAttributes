@@ -59,7 +59,7 @@ class IdentifiersTabTest extends TestCase
     public function testPostSaveIdentifiersPersistsWithoutRedirect(): void
     {
         $_SERVER['REQUEST_METHOD'] = 'POST';
-        $_POST = ['action' => 'save_product_identifiers', 'brand' => 'Acme'];
+        $_POST = ['action' => 'save_product_identifiers', 'brand' => 'Acme', 'pa_identifiers_save' => 'Save'];
 
         $this->dao->expects($this->once())
             ->method('upsert');
@@ -69,6 +69,27 @@ class IdentifiersTabTest extends TestCase
         $output = ob_get_clean();
 
         $this->assertStringContainsString('name="pa_identifiers_save"', $output);
+
+        $_SERVER['REQUEST_METHOD'] = 'GET';
+        unset($_POST);
+    }
+
+    /**
+     * Regression: a main-form POST without the tab save button (e.g. changing
+     * the product selector) must NOT trigger the identifiers save (GitHub
+     * issues #16 / #28).
+     */
+    public function testPostWithoutSaveButtonDoesNotSave(): void
+    {
+        $_SERVER['REQUEST_METHOD'] = 'POST';
+        $_POST = ['action' => 'save_product_identifiers', 'brand' => 'Acme', 'stock_id' => 'SKU002'];
+
+        $this->dao->expects($this->never())
+            ->method('upsert');
+
+        ob_start();
+        $this->tab->renderTabContent('SKU002');
+        ob_get_clean();
 
         $_SERVER['REQUEST_METHOD'] = 'GET';
         unset($_POST);

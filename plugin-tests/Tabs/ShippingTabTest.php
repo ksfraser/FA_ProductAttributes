@@ -59,7 +59,7 @@ class ShippingTabTest extends TestCase
     public function testPostSaveShippingAttributesPersistsWithoutRedirect(): void
     {
         $_SERVER['REQUEST_METHOD'] = 'POST';
-        $_POST = ['action' => 'save_shipping_attributes', 'length' => '30'];
+        $_POST = ['action' => 'save_shipping_attributes', 'length' => '30', 'pa_shipping_save' => 'Save'];
 
         $this->dao->expects($this->once())
             ->method('upsert');
@@ -74,10 +74,31 @@ class ShippingTabTest extends TestCase
         unset($_POST);
     }
 
+    /**
+     * Regression: a main-form POST without the tab save button (e.g. changing
+     * the product selector) must NOT trigger the shipping save (GitHub
+     * issues #16 / #28).
+     */
+    public function testPostWithoutSaveButtonDoesNotSave(): void
+    {
+        $_SERVER['REQUEST_METHOD'] = 'POST';
+        $_POST = ['action' => 'save_shipping_attributes', 'length' => '30', 'stock_id' => 'SKU002'];
+
+        $this->dao->expects($this->never())
+            ->method('upsert');
+
+        ob_start();
+        $this->tab->renderTabContent('SKU002');
+        ob_get_clean();
+
+        $_SERVER['REQUEST_METHOD'] = 'GET';
+        unset($_POST);
+    }
+
     public function testPostWithEmptyStockIdDoesNotSave(): void
     {
         $_SERVER['REQUEST_METHOD'] = 'POST';
-        $_POST = ['action' => 'save_shipping_attributes', 'length' => '30'];
+        $_POST = ['action' => 'save_shipping_attributes', 'length' => '30', 'pa_shipping_save' => 'Save'];
 
         $this->dao->expects($this->never())
             ->method('upsert');
