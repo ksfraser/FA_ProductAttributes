@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "ebdd39a2e922eefe4c43ad8c4660c31b",
+    "content-hash": "5b1948a19d102ddd0194215e05e55697",
     "packages": [
         {
             "name": "ksfraser/exceptions",
@@ -186,16 +186,16 @@
         },
         {
             "name": "ksfraser/ksf-modules-dao",
-            "version": "v0.3.4",
+            "version": "v0.3.5",
             "source": {
                 "type": "git",
                 "url": "https://github.com/ksfraser/ksf_ModulesDAO.git",
-                "reference": "3c935e3654de56ca6db2105deb442c2481fd074b"
+                "reference": "8a843e210a4f9dc518c01f2d1d2f33c0cb9b5850"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/ksfraser/ksf_ModulesDAO/zipball/3c935e3654de56ca6db2105deb442c2481fd074b",
-                "reference": "3c935e3654de56ca6db2105deb442c2481fd074b",
+                "url": "https://api.github.com/repos/ksfraser/ksf_ModulesDAO/zipball/8a843e210a4f9dc518c01f2d1d2f33c0cb9b5850",
+                "reference": "8a843e210a4f9dc518c01f2d1d2f33c0cb9b5850",
                 "shasum": ""
             },
             "require": {
@@ -210,7 +210,11 @@
                     "Ksfraser\\ModulesDAO\\": "src/"
                 }
             },
-            "notification-url": "https://packagist.org/downloads/",
+            "autoload-dev": {
+                "psr-4": {
+                    "Ksfraser\\ModulesDAO\\Tests\\": "tests/"
+                }
+            },
             "license": [
                 "MIT"
             ],
@@ -221,10 +225,10 @@
             ],
             "description": "Cross-platform DAO abstraction (DB, WordPress, SuiteCRM, FrontAccounting, CSV, XML)",
             "support": {
-                "issues": "https://github.com/ksfraser/ksf_ModulesDAO/issues",
-                "source": "https://github.com/ksfraser/ksf_ModulesDAO/tree/v0.3.4"
+                "source": "https://github.com/ksfraser/ksf_ModulesDAO/tree/v0.3.5",
+                "issues": "https://github.com/ksfraser/ksf_ModulesDAO/issues"
             },
-            "time": "2026-02-06T23:58:40+00:00"
+            "time": "2026-08-15T00:35:14+00:00"
         },
         {
             "name": "ksfraser/ksf-schemamanager",

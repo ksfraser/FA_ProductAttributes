@@ -11,6 +11,12 @@
       "name": "KS Fraser"
     }
   ],
+  "repositories": [
+    {
+      "type": "vcs",
+      "url": "https://github.com/ksfraser/ksf_ModulesDAO.git"
+    }
+  ],
   "require": {
     "php": ">=7.3",
     "ksfraser/fa-hooks": "^1.0 || dev-main",
