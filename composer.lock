@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "89b25d1d9048b6cda3244f5a8463d9c4",
+    "content-hash": "ebdd39a2e922eefe4c43ad8c4660c31b",
     "packages": [
         {
             "name": "ksfraser/exceptions",
@@ -270,6 +270,96 @@
                 "source": "https://github.com/ksfraser/ksf_SchemaManager/tree/main"
             },
             "time": "2026-02-10T21:11:23+00:00"
+        },
+        {
+            "name": "ksfraser/traits",
+            "version": "dev-main",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/ksfraser/Traits.git",
+                "reference": "2d0b46930a4976374dd69dc5a89e8b5ce736ca79"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/ksfraser/Traits/zipball/2d0b46930a4976374dd69dc5a89e8b5ce736ca79",
+                "reference": "2d0b46930a4976374dd69dc5a89e8b5ce736ca79",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=7.3",
+                "psr/log": "^1.0"
+            },
+            "require-dev": {
+                "ksfraser/exceptions": "*",
+                "phpunit/phpunit": "^9.0"
+            },
+            "default-branch": true,
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Ksfraser\\Traits\\": "src/Ksfraser/Traits/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "A collection of reusable PHP traits for ksfraser projects",
+            "support": {
+                "issues": "https://github.com/ksfraser/Traits/issues",
+                "source": "https://github.com/ksfraser/Traits/tree/main"
+            },
+            "time": "2026-08-15T00:27:18+00:00"
+        },
+        {
+            "name": "psr/log",
+            "version": "1.1.4",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/php-fig/log.git",
+                "reference": "d49695b909c3b7628b6289db5479a1c204601f11"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/php-fig/log/zipball/d49695b909c3b7628b6289db5479a1c204601f11",
+                "reference": "d49695b909c3b7628b6289db5479a1c204601f11",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=5.3.0"
+            },
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-master": "1.1.x-dev"
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Psr\\Log\\": "Psr/Log/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "PHP-FIG",
+                    "homepage": "https://www.php-fig.org/"
+                }
+            ],
+            "description": "Common interface for logging libraries",
+            "homepage": "https://github.com/php-fig/log",
+            "keywords": [
+                "log",
+                "psr",
+                "psr-3"
+            ],
+            "support": {
+                "source": "https://github.com/php-fig/log/tree/1.1.4"
+            },
+            "time": "2021-05-03T11:20:27+00:00"
         }
     ],
     "packages-dev": [
@@ -345,16 +435,16 @@
         },
         {
             "name": "ksfraser/famock",
-            "version": "0.6.0",
+            "version": "v0.10.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/ksfraser/FAMock.git",
-                "reference": "164335881bd53183e073e858241df2a999ea5a8e"
+                "reference": "6ba1ece204af849fa0b4170e63fa0ded7c9fc949"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/ksfraser/FAMock/zipball/164335881bd53183e073e858241df2a999ea5a8e",
-                "reference": "164335881bd53183e073e858241df2a999ea5a8e",
+                "url": "https://api.github.com/repos/ksfraser/FAMock/zipball/6ba1ece204af849fa0b4170e63fa0ded7c9fc949",
+                "reference": "6ba1ece204af849fa0b4170e63fa0ded7c9fc949",
                 "shasum": ""
             },
             "require": {
@@ -370,10 +460,6 @@
                 }
             },
             "autoload": {
-                "files": [
-                    "php/FAMock.php",
-                    "php/TestDbResult.php"
-                ],
                 "psr-4": {
                     "Ksfraser\\FAMock\\": "php/"
                 }
@@ -391,9 +477,9 @@
             "description": "FrontAccounting function mocks for unit testing",
             "support": {
                 "issues": "https://github.com/ksfraser/FAMock/issues",
-                "source": "https://github.com/ksfraser/FAMock/tree/v0.6.0"
+                "source": "https://github.com/ksfraser/FAMock/tree/v0.10.3"
             },
-            "time": "2026-05-06T21:45:27+00:00"
+            "time": "2026-07-24T01:13:17+00:00"
         },
         {
             "name": "myclabs/deep-copy",
@@ -2103,7 +2189,8 @@
     "aliases": [],
     "minimum-stability": "dev",
     "stability-flags": {
-        "ksfraser/fa-hooks": 20
+        "ksfraser/fa-hooks": 20,
+        "ksfraser/traits": 20
     },
     "prefer-stable": true,
     "prefer-lowest": false,

@@ -5,15 +5,31 @@ namespace Ksfraser\FA_ProductAttributes\Tabs;
 use FrontAccounting\ProductAttributes\Plugin\AbstractTab;
 use Ksfraser\FA_ProductAttributes\Dao\ShippingAttributesDao;
 use Ksfraser\FA_ProductAttributes\Actions\UpsertShippingAttributesAction;
+use Ksfraser\FA_ProductAttributes\UI\ShippingAttributesTab;
+use Ksfraser\Traits\InlinePostActionsTrait;
+use Ksfraser\Traits\InlineTabRendererTrait;
 
 class ShippingTab extends AbstractTab
 {
-    /** @var ShippingAttributesDao */
-    private $dao;
+    use InlinePostActionsTrait;
+    use InlineTabRendererTrait;
+
+    /** @var string FQCN of the upsert action class. */
+    protected $upsertClassName = UpsertShippingAttributesAction::class;
+
+    /** @var string Submit-button name that gates the inline save. */
+    protected $saveButtonName = 'pa_shipping_save';
+
+    /** @var string Notification shown after a successful save. */
+    protected $notificationMessage = 'Shipping attributes saved.';
+
+    /** @var string FQCN of the UI renderer class. */
+    protected $tabClassName = ShippingAttributesTab::class;
 
     public function __construct(ShippingAttributesDao $dao)
     {
         $this->dao = $dao;
+        $this->initUpsertClass();
     }
 
     public function getName(): string
@@ -29,41 +45,5 @@ class ShippingTab extends AbstractTab
     public function getTabLabel(): string
     {
         return _('Shipping');
-    }
-
-    public function renderTabContent(string $stockId): void
-    {
-        $this->handlePostActions($stockId);
-
-        $tab = new \Ksfraser\FA_ProductAttributes\UI\ShippingAttributesTab($this->dao);
-        $tab->render($stockId);
-    }
-
-    private function handlePostActions(string $stockId): void
-    {
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST' || $stockId === '') {
-            return;
-        }
-        if (!isset($_POST['pa_shipping_save'])) {
-            return;
-        }
-
-        $action = new UpsertShippingAttributesAction($this->dao);
-        $action->handle($stockId, $_POST);
-
-        if (function_exists('display_notification')) {
-            display_notification(_('Shipping attributes saved.'));
-        }
-    }
-
-    public function handleSave(string $stockId, array $postData): void
-    {
-        $action = new UpsertShippingAttributesAction($this->dao);
-        $action->handle($stockId, $postData);
-    }
-
-    public function handleDelete(string $stockId): void
-    {
-        $this->dao->delete($stockId);
     }
 }

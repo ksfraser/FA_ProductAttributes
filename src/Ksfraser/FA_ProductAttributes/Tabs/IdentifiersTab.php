@@ -6,11 +6,26 @@ use FrontAccounting\ProductAttributes\Plugin\AbstractTab;
 use Ksfraser\FA_ProductAttributes\Dao\ProductIdentifiersDao;
 use Ksfraser\FA_ProductAttributes\Dao\IdentifierLookupsDao;
 use Ksfraser\FA_ProductAttributes\Actions\UpsertProductIdentifiersAction;
+use Ksfraser\FA_ProductAttributes\UI\ProductIdentifiersTab;
+use Ksfraser\Traits\InlinePostActionsTrait;
+use Ksfraser\Traits\InlineTabRendererTrait;
 
 class IdentifiersTab extends AbstractTab
 {
-    /** @var ProductIdentifiersDao */
-    private $dao;
+    use InlinePostActionsTrait;
+    use InlineTabRendererTrait;
+
+    /** @var string FQCN of the upsert action class. */
+    protected $upsertClassName = UpsertProductIdentifiersAction::class;
+
+    /** @var string Submit-button name that gates the inline save. */
+    protected $saveButtonName = 'pa_identifiers_save';
+
+    /** @var string Notification shown after a successful save. */
+    protected $notificationMessage = 'Identifiers saved.';
+
+    /** @var string FQCN of the UI renderer class. */
+    protected $tabClassName = ProductIdentifiersTab::class;
 
     /** @var IdentifierLookupsDao|null */
     private $lookupsDao;
@@ -19,6 +34,7 @@ class IdentifiersTab extends AbstractTab
     {
         $this->dao        = $dao;
         $this->lookupsDao = $lookupsDao;
+        $this->initUpsertClass();
     }
 
     public function getName(): string
@@ -36,39 +52,8 @@ class IdentifiersTab extends AbstractTab
         return _('Identifiers');
     }
 
-    public function renderTabContent(string $stockId): void
+    protected function createTab()
     {
-        $this->handlePostActions($stockId);
-
-        $tab = new \Ksfraser\FA_ProductAttributes\UI\ProductIdentifiersTab($this->dao, $this->lookupsDao);
-        $tab->render($stockId);
-    }
-
-    private function handlePostActions(string $stockId): void
-    {
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST' || $stockId === '') {
-            return;
-        }
-        if (!isset($_POST['pa_identifiers_save'])) {
-            return;
-        }
-
-        $action = new UpsertProductIdentifiersAction($this->dao);
-        $action->handle($stockId, $_POST);
-
-        if (function_exists('display_notification')) {
-            display_notification(_('Identifiers saved.'));
-        }
-    }
-
-    public function handleSave(string $stockId, array $postData): void
-    {
-        $action = new UpsertProductIdentifiersAction($this->dao);
-        $action->handle($stockId, $postData);
-    }
-
-    public function handleDelete(string $stockId): void
-    {
-        $this->dao->delete($stockId);
+        return new $this->tabClassName($this->dao, $this->lookupsDao);
     }
 }

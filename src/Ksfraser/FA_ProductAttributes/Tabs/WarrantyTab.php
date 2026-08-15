@@ -5,15 +5,25 @@ namespace Ksfraser\FA_ProductAttributes\Tabs;
 use FrontAccounting\ProductAttributes\Plugin\AbstractTab;
 use Ksfraser\FA_ProductAttributes\Dao\ProductWarrantyDao;
 use Ksfraser\FA_ProductAttributes\Actions\UpsertWarrantyAction;
+use Ksfraser\Traits\InlinePostActionsTrait;
 
 class WarrantyTab extends AbstractTab
 {
-    /** @var ProductWarrantyDao */
-    private $dao;
+    use InlinePostActionsTrait;
+
+    /** @var string FQCN of the upsert action class. */
+    protected $upsertClassName = UpsertWarrantyAction::class;
+
+    /** @var string Submit-button name that gates the inline save. */
+    protected $saveButtonName = 'pa_warranty_save';
+
+    /** @var string Notification shown after a successful save. */
+    protected $notificationMessage = 'Warranty details saved.';
 
     public function __construct(ProductWarrantyDao $dao)
     {
         $this->dao = $dao;
+        $this->initUpsertClass();
     }
 
     public function getName(): string
@@ -102,35 +112,6 @@ class WarrantyTab extends AbstractTab
         echo '</fieldset>';
 
         echo '<p><input type="submit" name="pa_warranty_save" value="' . _('Save') . '"></p>';
-    }
-
-    /**
-     * Handle inline POST actions from the tab (warranty save) so the product
-     * and tab are retained after saving (no hard refresh).
-     */
-    private function handlePostActions(string $stockId): void
-    {
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST' || $stockId === '') {
-            return;
-        }
-
-        if (($_POST['action'] ?? '') === 'save_product_warranty' && isset($_POST['pa_warranty_save'])) {
-            $this->handleSave($stockId, $_POST);
-            if (function_exists('display_notification')) {
-                display_notification(_('Warranty details saved.'));
-            }
-        }
-    }
-
-    public function handleSave(string $stockId, array $postData): void
-    {
-        $action = new UpsertWarrantyAction($this->dao);
-        $action->handle($stockId, $postData);
-    }
-
-    public function handleDelete(string $stockId): void
-    {
-        $this->dao->delete($stockId);
     }
 
     private function durationUnitSelect(string $name, string $current): string
