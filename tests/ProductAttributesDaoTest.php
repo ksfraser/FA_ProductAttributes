@@ -212,17 +212,39 @@ class ProductAttributesDaoTest extends TestCase
         $db->expects($this->once())
             ->method('execute')
             ->with(
-                "INSERT INTO `fa_product_attribute_assignments` (stock_id, category_id, value_id, sort_order)\nVALUES (:stock_id, :category_id, :value_id, :sort_order)",
+                "INSERT INTO `fa_product_attribute_assignments` (stock_id, category_id, value_id, sort_order, parent_stock_id)\nVALUES (:stock_id, :category_id, :value_id, :sort_order, :parent_stock_id)",
                 [
                     'stock_id' => 'ABC123',
                     'category_id' => 1,
                     'value_id' => 1,
                     'sort_order' => 0,
+                    'parent_stock_id' => null,
                 ]
             );
 
         $dao = new ProductAttributesDao($db);
         $dao->addAssignment('ABC123', 1, 1, 0);
+    }
+
+    public function testAddAssignmentWithParentStockId(): void
+    {
+        $db = $this->createMock(DbAdapterInterface::class);
+        $db->method('getTablePrefix')->willReturn('fa_');
+        $db->expects($this->once())
+            ->method('execute')
+            ->with(
+                "INSERT INTO `fa_product_attribute_assignments` (stock_id, category_id, value_id, sort_order, parent_stock_id)\nVALUES (:stock_id, :category_id, :value_id, :sort_order, :parent_stock_id)",
+                [
+                    'stock_id' => 'ABC123-Red',
+                    'category_id' => 1,
+                    'value_id' => 1,
+                    'sort_order' => 1,
+                    'parent_stock_id' => 'ABC123',
+                ]
+            );
+
+        $dao = new ProductAttributesDao($db);
+        $dao->addAssignment('ABC123-Red', 1, 1, 1, 'ABC123');
     }
 
     public function testGetAssignedCategoriesForProduct(): void

@@ -140,16 +140,16 @@
         },
         {
             "name": "ksfraser/ksf-fa-common",
-            "version": "1.0.3",
+            "version": "v1.0.6",
             "source": {
                 "type": "git",
                 "url": "https://github.com/ksfraser/ksf_FA_Common.git",
-                "reference": "7178c414635861c49e9cc38b279d4cbee867ed14"
+                "reference": "6f382cbd27cc8bd9cc5f48800a71386f26bca162"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/ksfraser/ksf_FA_Common/zipball/7178c414635861c49e9cc38b279d4cbee867ed14",
-                "reference": "7178c414635861c49e9cc38b279d4cbee867ed14",
+                "url": "https://api.github.com/repos/ksfraser/ksf_FA_Common/zipball/6f382cbd27cc8bd9cc5f48800a71386f26bca162",
+                "reference": "6f382cbd27cc8bd9cc5f48800a71386f26bca162",
                 "shasum": ""
             },
             "require": {
@@ -167,10 +167,12 @@
             },
             "autoload": {
                 "files": [
-                    "src/logging_functions.php"
+                    "src/logging_functions.php",
+                    "src/compat.php"
                 ],
                 "psr-4": {
-                    "KsfCommon\\": "src/"
+                    "Ksfraser\\Frontaccounting\\HTML\\": "src/HTML/",
+                    "ksfraser\\FrontAccounting\\Common\\": "src/"
                 }
             },
             "notification-url": "https://packagist.org/downloads/",
@@ -180,9 +182,9 @@
             "description": "Shared FrontAccounting platform utilities, contracts, and extension points for the KSF ecosystem",
             "support": {
                 "issues": "https://github.com/ksfraser/ksf_FA_Common/issues",
-                "source": "https://github.com/ksfraser/ksf_FA_Common/tree/1.0.3"
+                "source": "https://github.com/ksfraser/ksf_FA_Common/tree/v1.0.6"
             },
-            "time": "2026-07-21T00:26:55+00:00"
+            "time": "2026-08-16T18:08:54+00:00"
         },
         {
             "name": "ksfraser/ksf-modules-dao",

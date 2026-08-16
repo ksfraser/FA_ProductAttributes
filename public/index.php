@@ -6,11 +6,18 @@
  * Runs inside FrontAccounting using FA's database layer (FrontAccountingDbAdapter)
  * instead of a standalone PDO/DB_DSN connection.
  *
+ * Each tab's master summary table is rendered with the reusable
+ * Ksfraser\Frontaccounting\HTML\MasterSummaryTable component (ksf_FA_Common),
+ * which carries the record id + _tabs_sel through row actions so deletes and
+ * edits return to the same tab (the no-hard-refresh pattern from issue #24).
+ *
  * @package FA_ProductAttributes
  */
 
 use Ksfraser\ModulesDAO\Db\FrontAccountingDbAdapter;
 use Ksfraser\FA_ProductAttributes\Dao\ProductAttributesDao;
+use Ksfraser\Frontaccounting\HTML\MasterSummaryTable;
+use Ksfraser\Frontaccounting\HTML\TabContext;
 
 // Resolve all relative includes from this module directory.
 chdir(__DIR__);
@@ -43,47 +50,202 @@ $tablePrefix = defined('TB_PREF') ? (string)TB_PREF : '0_';
 $dbAdapter  = new FrontAccountingDbAdapter($tablePrefix);
 $dao = new ProductAttributesDao($dbAdapter);
 
-$tab = $_GET['tab'] ?? 'categories';
+/**
+ * Build the MasterSummaryTable for the active sub-tab.
+ *
+ * @param string                $tab        Active sub-tab ('categories' | 'values' | 'assignments')
+ * @param ProductAttributesDao  $dao        Data access object
+ * @param int                   $categoryId Selected category id (values/assignments)
+ * @param string                $stockId    Selected stock id (assignments)
+ * @return MasterSummaryTable
+ *
+ * @since 1.0.0
+ */
+function pa_build_summary(string $tab, ProductAttributesDao $dao, int $categoryId, string $stockId): MasterSummaryTable
+{
+    $opts = [
+        'record_id_field' => 'id',
+        'row_id_field'    => 'id',
+        'tab_sel'         => $tab,
+        'show_footer'     => false,
+    ];
+
+    if ($tab === 'values') {
+        return new MasterSummaryTable(
+            [
+                ['key' => 'value', 'label' => _('Value')],
+                ['key' => 'slug', 'label' => _('Slug')],
+                ['key' => 'sort_order', 'label' => _('Sort')],
+                ['key' => 'active', 'label' => _('Active')],
+            ],
+            $dao->listValues($categoryId),
+            ['edit' => true, 'delete' => true],
+            array_merge($opts, ['delete_confirm_message' => _('Delete this value and its assignments?')])
+        );
+    }
+
+    if ($tab === 'assignments') {
+        return new MasterSummaryTable(
+            [
+                ['key' => 'category_code', 'label' => _('Category')],
+                ['key' => 'value_label', 'label' => _('Value')],
+                ['key' => 'value_slug', 'label' => _('Slug')],
+                ['key' => 'sort_order', 'label' => _('Sort')],
+            ],
+            $stockId !== '' ? $dao->listAssignments($stockId) : [],
+            ['delete' => true],
+            array_merge($opts, ['delete_confirm_message' => _('Remove this assignment?')])
+        );
+    }
+
+    return new MasterSummaryTable(
+        [
+            ['key' => 'code', 'label' => _('Code')],
+            ['key' => 'label', 'label' => _('Label')],
+            ['key' => 'sort_order', 'label' => _('Sort')],
+            ['key' => 'active', 'label' => _('Active')],
+        ],
+        $dao->listCategories(),
+        ['edit' => true, 'delete' => true],
+        array_merge($opts, ['delete_confirm_message' => _('Delete this category, its values and assignments?')])
+    );
+}
+
+/**
+ * Delete the record identified by a row-action button on the active tab.
+ *
+ * @param string                $tab   Active sub-tab
+ * @param ProductAttributesDao  $dao   Data access object
+ * @param int                   $rowId Record id
+ * @return void
+ *
+ * @since 1.0.0
+ */
+function pa_delete_row(string $tab, ProductAttributesDao $dao, int $rowId): void
+{
+    if ($rowId <= 0) {
+        return;
+    }
+
+    if ($tab === 'values') {
+        $dao->deleteValue($rowId);
+        return;
+    }
+
+    if ($tab === 'assignments') {
+        $dao->deleteAssignment($rowId);
+        return;
+    }
+
+    $dao->deleteCategory($rowId);
+}
+
+/**
+ * Build the redirect target for the active sub-tab, preserving the selected
+ * category/stock context.
+ *
+ * @param string $tab        Active sub-tab
+ * @param int    $categoryId Selected category id
+ * @param string $stockId    Selected stock id
+ * @return string Relative redirect URL
+ *
+ * @since 1.0.0
+ */
+function pa_redirect_for(string $tab, int $categoryId, string $stockId): string
+{
+    $target = '?tab=' . rawurlencode($tab);
+
+    if ($tab === 'values' && $categoryId > 0) {
+        $target .= '&category_id=' . $categoryId;
+    }
+
+    if ($tab === 'assignments' && $stockId !== '') {
+        $target .= '&stock_id=' . rawurlencode($stockId);
+    }
+
+    return $target;
+}
+
+$allowedTabs = ['categories', 'values', 'assignments'];
+$tab = (string) ($_GET['tab'] ?? 'categories');
+if (!in_array($tab, $allowedTabs, true)) {
+    $tab = 'categories';
+}
+
+// A POST from a MasterSummaryTable form carries the active tab in _tabs_sel;
+// prefer it so a row action returns to the same tab.
+$postTab = TabContext::fromPost($_POST, 'id')->getTabSel();
+if (in_array($postTab, $allowedTabs, true)) {
+    $tab = $postTab;
+}
+
+$categoryId = (int) ($_GET['category_id'] ?? ($_POST['category_id'] ?? 0));
+$stockId    = trim((string) ($_GET['stock_id'] ?? ($_POST['stock_id'] ?? '')));
+
+$cats = $dao->listCategories();
+if ($categoryId === 0 && count($cats) > 0) {
+    $categoryId = (int) $cats[0]['id'];
+}
+
+$editRowId = 0;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $action = $_POST['action'] ?? '';
+    $rowAction = pa_build_summary($tab, $dao, $categoryId, $stockId)->getPostedAction($_POST);
+    $action    = (string) ($_POST['action'] ?? '');
+
+    if ($rowAction !== null) {
+        $rowId = (int) $rowAction['id'];
+
+        if ($rowAction['action'] === 'delete') {
+            pa_delete_row($tab, $dao, $rowId);
+            header('Location: ' . pa_redirect_for($tab, $categoryId, $stockId));
+            exit;
+        }
+
+        // Edit: fall through to render the form prefilled with this record.
+        $editRowId = $rowId;
+    }
 
     if ($action === 'upsert_category') {
+        $editId = (int) ($_POST['id'] ?? 0);
         $dao->upsertCategory(
-            trim((string)($_POST['code'] ?? '')),
-            trim((string)($_POST['label'] ?? '')),
-            trim((string)($_POST['description'] ?? '')),
-            (int)($_POST['sort_order'] ?? 0),
-            isset($_POST['active'])
+            trim((string) ($_POST['code'] ?? '')),
+            trim((string) ($_POST['label'] ?? '')),
+            trim((string) ($_POST['description'] ?? '')),
+            (int) ($_POST['sort_order'] ?? 0),
+            isset($_POST['active']),
+            $editId > 0 ? $editId : null
         );
-        header('Location: ?tab=categories');
+        header('Location: ' . pa_redirect_for('categories', $categoryId, $stockId));
         exit;
     }
 
     if ($action === 'upsert_value') {
-        $categoryId = (int)($_POST['category_id'] ?? 0);
+        $catId  = (int) ($_POST['category_id'] ?? 0);
+        $editId = (int) ($_POST['id'] ?? 0);
         $dao->upsertValue(
-            $categoryId,
-            trim((string)($_POST['value'] ?? '')),
-            trim((string)($_POST['slug'] ?? '')),
-            (int)($_POST['sort_order'] ?? 0),
-            isset($_POST['active'])
+            $catId,
+            trim((string) ($_POST['value'] ?? '')),
+            trim((string) ($_POST['slug'] ?? '')),
+            (int) ($_POST['sort_order'] ?? 0),
+            isset($_POST['active']),
+            $editId > 0 ? $editId : 0
         );
-        header('Location: ?tab=values&category_id=' . $categoryId);
+        header('Location: ' . pa_redirect_for('values', $catId > 0 ? $catId : $categoryId, $stockId));
         exit;
     }
 
     if ($action === 'add_assignment') {
-        $stockId   = trim((string)($_POST['stock_id'] ?? ''));
-        $categoryId = (int)($_POST['category_id'] ?? 0);
-        $valueId    = (int)($_POST['value_id'] ?? 0);
-        $sortOrder  = (int)($_POST['sort_order'] ?? 0);
+        $sId       = trim((string) ($_POST['stock_id'] ?? ''));
+        $catId     = (int) ($_POST['category_id'] ?? 0);
+        $valueId   = (int) ($_POST['value_id'] ?? 0);
+        $sortOrder = (int) ($_POST['sort_order'] ?? 0);
 
-        if ($stockId !== '' && $categoryId > 0 && $valueId > 0) {
-            $dao->addAssignment($stockId, $categoryId, $valueId, $sortOrder);
+        if ($sId !== '' && $catId > 0 && $valueId > 0) {
+            $dao->addAssignment($sId, $catId, $valueId, $sortOrder);
         }
 
-        header('Location: ?tab=assignments&stock_id=' . rawurlencode($stockId) . '&category_id=' . $categoryId);
+        header('Location: ' . pa_redirect_for('assignments', $catId, $sId));
         exit;
     }
 }
@@ -99,38 +261,48 @@ echo '</nav>';
 echo '<br>';
 
 if ($tab === 'categories'):
-    $cats = $dao->listCategories();
-    echo '<table class="tablestyle2">';
-    echo '<thead><tr><th>' . _('Code') . '</th><th>' . _('Label') . '</th><th>' . _('Sort') . '</th><th>' . _('Active') . '</th></tr></thead><tbody>';
+    $editCatId = $editRowId ?: (int) ($_GET['edit_id'] ?? 0);
+    $editing = null;
     foreach ($cats as $c) {
-        echo '<tr>';
-        echo '<td>' . htmlspecialchars((string)($c['code'] ?? '')) . '</td>';
-        echo '<td>' . htmlspecialchars((string)($c['label'] ?? '')) . '</td>';
-        echo '<td>' . (int)($c['sort_order'] ?? 0) . '</td>';
-        echo '<td>' . (int)($c['active'] ?? 0) . '</td>';
-        echo '</tr>';
+        if ((int) ($c['id'] ?? 0) === $editCatId) {
+            $editing = $c;
+            break;
+        }
     }
-    echo '</tbody></table>';
+    echo '<form method="post">';
+    pa_build_summary('categories', $dao, $categoryId, $stockId)->render();
+    echo '</form>';
 ?>
 
 <fieldset>
-  <legend><?php echo _('Add / Update Category'); ?></legend>
+  <legend><?php echo $editing ? _('Edit Category') : _('Add Category'); ?></legend>
   <form method="post">
     <input type="hidden" name="action" value="upsert_category" />
-    <div><label><?php echo _('Code'); ?></label><input type="text" name="code" required placeholder="size_alpha" /></div>
-    <div><label><?php echo _('Label'); ?></label><input type="text" name="label" required placeholder="Size (alpha)" /></div>
-    <div><label><?php echo _('Description'); ?></label><input type="text" name="description" /></div>
-    <div><label><?php echo _('Sort order'); ?></label><input type="number" name="sort_order" value="0" /></div>
-    <div><label><?php echo _('Active'); ?></label><input type="checkbox" name="active" checked /></div>
-    <div style="margin-top:8px"><button type="submit"><?php echo _('Save'); ?></button></div>
+    <?php if ($editing): ?>
+      <input type="hidden" name="id" value="<?= (int)$editing['id'] ?>" />
+    <?php endif; ?>
+    <div><label><?php echo _('Code'); ?></label><input type="text" name="code" required placeholder="size_alpha" value="<?= htmlspecialchars((string)($editing['code'] ?? '')) ?>" /></div>
+    <div><label><?php echo _('Label'); ?></label><input type="text" name="label" required placeholder="Size (alpha)" value="<?= htmlspecialchars((string)($editing['label'] ?? '')) ?>" /></div>
+    <div><label><?php echo _('Description'); ?></label><input type="text" name="description" value="<?= htmlspecialchars((string)($editing['description'] ?? '')) ?>" /></div>
+    <div><label><?php echo _('Sort order'); ?></label><input type="number" name="sort_order" value="<?= (int)($editing['sort_order'] ?? 0) ?>" /></div>
+    <div><label><?php echo _('Active'); ?></label><input type="checkbox" name="active" <?= ($editing ? ((int)($editing['active'] ?? 1) === 1) : true) ? 'checked' : '' ?> /></div>
+    <div style="margin-top:8px"><button type="submit"><?php echo _('Save'); ?></button>
+      <?php if ($editing): ?>
+        <a href="?tab=categories" style="margin-left:8px"><?php echo _('Cancel'); ?></a>
+      <?php endif; ?>
+    </div>
   </form>
 </fieldset>
 
 <?php elseif ($tab === 'values'):
-    $categoryId = (int)($_GET['category_id'] ?? 0);
-    $cats = $dao->listCategories();
-    if ($categoryId === 0 && count($cats) > 0) {
-        $categoryId = (int)$cats[0]['id'];
+    $values = $categoryId ? $dao->listValues($categoryId) : [];
+    $editValId = $editRowId ?: (int) ($_GET['edit_id'] ?? 0);
+    $editingValue = null;
+    foreach ($values as $v) {
+        if ((int) ($v['id'] ?? 0) === $editValId) {
+            $editingValue = $v;
+            break;
+        }
     }
 ?>
 
@@ -147,42 +319,33 @@ if ($tab === 'categories'):
 </form>
 
 <?php
-    $values = $categoryId ? $dao->listValues($categoryId) : [];
-    echo '<table class="tablestyle2">';
-    echo '<thead><tr><th>' . _('Value') . '</th><th>' . _('Slug') . '</th><th>' . _('Sort') . '</th><th>' . _('Active') . '</th></tr></thead><tbody>';
-    foreach ($values as $v) {
-        echo '<tr>';
-        echo '<td>' . htmlspecialchars((string)($v['value'] ?? '')) . '</td>';
-        echo '<td>' . htmlspecialchars((string)($v['slug'] ?? '')) . '</td>';
-        echo '<td>' . (int)($v['sort_order'] ?? 0) . '</td>';
-        echo '<td>' . (int)($v['active'] ?? 0) . '</td>';
-        echo '</tr>';
-    }
-    echo '</tbody></table>';
+    echo '<form method="post">';
+    echo '<input type="hidden" name="category_id" value="' . htmlspecialchars((string)$categoryId) . '" />';
+    pa_build_summary('values', $dao, $categoryId, $stockId)->render();
+    echo '</form>';
 ?>
 
 <fieldset>
-  <legend><?php echo _('Add / Update Value'); ?></legend>
+  <legend><?php echo $editingValue ? _('Edit Value') : _('Add Value'); ?></legend>
   <form method="post">
     <input type="hidden" name="action" value="upsert_value" />
     <input type="hidden" name="category_id" value="<?= htmlspecialchars((string)$categoryId) ?>" />
-    <div><label><?php echo _('Value'); ?></label><input type="text" name="value" required placeholder="Red" /></div>
-    <div><label><?php echo _('Slug'); ?></label><input type="text" name="slug" required placeholder="red" /></div>
-    <div><label><?php echo _('Sort order'); ?></label><input type="number" name="sort_order" value="0" /></div>
-    <div><label><?php echo _('Active'); ?></label><input type="checkbox" name="active" checked /></div>
-    <div style="margin-top:8px"><button type="submit"><?php echo _('Save'); ?></button></div>
+    <?php if ($editingValue): ?>
+      <input type="hidden" name="id" value="<?= (int)$editingValue['id'] ?>" />
+    <?php endif; ?>
+    <div><label><?php echo _('Value'); ?></label><input type="text" name="value" required placeholder="Red" value="<?= htmlspecialchars((string)($editingValue['value'] ?? '')) ?>" /></div>
+    <div><label><?php echo _('Slug'); ?></label><input type="text" name="slug" required placeholder="red" value="<?= htmlspecialchars((string)($editingValue['slug'] ?? '')) ?>" /></div>
+    <div><label><?php echo _('Sort order'); ?></label><input type="number" name="sort_order" value="<?= (int)($editingValue['sort_order'] ?? 0) ?>" /></div>
+    <div><label><?php echo _('Active'); ?></label><input type="checkbox" name="active" <?= ($editingValue ? ((int)($editingValue['active'] ?? 1) === 1) : true) ? 'checked' : '' ?> /></div>
+    <div style="margin-top:8px"><button type="submit"><?php echo _('Save'); ?></button>
+      <?php if ($editingValue): ?>
+        <a href="?tab=values&category_id=<?= $categoryId ?>" style="margin-left:8px"><?php echo _('Cancel'); ?></a>
+      <?php endif; ?>
+    </div>
   </form>
 </fieldset>
 
-<?php endif; ?>
-
-<?php if ($tab === 'assignments'):
-    $stockId = trim((string)($_GET['stock_id'] ?? ''));
-    $categoryId = (int)($_GET['category_id'] ?? 0);
-    $cats = $dao->listCategories();
-    if ($categoryId === 0 && count($cats) > 0) {
-        $categoryId = (int)$cats[0]['id'];
-    }
+<?php else: /* assignments */
     $values = $categoryId ? $dao->listValues($categoryId) : [];
 ?>
 
@@ -191,8 +354,15 @@ if ($tab === 'categories'):
 <form method="get">
   <input type="hidden" name="tab" value="assignments" />
   <div>
-    <label><?php echo _('Stock ID'); ?></label>
-    <input type="text" name="stock_id" value="<?= htmlspecialchars($stockId) ?>" placeholder="SKU / stock_id" />
+    <label><?php echo _('Stock Item'); ?></label>
+    <select name="stock_id">
+      <option value=""><?php echo _('-- Select Stock Item --'); ?></option>
+      <?php foreach ($dao->listStockItems() as $s): ?>
+        <option value="<?= htmlspecialchars((string)$s['stock_id']) ?>" <?= $stockId === (string)$s['stock_id'] ? 'selected' : '' ?>>
+          <?= htmlspecialchars((string)$s['stock_id']) ?> — <?= htmlspecialchars((string)($s['description'] ?? '')) ?>
+        </option>
+      <?php endforeach; ?>
+    </select>
   </div>
   <div style="margin-top:6px">
     <label><?php echo _('Category'); ?></label>
@@ -207,19 +377,13 @@ if ($tab === 'categories'):
   <div style="margin-top:8px"><button type="submit"><?php echo _('Load'); ?></button></div>
 </form>
 
-<?php if ($stockId !== ''):
-    $assignments = $dao->listAssignments($stockId);
-    echo '<table class="tablestyle2">';
-    echo '<thead><tr><th>' . _('Category') . '</th><th>' . _('Value') . '</th><th>' . _('Slug') . '</th><th>' . _('Sort') . '</th></tr></thead><tbody>';
-    foreach ($assignments as $a) {
-        echo '<tr>';
-        echo '<td>' . htmlspecialchars((string)($a['category_code'] ?? '')) . '</td>';
-        echo '<td>' . htmlspecialchars((string)($a['value_label'] ?? '')) . '</td>';
-        echo '<td>' . htmlspecialchars((string)($a['value_slug'] ?? '')) . '</td>';
-        echo '<td>' . (int)($a['sort_order'] ?? 0) . '</td>';
-        echo '</tr>';
-    }
-    echo '</tbody></table>';
+<?php if ($stockId !== ''): ?>
+<?php
+    echo '<form method="post">';
+    echo '<input type="hidden" name="category_id" value="' . htmlspecialchars((string)$categoryId) . '" />';
+    echo '<input type="hidden" name="stock_id" value="' . htmlspecialchars($stockId) . '" />';
+    pa_build_summary('assignments', $dao, $categoryId, $stockId)->render();
+    echo '</form>';
 ?>
 
 <fieldset>

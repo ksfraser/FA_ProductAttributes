@@ -64,6 +64,18 @@ class IdentifierLookupsDao
     }
 
     /**
+     * Update an existing lookup entry's name.
+     */
+    public function update(int $id, string $name): void
+    {
+        $p = $this->db->getTablePrefix();
+        $this->db->execute(
+            'UPDATE `' . $p . 'product_identifier_lookups` SET name = :name WHERE id = :id',
+            ['name' => trim($name), 'id' => $id]
+        );
+    }
+
+    /**
      * Delete a lookup entry by ID.
      */
     public function delete(int $id): void

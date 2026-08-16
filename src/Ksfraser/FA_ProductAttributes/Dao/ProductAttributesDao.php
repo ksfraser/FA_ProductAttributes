@@ -33,6 +33,19 @@ class ProductAttributesDao
         );
     }
 
+    /**
+     * List stock items for the Assignments admin page DDL.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    public function listStockItems(): array
+    {
+        $p = $this->db->getTablePrefix();
+        return $this->db->query(
+            "SELECT stock_id, description FROM `{$p}stock_master` ORDER BY stock_id"
+        );
+    }
+
     public function upsertCategory(string $code, string $label, string $description, int $sortOrder, bool $active, ?int $id = null): int
     {
         $p = $this->db->getTablePrefix();
@@ -177,6 +190,14 @@ class ProductAttributesDao
     public function addCategoryAssignment(string $stockId, int $categoryId): void
     {
         $p = $this->db->getTablePrefix();
+        $exists = $this->db->query(
+            "SELECT id FROM `{$p}product_attribute_category_assignments`
+             WHERE stock_id = :stock_id AND category_id = :category_id",
+            ['stock_id' => $stockId, 'category_id' => $categoryId]
+        );
+        if (!empty($exists)) {
+            return;
+        }
         $this->db->execute(
             "INSERT INTO `{$p}product_attribute_category_assignments` (stock_id, category_id)
              VALUES (:stock_id, :category_id)",
@@ -194,17 +215,18 @@ class ProductAttributesDao
         );
     }
 
-    public function addAssignment(string $stockId, int $categoryId, int $valueId, int $sortOrder = 0): void
+    public function addAssignment(string $stockId, int $categoryId, int $valueId, int $sortOrder = 0, ?string $parentStockId = null): void
     {
         $p = $this->db->getTablePrefix();
         $this->db->execute(
-            "INSERT INTO `{$p}product_attribute_assignments` (stock_id, category_id, value_id, sort_order)\n"
-            . "VALUES (:stock_id, :category_id, :value_id, :sort_order)",
+            "INSERT INTO `{$p}product_attribute_assignments` (stock_id, category_id, value_id, sort_order, parent_stock_id)\n"
+            . "VALUES (:stock_id, :category_id, :value_id, :sort_order, :parent_stock_id)",
             [
                 'stock_id' => $stockId,
                 'category_id' => $categoryId,
                 'value_id' => $valueId,
                 'sort_order' => $sortOrder,
+                'parent_stock_id' => $parentStockId,
             ]
         );
     }

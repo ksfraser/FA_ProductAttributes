@@ -75,6 +75,17 @@ class LifecycleFlagDefsDao
 
         $sortOrder = (int)($data['sort_order'] ?? 0);
         $active    = (int)(bool)($data['active'] ?? 1);
+        $id        = (int)($data['id'] ?? 0);
+
+        if ($id > 0) {
+            $this->db->execute(
+                'UPDATE `' . $p . 'product_lifecycle_flag_defs`'
+                . ' SET code = :code, label = :label, sort_order = :sort_order, active = :active'
+                . ' WHERE id = :id',
+                ['code' => $code, 'label' => $label, 'sort_order' => $sortOrder, 'active' => $active, 'id' => $id]
+            );
+            return $id;
+        }
 
         $existing = $this->db->query(
             'SELECT id FROM `' . $p . 'product_lifecycle_flag_defs` WHERE code = :code',

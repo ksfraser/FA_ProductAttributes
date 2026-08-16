@@ -290,10 +290,14 @@ class hooks_FA_ProductAttributes extends hooks
 
     private function load_autoloader()
     {
-        // Shared utility: ensure Composer dependencies are installed (runs once).
-        $composerDepsPath = dirname(__DIR__) . '/ksf_FA_Common/src/Utils/ComposerDependencies.php';
-        if (file_exists($composerDepsPath)) {
-            require_once $composerDepsPath;
+        // Ensure Composer dependencies are installed (runs once).
+        if (!class_exists(\ksfraser\FrontAccounting\Common\Utils\ComposerDependencies::class)) {
+            $composerDepsPath = dirname(__DIR__) . '/ksf_FA_Common/src/Utils/ComposerDependencies.php';
+            if (is_file($composerDepsPath)) {
+                require_once $composerDepsPath;
+            }
+        }
+        if (class_exists(\ksfraser\FrontAccounting\Common\Utils\ComposerDependencies::class)) {
             \ksfraser\FrontAccounting\Common\Utils\ComposerDependencies::ensure(__DIR__);
         }
 

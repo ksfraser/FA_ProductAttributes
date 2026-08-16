@@ -6,11 +6,18 @@
  * Manage the dropdown values for Brand and Manufacturer
  * that appear in the Product Identifiers tab.
  *
+ * The lookup list is rendered with the reusable
+ * Ksfraser\Frontaccounting\HTML\MasterSummaryTable component (ksf_FA_Common),
+ * which carries the record id + _tabs_sel through row actions so deletes and
+ * edits return to the same type/tab (the no-hard-refresh pattern from #24).
+ *
  * @package FA_ProductAttributes
  */
 
 use Ksfraser\ModulesDAO\Db\FrontAccountingDbAdapter;
 use Ksfraser\FA_ProductAttributes\Dao\IdentifierLookupsDao;
+use Ksfraser\Frontaccounting\HTML\MasterSummaryTable;
+use Ksfraser\Frontaccounting\HTML\TabContext;
 
 // Resolve all relative includes from this module directory.
 chdir(__DIR__);
@@ -49,23 +56,94 @@ if (!isset($types[$currentType])) {
     $currentType = 'brand';
 }
 
+/**
+ * Build the MasterSummaryTable for the lookups of the given type.
+ *
+ * @param array<int, array<string, mixed>> $entries Lookup rows
+ * @param string                           $type    Lookup type ('brand' | 'manufacturer')
+ * @return MasterSummaryTable
+ *
+ * @since 1.0.0
+ */
+function pa_lookups_summary(array $entries, string $type): MasterSummaryTable
+{
+    $rows = [];
+    $n = 0;
+    foreach ($entries as $e) {
+        $n++;
+        $rows[] = [
+            'id'   => (int) ($e['id'] ?? 0),
+            '#'    => $n,
+            'name' => (string) ($e['name'] ?? ''),
+        ];
+    }
+
+    return new MasterSummaryTable(
+        [
+            ['key' => '#', 'label' => '#'],
+            ['key' => 'name', 'label' => _('Name')],
+        ],
+        $rows,
+        ['edit' => true, 'delete' => true],
+        [
+            'record_id_field'      => 'id',
+            'row_id_field'         => 'id',
+            'tab_sel'              => $type,
+            'show_footer'          => false,
+            'empty_message'        => _('No entries defined yet.'),
+            'delete_confirm_message' => _('Delete this entry?'),
+        ]
+    );
+}
+
+$entries = $dao->listByType($currentType);
+
+$editRowId = 0;
+
 // Handle POST actions
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $action = $_POST['action'] ?? '';
+    $rowAction = pa_lookups_summary($entries, $currentType)->getPostedAction($_POST);
+    $action    = (string) ($_POST['action'] ?? '');
+
+    // The row-action form posts _tabs_sel = lookup type; use it so deletes and
+    // edits return to the same type.
+    $returnType = TabContext::fromPost($_POST, 'id')->getTabSel();
+    if (!isset($types[$returnType])) {
+        $returnType = $currentType;
+    }
+
+    if ($rowAction !== null) {
+        $rowId = (int) $rowAction['id'];
+
+        if ($rowAction['action'] === 'delete') {
+            if ($rowId > 0) {
+                $dao->delete($rowId);
+            }
+            header('Location: ?type=' . rawurlencode($returnType));
+            exit;
+        }
+
+        // Edit: fall through to render the form prefilled with this record.
+        $editRowId = $rowId;
+    }
 
     if ($action === 'add_entry') {
         $type = $_POST['entry_type'] ?? 'brand';
-        $name = trim((string)($_POST['name'] ?? ''));
+        $name = trim((string) ($_POST['name'] ?? ''));
+        $entryId = (int) ($_POST['entry_id'] ?? 0);
         if ($name !== '' && isset($types[$type])) {
-            $dao->add($type, $name);
+            if ($entryId > 0) {
+                $dao->update($entryId, $name);
+            } else {
+                $dao->add($type, $name);
+            }
         }
-        header('Location: ?type=' . rawurlencode($type));
+        header('Location: ?type=' . rawurlencode($returnType));
         exit;
     }
 
     if ($action === 'delete_entry') {
-        $entryId = (int)($_POST['entry_id'] ?? 0);
-        $returnType = $_POST['entry_type'] ?? 'brand';
+        $entryId = (int) ($_POST['entry_id'] ?? 0);
         if ($entryId > 0) {
             $dao->delete($entryId);
         }
@@ -74,7 +152,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-$entries = $dao->listByType($currentType);
+$editEntryId = $editRowId ?: (int) ($_GET['edit_id'] ?? 0);
+$editingEntry = null;
+foreach ($entries as $e) {
+    if ((int) ($e['id'] ?? 0) === $editEntryId) {
+        $editingEntry = $e;
+        break;
+    }
+}
 
 page(_('Brand / Manufacturer Management'), false, false, '', '');
 
@@ -90,41 +175,27 @@ foreach ($types as $key => $label) {
 echo '</div>';
 echo '<br>';
 
-echo '<table class="tablestyle2">';
-echo '<thead><tr>';
-echo '<th>#</th><th>' . _('Name') . '</th><th></th>';
-echo '</tr></thead><tbody>';
-
-if (empty($entries)) {
-    echo '<tr><td colspan="3"><em>' . _('No entries defined yet.') . '</em></td></tr>';
-} else {
-    foreach ($entries as $e) {
-        echo '<tr>';
-        echo '<td>' . (int)($e['id'] ?? 0) . '</td>';
-        echo '<td>' . htmlspecialchars((string)($e['name'] ?? '')) . '</td>';
-        echo '<td>';
-        echo '<form method="post" style="display:inline">';
-        echo '<input type="hidden" name="action" value="delete_entry" />';
-        echo '<input type="hidden" name="entry_id" value="' . (int)($e['id'] ?? 0) . '" />';
-        echo '<input type="hidden" name="entry_type" value="' . htmlspecialchars($currentType) . '" />';
-        echo '<button type="submit" style="color:red;background:none;border:none;cursor:pointer;text-decoration:underline" '
-            . 'onclick="return confirm(\'' . _('Delete this entry?') . '\')">' . _('Delete') . '</button>';
-        echo '</form>';
-        echo '</td>';
-        echo '</tr>';
-    }
-}
-echo '</tbody></table>';
+echo '<form method="post">';
+pa_lookups_summary($entries, $currentType)->render();
+echo '</form>';
 
 echo '<fieldset>';
-echo '<legend>' . _('Add') . ' ' . htmlspecialchars($types[$currentType]) . '</legend>';
+echo '<legend>' . ($editingEntry ? _('Edit') : _('Add')) . ' ' . htmlspecialchars($types[$currentType]) . '</legend>';
 echo '<form method="post">';
 echo '<input type="hidden" name="action" value="add_entry" />';
 echo '<input type="hidden" name="entry_type" value="' . htmlspecialchars($currentType) . '" />';
+if ($editingEntry) {
+    echo '<input type="hidden" name="entry_id" value="' . (int)$editingEntry['id'] . '" />';
+}
 echo '<div><label for="name">' . _('Name') . '</label>';
-echo '<input type="text" id="name" name="name" required maxlength="128" /></div>';
-echo '<div style="margin-top:8px"><button type="submit">' . _('Add') . ' '
-    . htmlspecialchars($types[$currentType]) . '</button></div>';
+echo '<input type="text" id="name" name="name" required maxlength="128" '
+    . 'value="' . htmlspecialchars((string)($editingEntry['name'] ?? '')) . '" /></div>';
+echo '<div style="margin-top:8px"><button type="submit">' . ($editingEntry ? _('Save') : _('Add')) . ' '
+    . htmlspecialchars($types[$currentType]) . '</button>';
+if ($editingEntry) {
+    echo ' <a href="?type=' . htmlspecialchars($currentType) . '" style="margin-left:8px">' . _('Cancel') . '</a>';
+}
+echo '</div>';
 echo '</form>';
 echo '</fieldset>';
 
