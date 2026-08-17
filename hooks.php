@@ -290,22 +290,26 @@ class hooks_FA_ProductAttributes extends hooks
 
     private function load_autoloader()
     {
-        // Ensure Composer dependencies are installed (runs once).
-        if (!class_exists(\ksfraser\FrontAccounting\Common\Utils\ComposerDependencies::class)) {
-            $composerDepsPath = dirname(__DIR__) . '/ksf_FA_Common/src/Utils/ComposerDependencies.php';
-            if (is_file($composerDepsPath)) {
-                require_once $composerDepsPath;
-            }
-        }
-        if (class_exists(\ksfraser\FrontAccounting\Common\Utils\ComposerDependencies::class)) {
-            \ksfraser\FrontAccounting\Common\Utils\ComposerDependencies::ensure(__DIR__);
+        // Load vendor autoloader (preferred path).
+        $autoloadPath = __DIR__ . '/vendor/autoload.php';
+        if (is_file($autoloadPath)) {
+            require_once $autoloadPath;
+            return;
         }
 
-        // Try vendor autoloader.
-        $autoloadPath = __DIR__ . '/vendor/autoload.php';
-        if (!is_file($autoloadPath)) {
-            $autoloadPath = __DIR__ . '/../vendor/autoload.php';
+        // Vendor not installed — run composer install directly (avoids
+        // loading ComposerDependencies from ksf_FA_Common which conflicts
+        // with the same FQCN registered by our own PSR-4 autoloader).
+        $composerPath = __DIR__ . '/composer.json';
+        if (!is_file($composerPath)) {
+            return;
         }
+
+        chdir(__DIR__);
+        $output = [];
+        $returnCode = 0;
+        exec('composer install --no-interaction --prefer-dist 2>&1', $output, $returnCode);
+
         if (is_file($autoloadPath)) {
             require_once $autoloadPath;
         }

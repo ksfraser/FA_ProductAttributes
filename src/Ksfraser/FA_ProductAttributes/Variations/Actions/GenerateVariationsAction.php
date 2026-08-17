@@ -83,10 +83,18 @@ class GenerateVariationsAction
                 }
 
                 // Create the variation product
-                $this->createVariationProduct($parentProduct, $variationStockId, $variationDescription);
+                $this->createVariationProduct($parentProduct, $variationStockId, $variationDescription, $combination);
 
                 // Clone parent shipping attributes to the new variation (if available)
                 $this->cloneShippingIfAvailable($stockId, $variationStockId);
+
+                // Record the attribute combination for this variation so the
+                // Variations tab and variations picker can list it (issue #34).
+                $this->recordVariationAssignments(
+                    $parentProduct['stock_id'],
+                    $variationStockId,
+                    $this->sortCombinationByRoyalOrder($combination)
+                );
 
                 $createdCount++;
             } catch (\Exception $e) {
@@ -209,7 +217,7 @@ class GenerateVariationsAction
         $this->shippingDao->upsert($childId, $data);
     }
 
-    private function createVariationProduct(array $parentProduct, string $variationStockId, string $variationDescription): void
+    private function createVariationProduct(array $parentProduct, string $variationStockId, string $variationDescription, array $combination): void
     {
         $p = $this->dbAdapter->getTablePrefix();
 
@@ -241,6 +249,28 @@ class GenerateVariationsAction
             $this->dbAdapter->execute(
                 "UPDATE `{$p}stock_master` SET parent_stock_id = :parent_stock_id WHERE stock_id = :stock_id",
                 ['parent_stock_id' => $parentProduct['stock_id'], 'stock_id' => $variationStockId]
+            );
+        }
+    }
+
+    /**
+     * Insert one product_attribute_assignments row per selected value, linked to
+     * the parent product via parent_stock_id (GitHub issue #34).
+     *
+     * @param string $parentStockId
+     * @param string $variationStockId
+     * @param array  $combination
+     */
+    private function recordVariationAssignments(string $parentStockId, string $variationStockId, array $combination): void
+    {
+        $sortOrder = 1;
+        foreach ($combination as $item) {
+            $this->dao->addAssignment(
+                $variationStockId,
+                (int)$item['category_id'],
+                (int)$item['value_id'],
+                $sortOrder++,
+                $parentStockId
             );
         }
     }

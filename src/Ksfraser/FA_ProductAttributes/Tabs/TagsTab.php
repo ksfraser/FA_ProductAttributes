@@ -82,7 +82,7 @@ class TagsTab extends AbstractTab
         }
 
         if (isset($_POST['pa_category_add'])) {
-            $categoryId = (int)($_POST['category_id'] ?? 0);
+            $categoryId = (int)($_POST['pa_category_id'] ?? 0);
             if ($categoryId > 0) {
                 $this->attributesDao->addCategoryAssignment($stockId, $categoryId);
                 $this->autoSyncCategoryTag($stockId, $categoryId, true);
@@ -112,18 +112,16 @@ class TagsTab extends AbstractTab
 
     /**
      * Handle tag checkbox saves from the main form submission.
+     *
+     * Category assignment is only ever performed by the dedicated "Add Category"
+     * button (pa_category_add). It is intentionally NOT repeated here from the
+     * pa_category_id DDL, otherwise a removed category would silently be
+     * re-added on the next Save (GitHub issue #22).
      */
     private function handleTagSave(string $stockId, array $postData): void
     {
         if ($stockId === '') {
             return;
-        }
-
-        // Handle category assignment if DDL was submitted
-        if (isset($postData['category_id']) && (int)$postData['category_id'] > 0) {
-            $categoryId = (int)$postData['category_id'];
-            $this->attributesDao->addCategoryAssignment($stockId, $categoryId);
-            $this->autoSyncCategoryTag($stockId, $categoryId, true);
         }
 
         // Sync tag checkboxes
@@ -132,6 +130,13 @@ class TagsTab extends AbstractTab
             $tagIds = array_map('intval', $postData['product_tags']);
         }
         $this->tagsDao->syncAssignments($stockId, $tagIds);
+
+        // Re-apply tags that are auto-created from assigned categories so a
+        // Save cannot silently remove a category-derived tag.
+        $cats = $this->attributesDao->listCategoryAssignments($stockId);
+        foreach ($cats as $cat) {
+            $this->autoSyncCategoryTag($stockId, (int)$cat['id'], true);
+        }
     }
 
     /**

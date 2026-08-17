@@ -84,7 +84,7 @@ class TagsCategoriesTab
                 echo '<td><code>' . $code . '</code></td>';
                 echo '<td>' . $label . '</td>';
                 echo '<td><button type="submit" name="pa_category_remove" value="' . $catId . '" '
-                    . 'style="color:red" '
+                    . 'style="color:red" formnovalidate '
                     . 'onclick="return confirm(\'' . _('Remove this category assignment?') . '\')">'
                     . _('Remove') . '</button></td>';
                 echo '</tr>';
@@ -97,7 +97,7 @@ class TagsCategoriesTab
         // DDL + Add button
         echo '<table class="tablestyle_noborder">';
         echo '<tr><td>' . _('Category') . '</td><td>';
-        echo '<select name="category_id">';
+        echo '<select name="pa_category_id">';
         echo '<option value="0">' . _('-- Select Category --') . '</option>';
         foreach ($allCategories as $cat) {
             $catId  = (int)($cat['id'] ?? 0);
@@ -108,7 +108,7 @@ class TagsCategoriesTab
             echo '<option value="' . $catId . '"' . $sel . '>' . $code . ' - ' . $label . $mark . '</option>';
         }
         echo '</select></td>';
-        echo '<td><input type="submit" name="pa_category_add" value="' . _('Add Category') . '"></td>';
+        echo '<td><input type="submit" name="pa_category_add" value="' . _('Add Category') . '" formnovalidate></td>';
         echo '</tr></table>';
 
         echo '</fieldset>';

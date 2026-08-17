@@ -54,7 +54,7 @@ class UrlsTab extends AbstractTab
                 echo '<td>' . $desc . '</td>';
                 echo '<td>' . $date . '</td>';
                 echo '<td><button type="submit" name="pa_url_delete" value="' . $id . '" '
-                    . 'style="color:red" '
+                    . 'style="color:red" formnovalidate '
                     . 'onclick="return confirm(\'' . _('Delete this URL?') . '\')">'
                     . _('Delete') . '</button></td>';
                 echo '</tr>';
@@ -68,7 +68,7 @@ class UrlsTab extends AbstractTab
         echo '<input type="hidden" name="stock_id" value="' . htmlspecialchars($stockId) . '">';
         echo '<table class="tablestyle_noborder">';
         echo '<tr><td>' . _('URL') . ' <span style="color:red">*</span></td>';
-        echo '<td><input type="url" name="url" required maxlength="2048" style="width:100%" '
+        echo '<td><input type="url" name="url" maxlength="2048" style="width:100%" '
             . 'placeholder="https://youtube.com/watch?v=... or https://..."></td></tr>';
         echo '<tr><td>' . _('Description') . '</td>';
         echo '<td><input type="text" name="description" maxlength="255" style="width:100%" '
@@ -94,12 +94,16 @@ class UrlsTab extends AbstractTab
 
         if (isset($_POST['pa_url_add'])) {
             $url = trim((string)($_POST['url'] ?? ''));
-            if ($url !== '') {
-                $description = trim((string)($_POST['description'] ?? ''));
-                $this->dao->add($stockId, $url, $description);
-                if (function_exists('display_notification')) {
-                    display_notification(_('URL added.'));
+            if ($url === '') {
+                if (function_exists('display_error')) {
+                    display_error(_('A URL is required.'));
                 }
+                return;
+            }
+            $description = trim((string)($_POST['description'] ?? ''));
+            $this->dao->add($stockId, $url, $description);
+            if (function_exists('display_notification')) {
+                display_notification(_('URL added.'));
             }
             return;
         }

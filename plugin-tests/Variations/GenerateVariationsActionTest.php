@@ -195,4 +195,59 @@ class GenerateVariationsActionTest extends TestCase
         // Should be sorted by royal order (size first, then color)
         $this->assertEquals('TEST123-large-red', $result);
     }
+
+    /**
+     * Regression (GitHub issue #34): each generated variation must record its
+     * attribute combination in product_attribute_assignments linked back to the
+     * parent via parent_stock_id, otherwise the Variations tab and variations
+     * picker cannot list it.
+     */
+    public function testHandleRecordsParentAssignmentsForGeneratedVariations(): void
+    {
+        $dao = $this->createMock(ProductAttributesDao::class);
+        $dao->method('listCategoryAssignments')
+            ->with('TEST123')
+            ->willReturn([
+                ['id' => 1, 'code' => 'color', 'label' => 'Color'],
+            ]);
+        $dao->method('listValues')
+            ->willReturn([
+                ['id' => 1, 'value' => 'Red', 'slug' => 'red'],
+            ]);
+        $dao->method('listCategories')
+            ->willReturn([
+                ['id' => 1, 'code' => 'color', 'sort_order' => 1],
+            ]);
+
+        $dao->expects($this->once())
+            ->method('addAssignment')
+            ->with(
+                'TEST123-red',
+                1,
+                1,
+                1,
+                'TEST123'
+            );
+
+        $dbAdapter = $this->createMock(DbAdapterInterface::class);
+        $dbAdapter->method('getTablePrefix')->willReturn('fa_');
+        $dbAdapter->method('query')->willReturnCallback(function ($sql, $params = []) {
+            if (strpos($sql, 'SELECT * FROM') !== false) {
+                return [[
+                    'stock_id' => 'TEST123',
+                    'description' => 'Test Product',
+                    'category_id' => 1,
+                ]];
+            }
+            // SHOW COLUMNS (truthy) and COUNT (variation does not exist yet)
+            return [['count' => 0]];
+        });
+        $dbAdapter->expects($this->atLeastOnce())
+            ->method('execute');
+
+        $action = new GenerateVariationsAction($dao, $dbAdapter);
+        $result = $action->handle(['stock_id' => 'TEST123']);
+
+        $this->assertStringContainsString('Created 1 variations', $result);
+    }
 }

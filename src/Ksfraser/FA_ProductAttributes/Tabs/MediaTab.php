@@ -75,7 +75,7 @@ class MediaTab extends AbstractTab
                 echo '<td>' . $alt . '</td>';
                 echo '<td>' . $sort . '</td>';
                 echo '<td><button type="submit" name="pa_media_delete" value="' . $id . '" '
-                    . 'style="color:red" '
+                    . 'style="color:red" formnovalidate '
                     . 'onclick="return confirm(\'' . _('Delete this media item and its file?') . '\')">'
                     . _('Delete') . '</button></td>';
                 echo '</tr>';
@@ -173,7 +173,7 @@ class MediaTab extends AbstractTab
         $altText = trim((string)($_POST['alt_text'] ?? ''));
         $sortOrder = (int)($_POST['sort_order'] ?? 0);
 
-        $this->dao->addMedia($stockId, 'images/' . $filename, 'image', $altText, $sortOrder, false, '');
+        $this->dao->addMedia($stockId, 'images/' . $filename, $altText, $sortOrder, 'image', false, '');
         display_notification(_('Image uploaded successfully.'));
     }
 

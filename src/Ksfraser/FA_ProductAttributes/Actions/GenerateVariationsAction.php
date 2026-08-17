@@ -3,6 +3,7 @@
 namespace Ksfraser\FA_ProductAttributes\Actions;
 
 use Ksfraser\FA_ProductAttributes\Dao\ProductAttributesDao;
+use Ksfraser\FA_ProductAttributes\Dao\ShippingAttributesDao;
 use Ksfraser\ModulesDAO\Db\DbAdapterInterface;
 use Ksfraser\FA_ProductAttributes\UI\RoyalOrderHelper;
 
@@ -12,11 +13,17 @@ class GenerateVariationsAction
     private $dao;
     /** @var DbAdapterInterface */
     private $dbAdapter;
+    /** @var ShippingAttributesDao|null */
+    private $shippingDao;
 
-    public function __construct(ProductAttributesDao $dao, DbAdapterInterface $dbAdapter)
-    {
-        $this->dao = $dao;
-        $this->dbAdapter = $dbAdapter;
+    public function __construct(
+        ProductAttributesDao $dao,
+        DbAdapterInterface $dbAdapter,
+        ShippingAttributesDao $shippingDao = null
+    ) {
+        $this->dao        = $dao;
+        $this->dbAdapter  = $dbAdapter;
+        $this->shippingDao = $shippingDao;
     }
 
     public function handle(array $postData): string
@@ -75,7 +82,10 @@ class GenerateVariationsAction
                 }
 
                 // Create the variation product
-                $this->createVariationProduct($parentProduct, $variationStockId, $variationDescription);
+                $this->createVariationProduct($parentProduct, $variationStockId, $variationDescription, $combination);
+
+                // Clone parent shipping attributes to the new variation (if available)
+                $this->cloneShippingIfAvailable($stockId, $variationStockId);
 
                 $createdCount++;
             } catch (\Exception $e) {
@@ -180,7 +190,25 @@ class GenerateVariationsAction
         return ($result[0]['count'] ?? 0) > 0;
     }
 
-    private function createVariationProduct(array $parentProduct, string $variationStockId, string $variationDescription): void
+    /**
+     * Copy the parent's shipping attributes to the child, if a ShippingAttributesDao
+     * was provided and the parent has a shipping record.
+     */
+    private function cloneShippingIfAvailable(string $parentId, string $childId): void
+    {
+        if ($this->shippingDao === null) {
+            return;
+        }
+        $parentShipping = $this->shippingDao->get($parentId);
+        if ($parentShipping === null) {
+            return;
+        }
+        $data = $parentShipping;
+        unset($data['stock_id']);
+        $this->shippingDao->upsert($childId, $data);
+    }
+
+    private function createVariationProduct(array $parentProduct, string $variationStockId, string $variationDescription, array $combination): void
     {
         $p = $this->dbAdapter->getTablePrefix();
 
@@ -212,6 +240,36 @@ class GenerateVariationsAction
             $this->dbAdapter->execute(
                 "UPDATE `{$p}stock_master` SET parent_stock_id = :parent_stock_id WHERE stock_id = :stock_id",
                 ['parent_stock_id' => $parentProduct['stock_id'], 'stock_id' => $variationStockId]
+            );
+        }
+
+        // Record the attribute combination for this variation so the Variations
+        // tab and variations picker can list it (GitHub issue #34).
+        $this->recordVariationAssignments(
+            $parentProduct['stock_id'],
+            $variationStockId,
+            $this->sortCombinationByRoyalOrder($combination)
+        );
+    }
+
+    /**
+     * Insert one product_attribute_assignments row per selected value, linked to
+     * the parent product via parent_stock_id.
+     *
+     * @param string $parentStockId
+     * @param string $variationStockId
+     * @param array  $combination
+     */
+    private function recordVariationAssignments(string $parentStockId, string $variationStockId, array $combination): void
+    {
+        $sortOrder = 1;
+        foreach ($combination as $item) {
+            $this->dao->addAssignment(
+                $variationStockId,
+                (int)$item['category_id'],
+                (int)$item['value_id'],
+                $sortOrder++,
+                $parentStockId
             );
         }
     }

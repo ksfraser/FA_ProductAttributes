@@ -23,6 +23,9 @@ class TagsTabTest extends TestCase
         $this->attributesDao = $this->createMock(ProductAttributesDao::class);
         $this->tagsDao       = $this->createMock(ProductTagsDao::class);
         $this->tab           = new TagsTab($this->attributesDao, $this->tagsDao);
+
+        $_SERVER['REQUEST_METHOD'] = 'GET';
+        $_POST = [];
     }
 
     public function testGetName(): void
@@ -56,11 +59,14 @@ class TagsTabTest extends TestCase
 
         $this->assertStringContainsString('save_tags_categories', $output);
         $this->assertStringContainsString('SKU001', $output);
+        $this->assertStringContainsString('pa_category_id', $output);
+        $this->assertStringNotContainsString('name="category_id"', $output);
     }
 
     public function testHandleSaveDelegatesToTagSave(): void
     {
         $postData = ['product_tags' => ['1', '2', '3']];
+        $this->attributesDao->method('listCategoryAssignments')->willReturn([]);
         $this->tagsDao->expects($this->once())
             ->method('syncAssignments')
             ->with('SKU001', [1, 2, 3]);
@@ -68,22 +74,21 @@ class TagsTabTest extends TestCase
         $this->tab->handleSave('SKU001', $postData);
     }
 
-    public function testHandleSaveWithCategoryIdCreatesAssignmentAndSyncsTag(): void
+    /**
+     * Regression (GitHub issues #22 / #23): a plain Save must NOT interpret the
+     * pa_category_id DDL as a category assignment. Adding a category is only
+     * performed by the dedicated pa_category_add button, otherwise a removed
+     * category would silently be re-added on the next Save.
+     */
+    public function testHandleSaveDoesNotAutoAssignFromDdl(): void
     {
         $postData = [
-            'category_id' => '5',
+            'pa_category_id' => '5',
             'product_tags' => ['1'],
         ];
-        $this->attributesDao->expects($this->once())
-            ->method('addCategoryAssignment')
-            ->with('SKU001', 5);
-        $this->attributesDao->method('listCategories')->willReturn([
-            ['id' => 5, 'label' => 'Color'],
-        ]);
-        $this->tagsDao->method('listTags')->willReturn([]);
-        $this->tagsDao->expects($this->once())
-            ->method('upsertTag')
-            ->with('Color', 'color');
+        $this->attributesDao->expects($this->never())
+            ->method('addCategoryAssignment');
+        $this->attributesDao->method('listCategoryAssignments')->willReturn([]);
         $this->tagsDao->expects($this->once())
             ->method('syncAssignments')
             ->with('SKU001', [1]);
@@ -150,6 +155,9 @@ class TagsTabTest extends TestCase
 
     public function testAutoSyncCategoryTagCreatesTagWhenNotFound(): void
     {
+        $this->attributesDao->method('listCategoryAssignments')->willReturn([
+            ['id' => 1, 'label' => 'Size'],
+        ]);
         $this->attributesDao->method('listCategories')->willReturn([
             ['id' => 1, 'label' => 'Size'],
         ]);
@@ -164,11 +172,14 @@ class TagsTabTest extends TestCase
             ->method('addAssignment')
             ->with('SKU001', 99);
 
-        $this->tab->handleSave('SKU001', ['category_id' => '1', 'product_tags' => []]);
+        $this->tab->handleSave('SKU001', ['product_tags' => []]);
     }
 
     public function testAutoSyncCategoryTagUsesExistingTag(): void
     {
+        $this->attributesDao->method('listCategoryAssignments')->willReturn([
+            ['id' => 1, 'label' => 'Color'],
+        ]);
         $this->attributesDao->method('listCategories')->willReturn([
             ['id' => 1, 'label' => 'Color'],
         ]);
@@ -181,11 +192,14 @@ class TagsTabTest extends TestCase
             ->method('addAssignment')
             ->with('SKU001', 5);
 
-        $this->tab->handleSave('SKU001', ['category_id' => '1', 'product_tags' => []]);
+        $this->tab->handleSave('SKU001', ['product_tags' => []]);
     }
 
     public function testAutoSyncCategoryTagHandlesSpecialCharsInName(): void
     {
+        $this->attributesDao->method('listCategoryAssignments')->willReturn([
+            ['id' => 1, 'label' => 'New & Used / Items'],
+        ]);
         $this->attributesDao->method('listCategories')->willReturn([
             ['id' => 1, 'label' => 'New & Used / Items'],
         ]);
@@ -200,11 +214,14 @@ class TagsTabTest extends TestCase
             ->method('addAssignment')
             ->with('SKU001', 10);
 
-        $this->tab->handleSave('SKU001', ['category_id' => '1', 'product_tags' => []]);
+        $this->tab->handleSave('SKU001', ['product_tags' => []]);
     }
 
     public function testAutoSyncCategoryTagUsesCodeWhenLabelMissing(): void
     {
+        $this->attributesDao->method('listCategoryAssignments')->willReturn([
+            ['id' => 1, 'code' => 'COLOR'],
+        ]);
         $this->attributesDao->method('listCategories')->willReturn([
             ['id' => 1, 'code' => 'COLOR'],
         ]);
@@ -219,11 +236,12 @@ class TagsTabTest extends TestCase
             ->method('addAssignment')
             ->with('SKU001', 1);
 
-        $this->tab->handleSave('SKU001', ['category_id' => '1', 'product_tags' => []]);
+        $this->tab->handleSave('SKU001', ['product_tags' => []]);
     }
 
     public function testHandleSaveWithEmptyProductTagsArray(): void
     {
+        $this->attributesDao->method('listCategoryAssignments')->willReturn([]);
         $this->tagsDao->expects($this->once())
             ->method('syncAssignments')
             ->with('SKU001', []);
@@ -234,6 +252,7 @@ class TagsTabTest extends TestCase
     public function testHandleSaveMultipleTagsSelected(): void
     {
         $postData = ['product_tags' => ['1', '5', '10']];
+        $this->attributesDao->method('listCategoryAssignments')->willReturn([]);
         $this->tagsDao->expects($this->once())
             ->method('syncAssignments')
             ->with('SKU001', [1, 5, 10]);
@@ -248,7 +267,7 @@ class TagsTabTest extends TestCase
     public function testPostAddCategoryAssignsWithoutRedirect(): void
     {
         $_SERVER['REQUEST_METHOD'] = 'POST';
-        $_POST = ['pa_category_add' => 'Add Category', 'category_id' => '5'];
+        $_POST = ['pa_category_add' => 'Add Category', 'pa_category_id' => '5'];
 
         $this->attributesDao->expects($this->once())
             ->method('addCategoryAssignment')
