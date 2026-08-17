@@ -4,23 +4,27 @@ namespace Ksfraser\FA_ProductAttributes\Tabs;
 
 use FrontAccounting\ProductAttributes\Plugin\AbstractTab;
 use FrontAccounting\ProductAttributes\Variations\Dao\VariationsDao;
-use FrontAccounting\ProductAttributes\Variations\Service\FrontAccountingVariationService;
 use Ksfraser\FA_ProductAttributes\Actions\CreateChildAction;
 use Ksfraser\FA_ProductAttributes\Actions\GenerateVariationsAction;
-use Ksfraser\FA_ProductAttributes\Actions\UpdateProductTypesAction;
+use Ksfraser\FA_ProductAttributes\Dao\ProductAttributesDao;
+use Ksfraser\ModulesDAO\Db\DbAdapterInterface;
 
 class VariationsTab extends AbstractTab
 {
     /** @var VariationsDao */
     private $dao;
 
-    /** @var FrontAccountingVariationService|null */
-    private $variationService;
+    /** @var ProductAttributesDao */
+    private $coreDao;
 
-    public function __construct(VariationsDao $dao, ?FrontAccountingVariationService $variationService = null)
+    /** @var DbAdapterInterface */
+    private $db;
+
+    public function __construct(VariationsDao $dao, ProductAttributesDao $coreDao, DbAdapterInterface $db)
     {
-        $this->dao = $dao;
-        $this->variationService = $variationService;
+        $this->dao     = $dao;
+        $this->coreDao = $coreDao;
+        $this->db      = $db;
     }
 
     public function getName(): string
@@ -108,19 +112,14 @@ class VariationsTab extends AbstractTab
         }
 
         if (isset($_POST['generate_variations'])) {
-            $productAttributesDao = $this->getCoreDao();
-            if ($productAttributesDao) {
-                $tablePrefix = defined('TB_PREF') ? (string)TB_PREF : '0_';
-                $db = new \Ksfraser\ModulesDAO\Db\FrontAccountingDbAdapter($tablePrefix);
-                $action = new GenerateVariationsAction($productAttributesDao, $db);
-                $message = $action->handle($_POST);
-                display_notification($message);
-            }
+            $action = new GenerateVariationsAction($this->coreDao, $this->db);
+            $message = $action->handle($_POST);
+            display_notification($message);
             return;
         }
 
         if (isset($_POST['create_child'])) {
-            $action = new CreateChildAction($this->dao);
+            $action = new CreateChildAction($this->dao, $this->coreDao, $this->db);
             try {
                 $message = $action->handle($_POST);
                 display_notification($message);
@@ -128,17 +127,6 @@ class VariationsTab extends AbstractTab
                 display_error($e->getMessage());
             }
             return;
-        }
-    }
-
-    private function getCoreDao(): ?\Ksfraser\FA_ProductAttributes\Dao\ProductAttributesDao
-    {
-        $tablePrefix = defined('TB_PREF') ? (string)TB_PREF : '0_';
-        try {
-            $db = new \Ksfraser\ModulesDAO\Db\FrontAccountingDbAdapter($tablePrefix);
-            return new \Ksfraser\FA_ProductAttributes\Dao\ProductAttributesDao($db);
-        } catch (\Exception $e) {
-            return null;
         }
     }
 }

@@ -109,7 +109,7 @@ class ActionHandler
                     return (new GenerateVariationsAction($this->productAttributesDao, $this->dbAdapter, $this->shippingAttributesDao))->handle($postData);
 
                 case 'create_child':
-                    return (new CreateChildAction($this->productAttributesDao, $this->dbAdapter))->handle($postData);
+                    return (new CreateChildAction($this->variationsDao, $this->productAttributesDao, $this->dbAdapter))->handle($postData);
 
                 case 'update_product_types':
                     return (new UpdateProductTypesAction($this->productAttributesDao, $this->dbAdapter))->handle($postData);

@@ -10,61 +10,116 @@ use Ksfraser\ModulesDAO\Db\DbAdapterInterface;
 
 class CreateChildActionTest extends TestCase
 {
+    /** @var VariationsDao|\PHPUnit\Framework\MockObject\MockObject */
+    private $variationsDao;
+
     /** @var ProductAttributesDao|\PHPUnit\Framework\MockObject\MockObject */
-    private $dao;
+    private $coreDao;
+
+    /** @var DbAdapterInterface|\PHPUnit\Framework\MockObject\MockObject */
+    private $db;
 
     /** @var CreateChildAction */
     private $action;
 
     protected function setUp(): void
     {
-        $this->dao = $this->getMockBuilder(VariationsDao::class)->disableOriginalConstructor()->getMock();
-        $this->action = new CreateChildAction($this->dao);
+        $this->variationsDao = $this->getMockBuilder(VariationsDao::class)->disableOriginalConstructor()->getMock();
+        $this->coreDao       = $this->getMockBuilder(ProductAttributesDao::class)->disableOriginalConstructor()->getMock();
+        $this->db            = $this->createMock(DbAdapterInterface::class);
+        $this->action        = new CreateChildAction($this->variationsDao, $this->coreDao, $this->db);
     }
 
-    public function testHandleWithValidStockId()
+    public function testHandleCreatesAllCombinations(): void
     {
-        $stockId = 'TEST001';
+        $stockId = 'PARENT001';
         $postData = ['stock_id' => $stockId];
 
-        // Mock parent product data
         $parentData = [
             'stock_id' => $stockId,
             'description' => 'Test Product',
-            'long_description' => 'Test Description',
-            'mb_flag' => 'B'
+            'mb_flag' => 'B',
         ];
 
-        $this->dao->expects($this->once())
+        $this->variationsDao->expects($this->once())
             ->method('getParentProductData')
             ->with($stockId)
             ->willReturn($parentData);
 
-        $this->dao->expects($this->once())
-            ->method('createChildProduct')
-            ->with($this->callback(function($childStockId) use ($stockId) {
-                return strpos($childStockId, $stockId . '-VAR-') === 0;
-            }), $parentData);
+        $this->variationsDao->expects($this->once())
+            ->method('listCategoryAssignments')
+            ->with($stockId)
+            ->willReturn([
+                ['id' => 1, 'label' => 'Color'],
+                ['id' => 2, 'label' => 'Size'],
+            ]);
 
-        $this->dao->expects($this->once())
-            ->method('copyParentCategoryAssignments')
-            ->with($this->callback(function($childStockId) use ($stockId) {
-                return strpos($childStockId, $stockId . '-VAR-') === 0;
-            }), $stockId);
+        $this->variationsDao->method('listValues')
+            ->willReturnMap([
+                [1, [['id' => 10, 'slug' => 'red', 'value' => 'Red'], ['id' => 11, 'slug' => 'blue', 'value' => 'Blue']]],
+                [2, [['id' => 20, 'slug' => 'sm', 'value' => 'Small'], ['id' => 21, 'slug' => 'lg', 'value' => 'Large']]],
+            ]);
 
-        $this->dao->expects($this->once())
-            ->method('setParentRelationship')
-            ->with($this->callback(function($childStockId) use ($stockId) {
-                return strpos($childStockId, $stockId . '-VAR-') === 0;
-            }), $stockId);
+        $this->db->method('getTablePrefix')->willReturn('0_');
+        $this->db->method('query')->willReturn([]);
+
+        $this->variationsDao->expects($this->exactly(4))
+            ->method('createChildProduct');
+
+        $this->variationsDao->expects($this->exactly(4))
+            ->method('copyParentCategoryAssignments');
+
+        $this->variationsDao->expects($this->exactly(4))
+            ->method('setParentRelationship');
+
+        $this->coreDao->expects($this->exactly(8))
+            ->method('addAssignment');
 
         $result = $this->action->handle($postData);
 
-        $this->assertStringContainsString('Child product', $result);
-        $this->assertStringContainsString('created successfully', $result);
+        $this->assertStringContainsString('4', $result);
     }
 
-    public function testHandleWithEmptyStockId()
+    public function testHandleSkipsExistingCombinations(): void
+    {
+        $stockId = 'PARENT001';
+        $postData = ['stock_id' => $stockId];
+
+        $parentData = [
+            'stock_id' => $stockId,
+            'description' => 'Test Product',
+            'mb_flag' => 'B',
+        ];
+
+        $this->variationsDao->expects($this->once())
+            ->method('getParentProductData')
+            ->with($stockId)
+            ->willReturn($parentData);
+
+        $this->variationsDao->expects($this->once())
+            ->method('listCategoryAssignments')
+            ->with($stockId)
+            ->willReturn([
+                ['id' => 1, 'label' => 'Color'],
+            ]);
+
+        $this->variationsDao->method('listValues')
+            ->willReturnMap([
+                [1, [['id' => 10, 'slug' => 'red', 'value' => 'Red'], ['id' => 11, 'slug' => 'blue', 'value' => 'Blue']]],
+            ]);
+
+        $this->db->method('getTablePrefix')->willReturn('0_');
+        $this->db->method('query')->willReturn(['existing']);
+
+        $this->variationsDao->expects($this->never())
+            ->method('createChildProduct');
+
+        $result = $this->action->handle($postData);
+
+        $this->assertStringContainsString('0', $result);
+    }
+
+    public function testHandleWithEmptyStockId(): void
     {
         $postData = ['stock_id' => ''];
 
@@ -74,7 +129,7 @@ class CreateChildActionTest extends TestCase
         $this->action->handle($postData);
     }
 
-    public function testHandleWithMissingStockId()
+    public function testHandleWithMissingStockId(): void
     {
         $postData = [];
 
@@ -84,12 +139,12 @@ class CreateChildActionTest extends TestCase
         $this->action->handle($postData);
     }
 
-    public function testHandleWithNonexistentParent()
+    public function testHandleWithNonexistentParent(): void
     {
         $stockId = 'NONEXISTENT';
         $postData = ['stock_id' => $stockId];
 
-        $this->dao->expects($this->once())
+        $this->variationsDao->expects($this->once())
             ->method('getParentProductData')
             ->with($stockId)
             ->willReturn(null);
@@ -98,5 +153,31 @@ class CreateChildActionTest extends TestCase
         $this->expectExceptionMessage("Parent product '$stockId' not found");
 
         $this->action->handle($postData);
+    }
+
+    public function testHandleWithNoCategoriesAssigned(): void
+    {
+        $stockId = 'PARENT001';
+        $postData = ['stock_id' => $stockId];
+
+        $parentData = [
+            'stock_id' => $stockId,
+            'description' => 'Test Product',
+            'mb_flag' => 'B',
+        ];
+
+        $this->variationsDao->expects($this->once())
+            ->method('getParentProductData')
+            ->with($stockId)
+            ->willReturn($parentData);
+
+        $this->variationsDao->expects($this->once())
+            ->method('listCategoryAssignments')
+            ->with($stockId)
+            ->willReturn([]);
+
+        $result = $this->action->handle($postData);
+
+        $this->assertStringContainsString('No categories assigned', $result);
     }
 }

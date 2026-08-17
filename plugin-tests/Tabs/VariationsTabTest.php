@@ -3,11 +3,9 @@
 namespace Ksfraser\FA_ProductAttributes\Test\Tabs;
 
 use FrontAccounting\ProductAttributes\Variations\Dao\VariationsDao;
-use FrontAccounting\ProductAttributes\Variations\Service\FrontAccountingVariationService;
-use Ksfraser\FA_ProductAttributes\Actions\CreateChildAction;
-use Ksfraser\FA_ProductAttributes\Actions\GenerateVariationsAction;
-use Ksfraser\FA_ProductAttributes\Actions\UpdateProductTypesAction;
+use Ksfraser\FA_ProductAttributes\Dao\ProductAttributesDao;
 use Ksfraser\FA_ProductAttributes\Tabs\VariationsTab;
+use Ksfraser\ModulesDAO\Db\DbAdapterInterface;
 use PHPUnit\Framework\TestCase;
 
 class VariationsTabTest extends TestCase
@@ -15,13 +13,21 @@ class VariationsTabTest extends TestCase
     /** @var VariationsDao|\PHPUnit\Framework\MockObject\MockObject */
     private $dao;
 
+    /** @var ProductAttributesDao|\PHPUnit\Framework\MockObject\MockObject */
+    private $coreDao;
+
+    /** @var DbAdapterInterface|\PHPUnit\Framework\MockObject\MockObject */
+    private $db;
+
     /** @var VariationsTab */
     private $tab;
 
     protected function setUp(): void
     {
-        $this->dao = $this->createMock(VariationsDao::class);
-        $this->tab = new VariationsTab($this->dao);
+        $this->dao     = $this->createMock(VariationsDao::class);
+        $this->coreDao = $this->createMock(ProductAttributesDao::class);
+        $this->db      = $this->createMock(DbAdapterInterface::class);
+        $this->tab     = new VariationsTab($this->dao, $this->coreDao, $this->db);
     }
 
     public function testGetName(): void

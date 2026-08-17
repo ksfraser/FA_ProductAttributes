@@ -339,7 +339,7 @@ class hooks_FA_ProductAttributes extends hooks
         $registry->register(new MediaTab($services['media_dao']));
         $registry->register(new UrlsTab($services['media_attachments_dao']));
         $registry->register(new WarrantyTab($services['warranty_dao']));
-        $registry->register(new VariationsTab($services['variations_dao']));
+        $registry->register(new VariationsTab($services['variations_dao'], $services['dao'], $services['db']));
         $registry->register(new TagsTab($services['dao'], $services['tags_dao']));
 
         $GLOBALS['fa_product_attributes_tab_registry'] = $registry;
@@ -404,6 +404,7 @@ class hooks_FA_ProductAttributes extends hooks
         $handler = new ProductAttributesHandler($service);
 
         $GLOBALS['fa_product_attributes_services_cache'] = array(
+            'db' => $db,
             'service' => $service,
             'handler' => $handler,
             'dao' => $dao,
