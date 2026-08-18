@@ -242,7 +242,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $sortOrder = (int) ($_POST['sort_order'] ?? 0);
 
         if ($sId !== '' && $catId > 0 && $valueId > 0) {
-            $dao->addAssignment($sId, $catId, $valueId, $sortOrder);
+            $existing = $dao->listAssignments($sId);
+            $duplicate = false;
+            foreach ($existing as $a) {
+                if ((int)$a['category_id'] === $catId && (int)$a['value_id'] === $valueId) {
+                    $duplicate = true;
+                    break;
+                }
+            }
+            if (!$duplicate) {
+                $dao->addAssignment($sId, $catId, $valueId, $sortOrder);
+            }
         }
 
         header('Location: ' . pa_redirect_for('assignments', $catId, $sId));
@@ -360,7 +370,7 @@ if ($tab === 'categories'):
       <option value=""><?php echo _('-- Select Stock Item --'); ?></option>
       <?php foreach ($dao->listStockItems() as $s): ?>
         <option value="<?= htmlspecialchars((string)$s['stock_id'], ENT_QUOTES, 'UTF-8') ?>" <?= $stockId === (string)$s['stock_id'] ? 'selected' : '' ?>>
-          <?= htmlspecialchars((string)$s['stock_id'], ENT_QUOTES, 'UTF-8') ?> &mdash; <?= htmlspecialchars((string)($s['description'] ?? ''), ENT_QUOTES, 'UTF-8') ?>
+          <?= htmlspecialchars((string)$s['stock_id'], ENT_QUOTES, 'UTF-8') ?> - <?= htmlspecialchars((string)($s['description'] ?? ''), ENT_QUOTES, 'UTF-8') ?>
         </option>
       <?php endforeach; ?>
     </select>

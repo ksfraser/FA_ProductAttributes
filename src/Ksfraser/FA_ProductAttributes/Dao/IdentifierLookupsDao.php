@@ -64,15 +64,30 @@ class IdentifierLookupsDao
     }
 
     /**
-     * Update an existing lookup entry's name.
+     * Update an existing lookup entry's name and cascade to product_identifiers.
      */
     public function update(int $id, string $name): void
     {
         $p = $this->db->getTablePrefix();
+        $newName = trim($name);
+
+        // Fetch old name to cascade the change
+        $old = $this->get($id);
+        $oldName = $old ? (string)$old['name'] : '';
+        $type    = $old ? (string)$old['type'] : '';
+
         $this->db->execute(
             'UPDATE `' . $p . 'product_identifier_lookups` SET name = :name WHERE id = :id',
-            ['name' => trim($name), 'id' => $id]
+            ['name' => $newName, 'id' => $id]
         );
+
+        // Cascade name change into product_identifiers (brand / manufacturer columns)
+        if ($oldName !== '' && $oldName !== $newName && ($type === 'brand' || $type === 'manufacturer')) {
+            $this->db->execute(
+                'UPDATE `' . $p . 'product_identifiers` SET `' . $type . '` = :new_name WHERE `' . $type . '` = :old_name',
+                ['new_name' => $newName, 'old_name' => $oldName]
+            );
+        }
     }
 
     /**

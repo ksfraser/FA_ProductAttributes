@@ -263,7 +263,7 @@ class AdminPagesEquivalenceTest extends TestCase
         $this->assertStringContainsString('No', $html);
 
         $this->assertStringContainsString('value="add_flag"', $html);
-        $this->assertStringContainsString('name="code" required placeholder="is_organic" pattern="[a-z_]+"', $html);
+        $this->assertStringContainsString('name="code" required placeholder="is_organic" pattern="[a-z0-9_-]+"', $html);
         $this->assertStringContainsString('name="label" required placeholder="Organic Certified"', $html);
         $this->assertStringContainsString('name="sort_order"', $html);
         $this->assertStringContainsString('name="active"', $html);

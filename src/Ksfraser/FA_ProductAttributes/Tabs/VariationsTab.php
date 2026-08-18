@@ -74,10 +74,8 @@ class VariationsTab extends AbstractTab
                 echo '<a href="' . $GLOBALS['path_to_root'] . '/modules/FA_ProductAttributes/public/index.php?tab=values&category_id='
                     . $category['id'] . '">' . _('Manage Values') . '</a> ';
                 if ($stockId !== '') {
-                    echo '<form method="post" style="display:inline">'
-                        . '<input type="hidden" name="unassign_category_id" value="' . (int)$category['id'] . '">'
-                        . '<input type="submit" value="' . _('Unassign') . '" onclick="return confirm(\'' . htmlspecialchars(_('Remove this category from the product?'), ENT_QUOTES) . '\')">'
-                        . '</form>';
+                    echo '<input type="submit" name="unassign_category" value="' . (int)$category['id'] . '"'
+                        . ' onclick="return confirm(\'' . htmlspecialchars(_('Remove this category from the product?'), ENT_QUOTES) . '\')">';
                 }
                 echo '</td>';
                 echo '</tr>';
@@ -91,15 +89,15 @@ class VariationsTab extends AbstractTab
                 return !in_array($cat['id'], $assignedIds, true);
             });
             if (!empty($unassigned)) {
-                echo '<form method="post" style="margin-top:8px">';
+                echo '<div style="margin-top:8px">';
                 echo '<select name="assign_category_id">';
-                echo '<option value="">' . _('— Select category —') . '</option>';
+                echo '<option value="0">' . _('-- Select category --') . '</option>';
                 foreach ($unassigned as $cat) {
                     echo '<option value="' . (int)$cat['id'] . '">' . htmlspecialchars($cat['label']) . '</option>';
                 }
                 echo '</select> ';
-                echo '<input type="submit" name="assign_category" value="' . _('Assign Category') . '">';
-                echo '</form>';
+                echo '<input type="submit" name="assign_category_submit" value="' . _('Assign Category') . '">';
+                echo '</div>';
             }
         }
         echo '</fieldset>';
@@ -138,7 +136,7 @@ class VariationsTab extends AbstractTab
             return;
         }
 
-        if (isset($_POST['assign_category'])) {
+        if (isset($_POST['assign_category_submit'])) {
             $categoryId = (int)($_POST['assign_category_id'] ?? 0);
             if ($categoryId > 0) {
                 $this->coreDao->addCategoryAssignment($stockId, $categoryId);
@@ -147,8 +145,8 @@ class VariationsTab extends AbstractTab
             return;
         }
 
-        if (isset($_POST['unassign_category_id'])) {
-            $categoryId = (int)$_POST['unassign_category_id'];
+        if (isset($_POST['unassign_category'])) {
+            $categoryId = (int)$_POST['unassign_category'];
             if ($categoryId > 0) {
                 $this->coreDao->removeCategoryAssignment($stockId, $categoryId);
                 display_notification(_("Category unassigned"));

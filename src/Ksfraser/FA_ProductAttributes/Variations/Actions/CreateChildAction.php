@@ -87,6 +87,7 @@ class CreateChildAction
                 $this->variationsDao->copyParentCategoryAssignments($childId, $stockId);
                 $this->variationsDao->setParentRelationship($childId, $stockId);
                 $this->recordAssignments($childId, $combo, $stockId);
+                $this->cloneProductAttributes($childId, $stockId);
                 $created++;
             } catch (\Exception $e) {
                 $errors[] = $e->getMessage();
@@ -137,6 +138,70 @@ class CreateChildAction
                 $sortOrder++,
                 $parentStockId
             );
+        }
+    }
+
+    /**
+     * Clone product-level attributes from parent to child variation.
+     *
+     * Copies identifiers (brand, manufacturer, etc.), shipping attributes,
+     * warranty, lifecycle flags, and tag assignments so child products
+     * inherit their parent's settings by default.
+     *
+     * @since 1.0.0
+     */
+    private function cloneProductAttributes(string $childId, string $parentStockId): void
+    {
+        $p = $this->db->getTablePrefix();
+
+        $clonableTables = [
+            'product_identifiers',
+            'product_shipping_attributes',
+            'product_warranty',
+            'product_lifecycle_flag_assignments',
+            'product_tag_assignments',
+        ];
+
+        foreach ($clonableTables as $table) {
+            $tbl = $p . $table;
+
+            $exists = $this->db->query(
+                "SELECT 1 FROM `" . $tbl . "` WHERE stock_id = :parent LIMIT 1",
+                ['parent' => $parentStockId]
+            );
+            if (empty($exists)) {
+                continue;
+            }
+
+            $cols = $this->db->query("SHOW COLUMNS FROM `" . $tbl . "`");
+            $existingCols = array_column($cols, 'Field');
+
+            $rows = $this->db->query(
+                "SELECT * FROM `" . $tbl . "` WHERE stock_id = :parent",
+                ['parent' => $parentStockId]
+            );
+
+            foreach ($rows as $row) {
+                $copied = [];
+                foreach ($row as $k => $v) {
+                    if (!in_array($k, $existingCols, true)) {
+                        continue;
+                    }
+                    if ($k === 'id') {
+                        continue;
+                    }
+                    $copied[$k] = ($k === 'stock_id') ? $childId : $v;
+                }
+                if (empty($copied)) {
+                    continue;
+                }
+                $fields = array_keys($copied);
+                $placeholders = array_map(function ($f) { return ':' . $f; }, $fields);
+                $this->db->execute(
+                    "INSERT INTO `" . $tbl . "` (" . implode(', ', $fields) . ") VALUES (" . implode(', ', $placeholders) . ")",
+                    $copied
+                );
+            }
         }
     }
 }

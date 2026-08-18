@@ -175,9 +175,9 @@ if ($editingFlag) {
     echo '<input type="hidden" name="flag_id" value="' . (int)$editingFlag['id'] . '" />';
 }
 echo '<div><label for="code">' . _('Code') . '</label>';
-echo '<input type="text" id="code" name="code" required placeholder="is_organic" pattern="[a-z_]+" '
-    . 'title="' . _('Lowercase letters and underscores only') . '" value="' . htmlspecialchars($formCode, ENT_QUOTES, 'UTF-8') . '" /> ';
-echo '<small>' . _('Internal identifier (lowercase, underscores)') . '</small></div>';
+echo '<input type="text" id="code" name="code" required placeholder="is_organic" pattern="[a-z0-9_-]+" '
+    . 'title="' . _('Letters, numbers, underscores and hyphens only') . '" value="' . htmlspecialchars($formCode, ENT_QUOTES, 'UTF-8') . '" /> ';
+echo '<small>' . _('Internal identifier (letters, numbers, underscores)') . '</small></div>';
 echo '<div><label for="label">' . _('Label') . '</label>';
 echo '<input type="text" id="label" name="label" required placeholder="Organic Certified" '
     . 'value="' . htmlspecialchars($formLabel, ENT_QUOTES, 'UTF-8') . '" /> ';
