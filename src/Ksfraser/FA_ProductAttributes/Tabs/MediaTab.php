@@ -85,7 +85,13 @@ class MediaTab extends AbstractTab
         echo '</fieldset>';
 
         echo '<fieldset><legend>' . _('Upload Image') . '</legend>';
-        echo '<input type="hidden" name="stock_id" value="' . htmlspecialchars($stockId) . '">';
+        echo '<iframe name="media_upload_frame" id="media_upload_frame"'
+            . ' style="display:none"></iframe>';
+        echo '<form method="post" action="" enctype="multipart/form-data"'
+            . ' target="media_upload_frame">';
+        echo '<input type="hidden" name="stock_id" value="'
+            . htmlspecialchars($stockId, ENT_QUOTES, 'UTF-8') . '">';
+        echo '<input type="hidden" name="_tabs_sel" value="product_media">';
         echo '<table class="tablestyle_noborder">';
         echo '<tr><td>' . _('File') . '</td>';
         echo '<td><input type="file" name="media_file" accept="image/jpeg,image/png,image/gif"></td></tr>';
@@ -97,6 +103,14 @@ class MediaTab extends AbstractTab
         echo '</table>';
         echo '<p><small>' . _('Accepted formats: JPEG, PNG, GIF.') . '</small></p>';
         echo '<p><input type="submit" name="pa_media_upload" value="' . _('Upload Image') . '"></p>';
+        echo '</form>';
+        echo '<script>';
+        echo 'document.getElementById("media_upload_frame").onload = function(){';
+        echo '  try { var d = this.contentDocument || this.contentWindow.document;';
+        echo '    if (d && d.body && d.body.innerHTML.trim() !== "") { location.reload(); }';
+        echo '  } catch(e) { location.reload(); }';
+        echo '};';
+        echo '</script>';
         echo '</fieldset>';
     }
 
@@ -111,8 +125,13 @@ class MediaTab extends AbstractTab
             return;
         }
 
+        global $Ajax;
+
         if (isset($_POST['pa_media_upload']) && isset($_FILES['media_file'])) {
             $this->handleImageUpload($stockId, $_FILES['media_file']);
+            if (isset($Ajax)) {
+                $Ajax->activate('details');
+            }
             return;
         }
 
@@ -127,6 +146,9 @@ class MediaTab extends AbstractTab
                         display_notification(_('Media item deleted.'));
                     }
                 }
+            }
+            if (isset($Ajax)) {
+                $Ajax->activate('details');
             }
             return;
         }

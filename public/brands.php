@@ -119,8 +119,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if ($rowId > 0) {
                 $dao->delete($rowId);
             }
-            header('Location: ?type=' . rawurlencode($returnType));
-            exit;
+            display_notification(_('Record deleted.'));
         }
 
         // Edit: fall through to render the form prefilled with this record.
@@ -169,8 +168,8 @@ echo '<p>' . _('Manage the dropdown values that appear in the Product Identifier
 echo '<div class="nav">';
 foreach ($types as $key => $label) {
     $cls = $key === $currentType ? 'active' : '';
-    echo '<a href="?type=' . htmlspecialchars($key) . '" class="' . $cls . '">'
-        . htmlspecialchars($label) . '</a> &nbsp; ';
+    echo '<a href="?type=' . htmlspecialchars($key, ENT_QUOTES, 'UTF-8') . '" class="' . $cls . '">'
+        . htmlspecialchars($label, ENT_QUOTES, 'UTF-8') . '</a> &nbsp; ';
 }
 echo '</div>';
 echo '<br>';
@@ -180,20 +179,20 @@ pa_lookups_summary($entries, $currentType)->render();
 echo '</form>';
 
 echo '<fieldset>';
-echo '<legend>' . ($editingEntry ? _('Edit') : _('Add')) . ' ' . htmlspecialchars($types[$currentType]) . '</legend>';
+echo '<legend>' . ($editingEntry ? _('Edit') : _('Add')) . ' ' . htmlspecialchars($types[$currentType], ENT_QUOTES, 'UTF-8') . '</legend>';
 echo '<form method="post">';
 echo '<input type="hidden" name="action" value="add_entry" />';
-echo '<input type="hidden" name="entry_type" value="' . htmlspecialchars($currentType) . '" />';
+echo '<input type="hidden" name="entry_type" value="' . htmlspecialchars($currentType, ENT_QUOTES, 'UTF-8') . '" />';
 if ($editingEntry) {
     echo '<input type="hidden" name="entry_id" value="' . (int)$editingEntry['id'] . '" />';
 }
 echo '<div><label for="name">' . _('Name') . '</label>';
 echo '<input type="text" id="name" name="name" required maxlength="128" '
-    . 'value="' . htmlspecialchars((string)($editingEntry['name'] ?? '')) . '" /></div>';
+    . 'value="' . htmlspecialchars((string)($editingEntry['name'] ?? ''), ENT_QUOTES, 'UTF-8') . '" /></div>';
 echo '<div style="margin-top:8px"><button type="submit">' . ($editingEntry ? _('Save') : _('Add')) . ' '
-    . htmlspecialchars($types[$currentType]) . '</button>';
+    . htmlspecialchars($types[$currentType], ENT_QUOTES, 'UTF-8') . '</button>';
 if ($editingEntry) {
-    echo ' <a href="?type=' . htmlspecialchars($currentType) . '" style="margin-left:8px">' . _('Cancel') . '</a>';
+    echo ' <a href="?type=' . htmlspecialchars($currentType, ENT_QUOTES, 'UTF-8') . '" style="margin-left:8px">' . _('Cancel') . '</a>';
 }
 echo '</div>';
 echo '</form>';

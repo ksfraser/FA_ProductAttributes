@@ -20,7 +20,7 @@ class ProductWarrantyTabTest extends TestCase
         $this->tab = new ProductWarrantyTab($this->dao);
     }
 
-    public function testRenderOutputsHiddenStockId(): void
+    public function testRenderDoesNotOutputHiddenStockId(): void
     {
         $this->dao->expects($this->once())
             ->method('get')
@@ -31,8 +31,7 @@ class ProductWarrantyTabTest extends TestCase
         $this->tab->render('SKU001');
         $output = ob_get_clean();
 
-        $this->assertStringContainsString('name="stock_id"', $output);
-        $this->assertStringContainsString('value="SKU001"', $output);
+        $this->assertStringNotContainsString('name="stock_id"', $output);
     }
 
     public function testRenderShowsNoneSelectedWhenNoData(): void
@@ -71,7 +70,7 @@ class ProductWarrantyTabTest extends TestCase
         $this->tab->render('');
         $output = ob_get_clean();
 
-        $this->assertStringContainsString('name="stock_id"', $output);
+        $this->assertStringNotContainsString('name="stock_id"', $output);
     }
 
     public function testRenderOutputsDurationFields(): void

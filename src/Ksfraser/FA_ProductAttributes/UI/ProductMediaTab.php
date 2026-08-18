@@ -155,7 +155,6 @@ class ProductMediaTab
         echo '<fieldset><legend>' . _('Add Media') . '</legend>';
         echo '<form method="post" action="">';
         echo '<input type="hidden" name="action"   value="add_product_media">';
-        echo '<input type="hidden" name="stock_id" value="' . htmlspecialchars($stockId) . '">';
 
         echo '<table class="tablestyle_noborder">';
 

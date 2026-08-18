@@ -93,7 +93,6 @@ class VariationsIntegration
         // Add variations management section
         $content .= '<br><h4>Product Variations</h4>';
         $content .= '<form method="post" action="">';
-        $content .= '<input type="hidden" name="stock_id" value="' . htmlspecialchars($stock_id) . '">';
         $content .= '<input type="submit" name="generate_variations" value="Generate Variations" class="btn btn-default">';
         $content .= '</form>';
 

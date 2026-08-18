@@ -198,8 +198,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         if ($rowAction['action'] === 'delete') {
             pa_delete_row($tab, $dao, $rowId);
-            header('Location: ' . pa_redirect_for($tab, $categoryId, $stockId));
-            exit;
+            display_notification(_('Record deleted.'));
         }
 
         // Edit: fall through to render the form prefilled with this record.
@@ -281,9 +280,9 @@ if ($tab === 'categories'):
     <?php if ($editing): ?>
       <input type="hidden" name="id" value="<?= (int)$editing['id'] ?>" />
     <?php endif; ?>
-    <div><label><?php echo _('Code'); ?></label><input type="text" name="code" required placeholder="size_alpha" value="<?= htmlspecialchars((string)($editing['code'] ?? '')) ?>" /></div>
-    <div><label><?php echo _('Label'); ?></label><input type="text" name="label" required placeholder="Size (alpha)" value="<?= htmlspecialchars((string)($editing['label'] ?? '')) ?>" /></div>
-    <div><label><?php echo _('Description'); ?></label><input type="text" name="description" value="<?= htmlspecialchars((string)($editing['description'] ?? '')) ?>" /></div>
+    <div><label><?php echo _('Code'); ?></label><input type="text" name="code" required placeholder="size_alpha" value="<?= htmlspecialchars((string)($editing['code'] ?? ''), ENT_QUOTES, 'UTF-8') ?>" /></div>
+    <div><label><?php echo _('Label'); ?></label><input type="text" name="label" required placeholder="Size (alpha)" value="<?= htmlspecialchars((string)($editing['label'] ?? ''), ENT_QUOTES, 'UTF-8') ?>" /></div>
+    <div><label><?php echo _('Description'); ?></label><input type="text" name="description" value="<?= htmlspecialchars((string)($editing['description'] ?? ''), ENT_QUOTES, 'UTF-8') ?>" /></div>
     <div><label><?php echo _('Sort order'); ?></label><input type="number" name="sort_order" value="<?= (int)($editing['sort_order'] ?? 0) ?>" /></div>
     <div><label><?php echo _('Active'); ?></label><input type="checkbox" name="active" <?= ($editing ? ((int)($editing['active'] ?? 1) === 1) : true) ? 'checked' : '' ?> /></div>
     <div style="margin-top:8px"><button type="submit"><?php echo _('Save'); ?></button>
@@ -310,17 +309,18 @@ if ($tab === 'categories'):
   <input type="hidden" name="tab" value="values" />
   <label><?php echo _('Category'); ?></label>
   <select name="category_id" onchange="this.form.submit()">
-    <?php foreach ($cats as $c): $id = (int)$c['id']; ?>
-      <option value="<?= htmlspecialchars((string)$id) ?>" <?= $id === $categoryId ? 'selected' : '' ?>>
-        <?= htmlspecialchars((string)$c['code']) ?>
-      </option>
-    <?php endforeach; ?>
-  </select>
-</form>
+      <?php foreach ($cats as $c): $id = (int)$c['id']; ?>
+        <option value="<?= htmlspecialchars((string)$id, ENT_QUOTES, 'UTF-8') ?>" <?= $id === $categoryId ? 'selected' : '' ?>>
+          <?= htmlspecialchars((string)$c['code'], ENT_QUOTES, 'UTF-8') ?>
+        </option>
+      <?php endforeach; ?>
+    </select>
+  </form>
+</fieldset>
 
 <?php
     echo '<form method="post">';
-    echo '<input type="hidden" name="category_id" value="' . htmlspecialchars((string)$categoryId) . '" />';
+    echo '<input type="hidden" name="category_id" value="' . htmlspecialchars((string)$categoryId, ENT_QUOTES, 'UTF-8') . '" />';
     pa_build_summary('values', $dao, $categoryId, $stockId)->render();
     echo '</form>';
 ?>
@@ -329,12 +329,12 @@ if ($tab === 'categories'):
   <legend><?php echo $editingValue ? _('Edit Value') : _('Add Value'); ?></legend>
   <form method="post">
     <input type="hidden" name="action" value="upsert_value" />
-    <input type="hidden" name="category_id" value="<?= htmlspecialchars((string)$categoryId) ?>" />
+    <input type="hidden" name="category_id" value="<?= htmlspecialchars((string)$categoryId, ENT_QUOTES, 'UTF-8') ?>" />
     <?php if ($editingValue): ?>
       <input type="hidden" name="id" value="<?= (int)$editingValue['id'] ?>" />
     <?php endif; ?>
-    <div><label><?php echo _('Value'); ?></label><input type="text" name="value" required placeholder="Red" value="<?= htmlspecialchars((string)($editingValue['value'] ?? '')) ?>" /></div>
-    <div><label><?php echo _('Slug'); ?></label><input type="text" name="slug" required placeholder="red" value="<?= htmlspecialchars((string)($editingValue['slug'] ?? '')) ?>" /></div>
+    <div><label><?php echo _('Value'); ?></label><input type="text" name="value" required placeholder="Red" value="<?= htmlspecialchars((string)($editingValue['value'] ?? ''), ENT_QUOTES, 'UTF-8') ?>" /></div>
+    <div><label><?php echo _('Slug'); ?></label><input type="text" name="slug" required placeholder="red" value="<?= htmlspecialchars((string)($editingValue['slug'] ?? ''), ENT_QUOTES, 'UTF-8') ?>" /></div>
     <div><label><?php echo _('Sort order'); ?></label><input type="number" name="sort_order" value="<?= (int)($editingValue['sort_order'] ?? 0) ?>" /></div>
     <div><label><?php echo _('Active'); ?></label><input type="checkbox" name="active" <?= ($editingValue ? ((int)($editingValue['active'] ?? 1) === 1) : true) ? 'checked' : '' ?> /></div>
     <div style="margin-top:8px"><button type="submit"><?php echo _('Save'); ?></button>
@@ -358,8 +358,8 @@ if ($tab === 'categories'):
     <select name="stock_id">
       <option value=""><?php echo _('-- Select Stock Item --'); ?></option>
       <?php foreach ($dao->listStockItems() as $s): ?>
-        <option value="<?= htmlspecialchars((string)$s['stock_id']) ?>" <?= $stockId === (string)$s['stock_id'] ? 'selected' : '' ?>>
-          <?= htmlspecialchars((string)$s['stock_id']) ?> — <?= htmlspecialchars((string)($s['description'] ?? '')) ?>
+        <option value="<?= htmlspecialchars((string)$s['stock_id'], ENT_QUOTES, 'UTF-8') ?>" <?= $stockId === (string)$s['stock_id'] ? 'selected' : '' ?>>
+          <?= htmlspecialchars((string)$s['stock_id'], ENT_QUOTES, 'UTF-8') ?> &mdash; <?= htmlspecialchars((string)($s['description'] ?? ''), ENT_QUOTES, 'UTF-8') ?>
         </option>
       <?php endforeach; ?>
     </select>
@@ -368,8 +368,8 @@ if ($tab === 'categories'):
     <label><?php echo _('Category'); ?></label>
     <select name="category_id" onchange="this.form.submit()">
       <?php foreach ($cats as $c): $id = (int)$c['id']; ?>
-        <option value="<?= htmlspecialchars((string)$id) ?>" <?= $id === $categoryId ? 'selected' : '' ?>>
-          <?= htmlspecialchars((string)$c['code']) ?>
+        <option value="<?= htmlspecialchars((string)$id, ENT_QUOTES, 'UTF-8') ?>" <?= $id === $categoryId ? 'selected' : '' ?>>
+          <?= htmlspecialchars((string)$c['code'], ENT_QUOTES, 'UTF-8') ?>
         </option>
       <?php endforeach; ?>
     </select>
@@ -380,8 +380,8 @@ if ($tab === 'categories'):
 <?php if ($stockId !== ''): ?>
 <?php
     echo '<form method="post">';
-    echo '<input type="hidden" name="category_id" value="' . htmlspecialchars((string)$categoryId) . '" />';
-    echo '<input type="hidden" name="stock_id" value="' . htmlspecialchars($stockId) . '" />';
+    echo '<input type="hidden" name="category_id" value="' . htmlspecialchars((string)$categoryId, ENT_QUOTES, 'UTF-8') . '" />';
+    echo '<input type="hidden" name="stock_id" value="' . htmlspecialchars($stockId, ENT_QUOTES, 'UTF-8') . '" />';
     pa_build_summary('assignments', $dao, $categoryId, $stockId)->render();
     echo '</form>';
 ?>
@@ -390,12 +390,12 @@ if ($tab === 'categories'):
   <legend><?php echo _('Add Assignment'); ?></legend>
   <form method="post">
     <input type="hidden" name="action" value="add_assignment" />
-    <input type="hidden" name="stock_id" value="<?= htmlspecialchars($stockId) ?>" />
+    <input type="hidden" name="stock_id" value="<?= htmlspecialchars($stockId, ENT_QUOTES, 'UTF-8') ?>" />
     <div><label><?php echo _('Category'); ?></label>
       <select name="category_id">
         <?php foreach ($cats as $c): $id = (int)$c['id']; ?>
-          <option value="<?= htmlspecialchars((string)$id) ?>" <?= $id === $categoryId ? 'selected' : '' ?>>
-            <?= htmlspecialchars((string)$c['code']) ?>
+          <option value="<?= htmlspecialchars((string)$id, ENT_QUOTES, 'UTF-8') ?>" <?= $id === $categoryId ? 'selected' : '' ?>>
+            <?= htmlspecialchars((string)$c['code'], ENT_QUOTES, 'UTF-8') ?>
           </option>
         <?php endforeach; ?>
       </select>
@@ -403,8 +403,8 @@ if ($tab === 'categories'):
     <div><label><?php echo _('Value'); ?></label>
       <select name="value_id">
         <?php foreach ($values as $v): $vid = (int)$v['id']; ?>
-          <option value="<?= htmlspecialchars((string)$vid) ?>">
-            <?= htmlspecialchars((string)$v['value']) ?> (<?= htmlspecialchars((string)$v['slug']) ?>)
+          <option value="<?= htmlspecialchars((string)$vid, ENT_QUOTES, 'UTF-8') ?>">
+            <?= htmlspecialchars((string)$v['value'], ENT_QUOTES, 'UTF-8') ?> (<?= htmlspecialchars((string)$v['slug'], ENT_QUOTES, 'UTF-8') ?>)
           </option>
         <?php endforeach; ?>
       </select>

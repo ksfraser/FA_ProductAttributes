@@ -36,8 +36,6 @@ class ProductWarrantyTab
     {
         $data = ($stockId !== '') ? ($this->dao->get($stockId) ?? []) : [];
 
-        echo '<input type="hidden" name="stock_id" value="' . htmlspecialchars($stockId) . '">';
-
         $this->renderWarrantyType($data);
         $this->renderManufacturerDuration($data);
         $this->renderExtendedDuration($data);

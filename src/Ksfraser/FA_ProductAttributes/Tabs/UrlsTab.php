@@ -65,7 +65,6 @@ class UrlsTab extends AbstractTab
         echo '</fieldset>';
 
         echo '<fieldset><legend>' . _('Add URL') . '</legend>';
-        echo '<input type="hidden" name="stock_id" value="' . htmlspecialchars($stockId) . '">';
         echo '<table class="tablestyle_noborder">';
         echo '<tr><td>' . _('URL') . ' <span style="color:red">*</span></td>';
         echo '<td><input type="url" name="url" maxlength="2048" style="width:100%" '

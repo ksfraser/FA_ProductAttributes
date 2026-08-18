@@ -37,7 +37,7 @@ class TagsCategoriesTabTest extends TestCase
         $output = ob_get_clean();
 
         $this->assertStringContainsString('save_tags_categories', $output);
-        $this->assertStringContainsString('SKU001', $output);
+        $this->assertStringNotContainsString('name="stock_id"', $output);
         $this->assertStringContainsString('type="submit"', $output);
     }
 

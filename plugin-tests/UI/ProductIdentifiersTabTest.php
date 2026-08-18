@@ -29,7 +29,7 @@ class ProductIdentifiersTabTest extends TestCase
         $html = ob_get_clean();
 
         $this->assertStringContainsString('<fieldset', $html);
-        $this->assertStringContainsString('name="stock_id"', $html);
+        $this->assertStringNotContainsString('name="stock_id"', $html);
     }
 
     public function testRenderContainsHiddenActionInput(): void
@@ -40,11 +40,11 @@ class ProductIdentifiersTabTest extends TestCase
         $this->tab->render('SKU001');
         $html = ob_get_clean();
 
-        $this->assertStringContainsString('name="stock_id"', $html);
-        $this->assertStringContainsString('value="SKU001"', $html);
+        $this->assertStringContainsString('name="action"', $html);
+        $this->assertStringContainsString('value="save_product_identifiers"', $html);
     }
 
-    public function testRenderContainsHiddenStockIdInput(): void
+    public function testRenderDoesNotContainHiddenStockIdInput(): void
     {
         $this->dao->method('get')->willReturn(null);
 
@@ -52,8 +52,7 @@ class ProductIdentifiersTabTest extends TestCase
         $this->tab->render('SKU001');
         $html = ob_get_clean();
 
-        $this->assertStringContainsString('name="stock_id"', $html);
-        $this->assertStringContainsString('SKU001', $html);
+        $this->assertStringNotContainsString('name="stock_id"', $html);
     }
 
     public function testRenderPrePopulatesExistingData(): void
@@ -74,7 +73,7 @@ class ProductIdentifiersTabTest extends TestCase
         $this->tab->render('');
         $html = ob_get_clean();
 
-        $this->assertStringContainsString('name="stock_id"', $html);
+        $this->assertStringNotContainsString('name="stock_id"', $html);
         $this->assertStringContainsString('name="brand"', $html);
     }
 

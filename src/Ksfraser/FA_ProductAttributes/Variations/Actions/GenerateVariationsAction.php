@@ -221,36 +221,28 @@ class GenerateVariationsAction
     {
         $p = $this->dbAdapter->getTablePrefix();
 
-        // Insert new product based on parent
-        $this->dbAdapter->execute(
-            "INSERT INTO `{$p}stock_master` (
-                stock_id, category_id, tax_type_id, description, long_description,
-                units, mb_flag, sales_account, inventory_account, cogs_account,
-                adjustment_account, wip_account, dimension_id, dimension2_id,
-                base_sales, last_cost, actual_cost, material_cost, labour_cost, overhead_cost,
-                inactive, no_sale, editable
-            ) SELECT
-                :stock_id, category_id, tax_type_id, :description, long_description,
-                units, mb_flag, sales_account, inventory_account, cogs_account,
-                adjustment_account, wip_account, dimension_id, dimension2_id,
-                base_sales, last_cost, actual_cost, material_cost, labour_cost, overhead_cost,
-                0, no_sale, editable
-            FROM `{$p}stock_master` WHERE stock_id = :parent_stock_id",
-            [
-                'stock_id' => $variationStockId,
-                'description' => $variationDescription,
-                'parent_stock_id' => $parentProduct['stock_id']
-            ]
-        );
+        $cols = $this->dbAdapter->query("SHOW COLUMNS FROM `{$p}stock_master`");
+        $existingCols = array_column($cols, 'Field');
 
-        // Set parent relationship (assuming there's a parent_stock_id field)
-        // Note: This might need to be added to FA schema or handled differently
-        if ($this->dbAdapter->query("SHOW COLUMNS FROM `{$p}stock_master` LIKE 'parent_stock_id'")) {
-            $this->dbAdapter->execute(
-                "UPDATE `{$p}stock_master` SET parent_stock_id = :parent_stock_id WHERE stock_id = :stock_id",
-                ['parent_stock_id' => $parentProduct['stock_id'], 'stock_id' => $variationStockId]
-            );
+        $copied = [];
+        foreach ($parentProduct as $k => $v) {
+            if (in_array($k, $existingCols, true)) {
+                $copied[$k] = $v;
+            }
         }
+
+        $copied['stock_id'] = $variationStockId;
+        $copied['description'] = $variationDescription;
+        unset($copied['inactive']);
+        unset($copied['editable']);
+
+        $fields = array_keys($copied);
+        $placeholders = array_map(function ($f) { return ':' . $f; }, $fields);
+
+        $this->dbAdapter->execute(
+            "INSERT INTO `{$p}stock_master` (" . implode(', ', $fields) . ") VALUES (" . implode(', ', $placeholders) . ")",
+            $copied
+        );
     }
 
     /**

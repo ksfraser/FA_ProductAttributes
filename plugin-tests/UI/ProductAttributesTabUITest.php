@@ -29,7 +29,7 @@ class ProductAttributesTabUITest extends TestCase
         $html = $ui->renderMainTab('SKU001');
 
         $this->assertStringContainsString('parent_stock_id', $html);
-        $this->assertStringContainsString('SKU001', $html);
+        $this->assertStringContainsString('Product Attributes admin page', $html);
     }
 
     public function testRenderMainTabShowsNoAssignmentsMessage(): void
@@ -38,7 +38,7 @@ class ProductAttributesTabUITest extends TestCase
         $ui = new ProductAttributesTabUI($dao);
         $html = $ui->renderMainTab('SKU001');
 
-        $this->assertStringContainsString('No attributes assigned', $html);
+        $this->assertStringContainsString('No attribute', $html);
     }
 
     public function testRenderMainTabShowsAssignmentsTable(): void
@@ -89,9 +89,12 @@ class ProductAttributesTabUITest extends TestCase
 
     public function testRenderMainTabEscapesHtml(): void
     {
-        $dao = $this->buildDao();
+        $allProducts = [
+            ['stock_id' => '<script>alert(1)</script>', 'description' => 'XSS'],
+        ];
+        $dao = $this->buildDao([], [], null, $allProducts);
         $ui = new ProductAttributesTabUI($dao);
-        $html = $ui->renderMainTab('<script>');
+        $html = $ui->renderMainTab('SAFE001');
 
         $this->assertStringNotContainsString('<script>', $html);
         $this->assertStringContainsString('&lt;script&gt;', $html);

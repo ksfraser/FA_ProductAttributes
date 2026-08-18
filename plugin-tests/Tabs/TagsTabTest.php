@@ -58,7 +58,7 @@ class TagsTabTest extends TestCase
         $output = ob_get_clean();
 
         $this->assertStringContainsString('save_tags_categories', $output);
-        $this->assertStringContainsString('SKU001', $output);
+        $this->assertStringNotContainsString('name="stock_id"', $output);
         $this->assertStringContainsString('pa_category_id', $output);
         $this->assertStringNotContainsString('name="category_id"', $output);
     }
@@ -153,7 +153,12 @@ class TagsTabTest extends TestCase
         $this->tab->handleDelete('SKU001');
     }
 
-    public function testAutoSyncCategoryTagCreatesTagWhenNotFound(): void
+    /**
+     * Verify that a plain Save does NOT auto-create/assign category-derived
+     * tags — only the dedicated "Add Category" button should do that.
+     * Unchecking a category-derived tag must actually remove it (issue #22).
+     */
+    public function testHandleSaveDoesNotAutoSyncCategoryTags(): void
     {
         $this->attributesDao->method('listCategoryAssignments')->willReturn([
             ['id' => 1, 'label' => 'Size'],
@@ -161,80 +166,14 @@ class TagsTabTest extends TestCase
         $this->attributesDao->method('listCategories')->willReturn([
             ['id' => 1, 'label' => 'Size'],
         ]);
-        $this->tagsDao->method('listTags')->willReturnOnConsecutiveCalls(
-            [],
-            [['id' => 99, 'name' => 'Size', 'slug' => 'size']]
-        );
-        $this->tagsDao->expects($this->once())
-            ->method('upsertTag')
-            ->with('Size', 'size');
-        $this->tagsDao->expects($this->once())
-            ->method('addAssignment')
-            ->with('SKU001', 99);
-
-        $this->tab->handleSave('SKU001', ['product_tags' => []]);
-    }
-
-    public function testAutoSyncCategoryTagUsesExistingTag(): void
-    {
-        $this->attributesDao->method('listCategoryAssignments')->willReturn([
-            ['id' => 1, 'label' => 'Color'],
-        ]);
-        $this->attributesDao->method('listCategories')->willReturn([
-            ['id' => 1, 'label' => 'Color'],
-        ]);
-        $this->tagsDao->method('listTags')->willReturn([
-            ['id' => 5, 'name' => 'Color', 'slug' => 'color'],
-        ]);
+        $this->tagsDao->method('listTags')->willReturn([]);
         $this->tagsDao->expects($this->never())
             ->method('upsertTag');
+        $this->tagsDao->expects($this->never())
+            ->method('addAssignment');
         $this->tagsDao->expects($this->once())
-            ->method('addAssignment')
-            ->with('SKU001', 5);
-
-        $this->tab->handleSave('SKU001', ['product_tags' => []]);
-    }
-
-    public function testAutoSyncCategoryTagHandlesSpecialCharsInName(): void
-    {
-        $this->attributesDao->method('listCategoryAssignments')->willReturn([
-            ['id' => 1, 'label' => 'New & Used / Items'],
-        ]);
-        $this->attributesDao->method('listCategories')->willReturn([
-            ['id' => 1, 'label' => 'New & Used / Items'],
-        ]);
-        $this->tagsDao->method('listTags')->willReturnOnConsecutiveCalls(
-            [],
-            [['id' => 10, 'name' => 'New & Used / Items', 'slug' => 'new-used-items']]
-        );
-        $this->tagsDao->expects($this->once())
-            ->method('upsertTag')
-            ->with('New & Used / Items', 'new-used-items');
-        $this->tagsDao->expects($this->once())
-            ->method('addAssignment')
-            ->with('SKU001', 10);
-
-        $this->tab->handleSave('SKU001', ['product_tags' => []]);
-    }
-
-    public function testAutoSyncCategoryTagUsesCodeWhenLabelMissing(): void
-    {
-        $this->attributesDao->method('listCategoryAssignments')->willReturn([
-            ['id' => 1, 'code' => 'COLOR'],
-        ]);
-        $this->attributesDao->method('listCategories')->willReturn([
-            ['id' => 1, 'code' => 'COLOR'],
-        ]);
-        $this->tagsDao->method('listTags')->willReturnOnConsecutiveCalls(
-            [],
-            [['id' => 1, 'name' => 'COLOR', 'slug' => 'color']]
-        );
-        $this->tagsDao->expects($this->once())
-            ->method('upsertTag')
-            ->with('COLOR', 'color');
-        $this->tagsDao->expects($this->once())
-            ->method('addAssignment')
-            ->with('SKU001', 1);
+            ->method('syncAssignments')
+            ->with('SKU001', []);
 
         $this->tab->handleSave('SKU001', ['product_tags' => []]);
     }

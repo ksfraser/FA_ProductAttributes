@@ -60,7 +60,6 @@ class AssignmentsTab
 
             echo '<form method="post" action="">';
             echo '<input type="hidden" name="action" value="update_category_assignments">';
-            echo '<input type="hidden" name="stock_id" value="' . htmlspecialchars($stockId) . '">';
             echo '<table class="tablestyle2">';
             echo '<tr><th>' . _('Assigned') . '</th><th>' . _('Code') . '</th><th>' . _('Label') . '</th></tr>';
             foreach ($categories as $cat) {

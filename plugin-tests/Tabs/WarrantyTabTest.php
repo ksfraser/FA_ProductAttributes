@@ -105,7 +105,7 @@ class WarrantyTabTest extends TestCase
 
         $this->assertStringContainsString('name="warranty_type"', $output);
         $this->assertStringContainsString('value="none"', $output);
-        $this->assertStringContainsString('name="stock_id" value=""', $output);
+        $this->assertStringNotContainsString('name="stock_id"', $output);
     }
 
     /**

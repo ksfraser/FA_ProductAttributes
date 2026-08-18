@@ -144,7 +144,7 @@ class VariationsButtonsPanelTest extends TestCase
         $this->assertStringNotContainsString('Assign Parent', $output);
     }
 
-    public function testRenderHiddenStockIdField(): void
+    public function testRenderDoesNotOutputHiddenStockIdField(): void
     {
         $this->variationsDao->expects($this->any())
             ->method('getProductVariations')
@@ -168,7 +168,6 @@ class VariationsButtonsPanelTest extends TestCase
         $panel->render('TEST001');
         $output = ob_get_clean();
 
-        $this->assertStringContainsString('name="stock_id"', $output);
-        $this->assertStringContainsString('value="TEST001"', $output);
+        $this->assertStringNotContainsString('name="stock_id"', $output);
     }
 }

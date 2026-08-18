@@ -57,7 +57,6 @@ class WarrantyTab extends AbstractTab
         ];
 
         echo '<input type="hidden" name="action"   value="save_product_warranty">';
-        echo '<input type="hidden" name="stock_id" value="' . htmlspecialchars($stockId) . '">';
 
         echo '<fieldset><legend>' . _('Warranty Type') . '</legend>';
         echo '<table class="tablestyle_noborder">';

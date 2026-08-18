@@ -124,19 +124,12 @@ class TagsTab extends AbstractTab
             return;
         }
 
-        // Sync tag checkboxes
+        // Sync tag checkboxes — only checked tags survive.
         $tagIds = [];
         if (isset($postData['product_tags']) && is_array($postData['product_tags'])) {
             $tagIds = array_map('intval', $postData['product_tags']);
         }
         $this->tagsDao->syncAssignments($stockId, $tagIds);
-
-        // Re-apply tags that are auto-created from assigned categories so a
-        // Save cannot silently remove a category-derived tag.
-        $cats = $this->attributesDao->listCategoryAssignments($stockId);
-        foreach ($cats as $cat) {
-            $this->autoSyncCategoryTag($stockId, (int)$cat['id'], true);
-        }
     }
 
     /**

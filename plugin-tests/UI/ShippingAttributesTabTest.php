@@ -30,8 +30,8 @@ class ShippingAttributesTabTest extends TestCase
         $this->tab->render('SKU001');
         $html = ob_get_clean();
 
-        $this->assertStringContainsString('name="stock_id"', $html);
-        $this->assertStringContainsString('value="SKU001"', $html);
+        $this->assertStringNotContainsString('name="stock_id"', $html);
+        $this->assertStringContainsString('value="save_shipping_attributes"', $html);
     }
 
     public function testRenderOutputsAllFieldsets(): void

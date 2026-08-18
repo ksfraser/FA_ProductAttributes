@@ -57,7 +57,6 @@ class ShippingClonePanel
             . 'attributes. Existing variation-specific shipping data will be overwritten.') . '</p>';
         echo '<form method="post" action="">';
         echo '<input type="hidden" name="action" value="clone_shipping_to_variations">';
-        echo '<input type="hidden" name="stock_id" value="' . htmlspecialchars($stockId) . '">';
 
         echo '<table class="tablestyle_noborder">';
         echo '<tr>';

@@ -80,7 +80,7 @@ class ShippingClonePanelTest extends TestCase
         $this->assertStringContainsString('value="clone_shipping_to_variations"', $html);
     }
 
-    public function testRenderContainsParentStockIdHiddenInput(): void
+    public function testRenderDoesNotContainParentStockIdHiddenInput(): void
     {
         $this->variationsDao->method('getProductVariations')->willReturn([
             ['stock_id' => 'PARENT-RED'],
@@ -91,8 +91,7 @@ class ShippingClonePanelTest extends TestCase
         $this->panel->render('PARENT');
         $html = ob_get_clean();
 
-        $this->assertStringContainsString('name="stock_id"', $html);
-        $this->assertStringContainsString('value="PARENT"', $html);
+        $this->assertStringNotContainsString('name="stock_id"', $html);
     }
 
     // ── checkboxes ────────────────────────────────────────────────────────────

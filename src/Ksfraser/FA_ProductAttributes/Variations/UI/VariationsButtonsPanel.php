@@ -48,7 +48,6 @@ class VariationsButtonsPanel
         echo '<div class="variations-buttons-panel">';
         echo '<h4>' . _('Variation Actions') . '</h4>';
         echo '<form method="post" action="">';
-        echo '<input type="hidden" name="stock_id" value="' . htmlspecialchars($stockId) . '">';
 
         if ($isParent) {
             $this->renderParentButtons($stockId, $isInactive);

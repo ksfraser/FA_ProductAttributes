@@ -53,7 +53,6 @@ class LifecycleClonePanel
             . 'Existing variation lifecycle data will be overwritten.') . '</p>';
         echo '<form method="post" action="">';
         echo '<input type="hidden" name="action"   value="clone_lifecycle_to_variations">';
-        echo '<input type="hidden" name="stock_id" value="' . htmlspecialchars($stockId) . '">';
 
         echo '<table class="tablestyle">';
         echo '<thead><tr>';

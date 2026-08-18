@@ -106,8 +106,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if ($rowId > 0) {
                 $dao->deleteFlag($rowId);
             }
-            header('Location: ?tab=flags');
-            exit;
+            display_notification(_('Record deleted.'));
         }
 
         // Edit: fall through to render the form prefilled with this record.
@@ -176,11 +175,11 @@ if ($editingFlag) {
 }
 echo '<div><label for="code">' . _('Code') . '</label>';
 echo '<input type="text" id="code" name="code" required placeholder="is_organic" pattern="[a-z_]+" '
-    . 'title="' . _('Lowercase letters and underscores only') . '" value="' . htmlspecialchars($formCode) . '" /> ';
+    . 'title="' . _('Lowercase letters and underscores only') . '" value="' . htmlspecialchars($formCode, ENT_QUOTES, 'UTF-8') . '" /> ';
 echo '<small>' . _('Internal identifier (lowercase, underscores)') . '</small></div>';
 echo '<div><label for="label">' . _('Label') . '</label>';
 echo '<input type="text" id="label" name="label" required placeholder="Organic Certified" '
-    . 'value="' . htmlspecialchars($formLabel) . '" /> ';
+    . 'value="' . htmlspecialchars($formLabel, ENT_QUOTES, 'UTF-8') . '" /> ';
 echo '<small>' . _('Display text on the lifecycle tab') . '</small></div>';
 echo '<div><label for="sort_order">' . _('Sort Order') . '</label>';
 echo '<input type="number" id="sort_order" name="sort_order" value="' . $formSort . '" min="0" /></div>';

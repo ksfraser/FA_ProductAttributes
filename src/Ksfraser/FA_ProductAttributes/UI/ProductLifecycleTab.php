@@ -47,7 +47,6 @@ class ProductLifecycleTab
 
         echo '<form method="post" action="">';
         echo '<input type="hidden" name="action"   value="upsert_lifecycle">';
-        echo '<input type="hidden" name="stock_id" value="' . htmlspecialchars($stockId) . '">';
 
         $this->renderStatus($data);
         $this->renderDynamicFlags($stockId, $data);

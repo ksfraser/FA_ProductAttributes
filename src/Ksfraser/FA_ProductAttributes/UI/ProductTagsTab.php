@@ -73,7 +73,6 @@ class ProductTagsTab
                 echo '<span style="margin-right:1.5em;">';
                 echo '<form method="post" action="" style="display:inline">';
                 echo '<input type="hidden" name="action"   value="add_tag_assignment">';
-                echo '<input type="hidden" name="stock_id" value="' . htmlspecialchars($stockId) . '">';
                 echo '<input type="hidden" name="tag_id"   value="' . $tagId . '">';
                 echo '<label>';
                 echo '<input type="checkbox" onchange="' . htmlspecialchars($addJs) . '"' . $checked . '> ';

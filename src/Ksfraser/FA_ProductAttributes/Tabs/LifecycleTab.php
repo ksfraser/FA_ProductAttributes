@@ -49,7 +49,6 @@ class LifecycleTab extends AbstractTab
         $statuses = ['active' => 'Active', 'draft' => 'Draft', 'discontinued' => 'Discontinued', 'archived' => 'Archived'];
 
         echo '<input type="hidden" name="action"   value="save_product_lifecycle">';
-        echo '<input type="hidden" name="stock_id" value="' . htmlspecialchars($stockId) . '">';
 
         echo '<fieldset><legend>' . _('Status') . '</legend>';
         echo '<table class="tablestyle_noborder"><tr>';

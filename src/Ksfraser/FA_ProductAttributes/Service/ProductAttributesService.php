@@ -35,7 +35,6 @@ class ProductAttributesService
         $assignedCategories  = $this->dao->getAssignedCategoriesForProduct($stockId);
 
         $html  = '<h4>' . _('Product Attributes') . '</h4>';
-        $html .= '<input type="hidden" name="stock_id" value="' . htmlspecialchars($stockId) . '">';
 
         if (empty($assignments)) {
             $html .= '<p>' . _('No product attributes assigned') . '</p>';

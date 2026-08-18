@@ -51,7 +51,7 @@ class LifecycleTabTest extends TestCase
         $this->tab->renderTabContent('');
         $output = ob_get_clean();
 
-        $this->assertStringContainsString('stock_id', $output);
+        $this->assertStringNotContainsString('stock_id', $output);
     }
 
     public function testRenderTabContentWithStockId(): void
