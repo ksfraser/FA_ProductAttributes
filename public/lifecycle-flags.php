@@ -84,6 +84,7 @@ function pa_flags_summary(array $flags): MasterSummaryTable
             'row_id_field'         => 'id',
             'tab_sel'              => 'flags',
             'show_footer'          => false,
+            'ajax'                 => false,
             'empty_message'        => _('No flags defined yet.'),
             'delete_confirm_message' => _('Delete this flag? All products using it will lose the assignment.'),
         ]

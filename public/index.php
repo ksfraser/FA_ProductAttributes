@@ -68,6 +68,7 @@ function pa_build_summary(string $tab, ProductAttributesDao $dao, int $categoryI
         'row_id_field'    => 'id',
         'tab_sel'         => $tab,
         'show_footer'     => false,
+        'ajax'            => false,
     ];
 
     if ($tab === 'values') {

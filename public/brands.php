@@ -90,6 +90,7 @@ function pa_lookups_summary(array $entries, string $type): MasterSummaryTable
             'row_id_field'         => 'id',
             'tab_sel'              => $type,
             'show_footer'          => false,
+            'ajax'                 => false,
             'empty_message'        => _('No entries defined yet.'),
             'delete_confirm_message' => _('Delete this entry?'),
         ]
