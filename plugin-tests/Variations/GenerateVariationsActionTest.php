@@ -61,7 +61,7 @@ class GenerateVariationsActionTest extends TestCase
             ]);
 
         $dao->expects($this->once())
-            ->method('listValues')
+            ->method('listActiveValues')
             ->with(1)
             ->willReturn([]);
 
@@ -210,7 +210,7 @@ class GenerateVariationsActionTest extends TestCase
             ->willReturn([
                 ['id' => 1, 'code' => 'color', 'label' => 'Color'],
             ]);
-        $dao->method('listValues')
+        $dao->method('listActiveValues')
             ->willReturn([
                 ['id' => 1, 'value' => 'Red', 'slug' => 'red'],
             ]);

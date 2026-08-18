@@ -51,7 +51,7 @@ class CreateChildAction
         $categoryValues = [];
         foreach ($assignedCategories as $category) {
             $categoryId = (int)$category['id'];
-            $values = $this->variationsDao->listValues($categoryId);
+            $values = $this->variationsDao->listActiveValues($categoryId);
             if (!empty($values)) {
                 $categoryValues[$categoryId] = $values;
             }

@@ -87,6 +87,20 @@ class ProductAttributesDao
         );
     }
 
+    /**
+     * List only active values for a category (used by variation generation).
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    public function listActiveValues(int $categoryId): array
+    {
+        $p = $this->db->getTablePrefix();
+        return $this->db->query(
+            "SELECT * FROM `{$p}product_attribute_values` WHERE category_id = :category_id AND active = 1 ORDER BY sort_order, slug",
+            ['category_id' => $categoryId]
+        );
+    }
+
     public function upsertValue(string $categoryId, string $value, string $slug, int $sortOrder, bool $active = true, int $id = 0): int
     {
         $p = $this->db->getTablePrefix();

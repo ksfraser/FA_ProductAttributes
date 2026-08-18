@@ -65,7 +65,7 @@ class CreateMissingVariationsAction
         $categoryValues = [];
         foreach ($assignments as $assignment) {
             $categoryId = (int)$assignment['category_id'];
-            $values     = $this->variationsDao->listValues($categoryId);
+            $values     = $this->variationsDao->listActiveValues($categoryId);
             if (!empty($values)) {
                 $categoryValues[$categoryId] = $values;
             }

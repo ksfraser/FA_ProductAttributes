@@ -143,6 +143,19 @@ class VariationsDao
     }
 
     /**
+     * List only active values for a variation category (used by generation).
+     * @return array<int, array<string, mixed>>
+     */
+    public function listActiveValues(int $categoryId): array
+    {
+        $p = $this->db->getTablePrefix();
+        return $this->db->query(
+            "SELECT * FROM `{$p}product_attribute_values` WHERE category_id = :category_id AND active = 1 ORDER BY sort_order, slug",
+            ['category_id' => $categoryId]
+        );
+    }
+
+    /**
      * Create or update a variation value
      */
     public function upsertValue(int $categoryId, string $value, string $slug, int $sortOrder = 0, bool $active = true, int $valueId = 0): void

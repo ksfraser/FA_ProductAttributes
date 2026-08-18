@@ -55,7 +55,7 @@ class VariationsTabTest extends TestCase
         $this->tab->renderTabContent('');
         $output = ob_get_clean();
 
-        $this->assertStringContainsString('Variation Categories', $output);
+        $this->assertStringContainsString('Assigned Categories', $output);
     }
 
     /**

@@ -45,7 +45,7 @@ class GenerateVariationsAction
         $categoryValues = [];
         foreach ($assignedCategories as $category) {
             $categoryId = (int)$category['id'];
-            $values = $this->dao->listValues($categoryId);
+            $values = $this->dao->listActiveValues($categoryId);
             if (!empty($values)) {
                 $categoryValues[$categoryId] = $values;
             }

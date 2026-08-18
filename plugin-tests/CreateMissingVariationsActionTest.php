@@ -60,7 +60,7 @@ class CreateMissingVariationsActionTest extends TestCase
         $dao->method('listCategoryAssignments')
             ->willReturn([['category_id' => 1]]);
 
-        $dao->method('listValues')
+        $dao->method('listActiveValues')
             ->with(1)
             ->willReturn([
                 ['slug' => 'red', 'value' => 'Red'],

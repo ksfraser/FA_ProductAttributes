@@ -46,7 +46,8 @@ class VariationsTab extends AbstractTab
     {
         $this->handlePostActions($stockId);
 
-        $categories = $this->dao->listCategories();
+        $assignedCategories = ($stockId !== '') ? $this->dao->listCategoryAssignments($stockId) : [];
+        $allCategories = $this->dao->listCategories();
         $parentData = $this->dao->getProductParent($stockId);
         $variations = ($stockId !== '') ? $this->dao->getProductVariations($stockId) : [];
 
@@ -58,22 +59,48 @@ class VariationsTab extends AbstractTab
             echo '</fieldset>';
         }
 
-        echo '<fieldset><legend>' . _('Variation Categories') . '</legend>';
-        if (empty($categories)) {
-            echo '<p>' . _('No variation categories defined.') . '</p>';
+        echo '<fieldset><legend>' . _('Assigned Categories') . '</legend>';
+        if (empty($assignedCategories)) {
+            echo '<p>' . _('No categories assigned. Use the dropdown below to assign one.') . '</p>';
         } else {
             echo '<table class="tablestyle2">';
-            echo '<tr><th>' . _('Category') . '</th><th>' . _('Values') . '</th><th>' . _('Actions') . '</th></tr>';
-            foreach ($categories as $category) {
-                $values = $this->dao->listValues($category['id']);
+            echo '<tr><th>' . _('Category') . '</th><th>' . _('Active Values') . '</th><th>' . _('Actions') . '</th></tr>';
+            foreach ($assignedCategories as $category) {
+                $activeValues = $this->coreDao->listActiveValues((int)$category['id']);
                 echo '<tr>';
                 echo '<td>' . htmlspecialchars($category['label']) . '</td>';
-                echo '<td>' . count($values) . ' values</td>';
-                echo '<td><a href="' . $GLOBALS['path_to_root'] . '/modules/FA_ProductAttributes/public/index.php?tab=values&category_id='
-                    . $category['id'] . '">' . _('Manage') . '</a></td>';
+                echo '<td>' . count($activeValues) . ' ' . _('values') . '</td>';
+                echo '<td>';
+                echo '<a href="' . $GLOBALS['path_to_root'] . '/modules/FA_ProductAttributes/public/index.php?tab=values&category_id='
+                    . $category['id'] . '">' . _('Manage Values') . '</a> ';
+                if ($stockId !== '') {
+                    echo '<form method="post" style="display:inline">'
+                        . '<input type="hidden" name="unassign_category_id" value="' . (int)$category['id'] . '">'
+                        . '<input type="submit" value="' . _('Unassign') . '" onclick="return confirm(\'' . htmlspecialchars(_('Remove this category from the product?'), ENT_QUOTES) . '\')">'
+                        . '</form>';
+                }
+                echo '</td>';
                 echo '</tr>';
             }
             echo '</table>';
+        }
+
+        if ($stockId !== '' && !empty($allCategories)) {
+            $assignedIds = array_column($assignedCategories, 'id');
+            $unassigned = array_filter($allCategories, function ($cat) use ($assignedIds) {
+                return !in_array($cat['id'], $assignedIds, true);
+            });
+            if (!empty($unassigned)) {
+                echo '<form method="post" style="margin-top:8px">';
+                echo '<select name="assign_category_id">';
+                echo '<option value="">' . _('— Select category —') . '</option>';
+                foreach ($unassigned as $cat) {
+                    echo '<option value="' . (int)$cat['id'] . '">' . htmlspecialchars($cat['label']) . '</option>';
+                }
+                echo '</select> ';
+                echo '<input type="submit" name="assign_category" value="' . _('Assign Category') . '">';
+                echo '</form>';
+            }
         }
         echo '</fieldset>';
 
@@ -108,6 +135,24 @@ class VariationsTab extends AbstractTab
     private function handlePostActions(string $stockId): void
     {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST' || $stockId === '') {
+            return;
+        }
+
+        if (isset($_POST['assign_category'])) {
+            $categoryId = (int)($_POST['assign_category_id'] ?? 0);
+            if ($categoryId > 0) {
+                $this->coreDao->addCategoryAssignment($stockId, $categoryId);
+                display_notification(_("Category assigned"));
+            }
+            return;
+        }
+
+        if (isset($_POST['unassign_category_id'])) {
+            $categoryId = (int)$_POST['unassign_category_id'];
+            if ($categoryId > 0) {
+                $this->coreDao->removeCategoryAssignment($stockId, $categoryId);
+                display_notification(_("Category unassigned"));
+            }
             return;
         }
 

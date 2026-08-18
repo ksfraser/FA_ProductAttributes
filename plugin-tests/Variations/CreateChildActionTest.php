@@ -54,7 +54,7 @@ class CreateChildActionTest extends TestCase
                 ['id' => 2, 'label' => 'Size'],
             ]);
 
-        $this->variationsDao->method('listValues')
+        $this->variationsDao->method('listActiveValues')
             ->willReturnMap([
                 [1, [['id' => 10, 'slug' => 'red', 'value' => 'Red'], ['id' => 11, 'slug' => 'blue', 'value' => 'Blue']]],
                 [2, [['id' => 20, 'slug' => 'sm', 'value' => 'Small'], ['id' => 21, 'slug' => 'lg', 'value' => 'Large']]],
@@ -103,7 +103,7 @@ class CreateChildActionTest extends TestCase
                 ['id' => 1, 'label' => 'Color'],
             ]);
 
-        $this->variationsDao->method('listValues')
+        $this->variationsDao->method('listActiveValues')
             ->willReturnMap([
                 [1, [['id' => 10, 'slug' => 'red', 'value' => 'Red'], ['id' => 11, 'slug' => 'blue', 'value' => 'Blue']]],
             ]);
