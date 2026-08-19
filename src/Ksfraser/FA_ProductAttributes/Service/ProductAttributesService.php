@@ -70,13 +70,27 @@ class ProductAttributesService
         }
 
         if (!empty($categories)) {
+            $ajaxUrl = $GLOBALS['path_to_root'] . '/modules/FA_ProductAttributes/public/ajax_get_values.php';
+            $escapedAjaxUrl = htmlspecialchars($ajaxUrl, ENT_QUOTES);
+
             $html .= '<fieldset><legend>' . _('Add Assignment') . '</legend>';
-            $html .= '<form method="post">';
+
             $html .= '<input type="hidden" name="action" value="add_pa_assignment" />';
             $html .= '<input type="hidden" name="stock_id" value="' . htmlspecialchars($stockId, ENT_QUOTES, 'UTF-8') . '" />';
 
             $html .= '<div><label>' . _('Category') . '</label>';
-            $html .= '<select name="category_id" id="pa_category_select">';
+            $html .= '<select name="category_id" id="pa_category_select"'
+                . ' onchange="'
+                . 'var v=document.getElementById(\'pa_value_select\');'
+                . 'v.innerHTML=\'<option value="">Loading...</option>\';'
+                . 'fetch(\'' . $escapedAjaxUrl . '?category_id=\'+this.value)'
+                . '.then(function(r){return r.json()})'
+                . '.then(function(d){'
+                . 'var h=\'<option value="">-- Select Value --</option>\';'
+                . 'for(var i=0;i<d.length;i++){h+=\'<option value="\'+d[i].id+\'">\'+d[i].value+\' (\'+d[i].slug+\')</option>\'}'
+                . 'v.innerHTML=h;'
+                . '})'
+                . '">';
             $html .= '<option value="">' . _('-- Select Category --') . '</option>';
             foreach ($categories as $cat) {
                 $html .= '<option value="' . (int)$cat['id'] . '">'
@@ -93,66 +107,10 @@ class ProductAttributesService
             $html .= '<input type="number" name="sort_order" value="0" min="0" /></div>';
 
             $html .= '<div style="margin-top:8px"><button type="submit">' . _('Add') . '</button></div>';
-            $html .= '</form>';
             $html .= '</fieldset>';
-
-            $html .= '<script>
-var paCatSelect = document.getElementById("pa_category_select");
-var paValSelect = document.getElementById("pa_value_select");
-var paValues = ' . json_encode($this->buildCategoryValuesMap($categories)) . ';
-
-if (paCatSelect) {
-    paCatSelect.addEventListener("change", function() {
-        var catId = this.value;
-        paValSelect.innerHTML = "";
-        if (!catId || !paValues[catId]) {
-            var opt = document.createElement("option");
-            opt.value = "";
-            opt.textContent = "-- Select Category First --";
-            paValSelect.appendChild(opt);
-            return;
-        }
-        var vals = paValues[catId];
-        var def = document.createElement("option");
-        def.value = "";
-        def.textContent = "-- Select Value --";
-        paValSelect.appendChild(def);
-        for (var i = 0; i < vals.length; i++) {
-            var o = document.createElement("option");
-            o.value = vals[i].id;
-            o.textContent = vals[i].value + " (" + vals[i].slug + ")";
-            paValSelect.appendChild(o);
-        }
-    });
-}
-</script>';
         }
 
         return $html;
-    }
-
-    /**
-     * Build a map of category_id => values for client-side value dropdown.
-     *
-     * @param array $categories
-     * @return array<int, array<int, array{id: int, value: string, slug: string}>>
-     */
-    private function buildCategoryValuesMap(array $categories): array
-    {
-        $map = [];
-        foreach ($categories as $cat) {
-            $catId = (int)$cat['id'];
-            $values = $this->dao->getValuesForCategory($catId);
-            $map[$catId] = [];
-            foreach ($values as $v) {
-                $map[$catId][] = [
-                    'id'    => (int)$v['id'],
-                    'value' => (string)$v['value'],
-                    'slug'  => (string)($v['slug'] ?? ''),
-                ];
-            }
-        }
-        return $map;
     }
 
     /**

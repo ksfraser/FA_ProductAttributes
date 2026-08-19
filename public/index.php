@@ -403,7 +403,8 @@ if ($tab === 'categories'):
     <input type="hidden" name="action" value="add_assignment" />
     <input type="hidden" name="stock_id" value="<?= htmlspecialchars($stockId, ENT_QUOTES, 'UTF-8') ?>" />
     <div><label><?php echo _('Category'); ?></label>
-      <select name="category_id">
+      <select name="category_id" id="admin_pa_category_select"
+        onchange="var v=document.getElementById('admin_pa_value_select');v.innerHTML='<option value="">Loading...</option>';fetch('ajax_get_values.php?category_id='+this.value).then(function(r){return r.json()}).then(function(d){var h='<option value=\"\">-- Select Value --</option>';for(var i=0;i<d.length;i++){h+='<option value=\"'+d[i].id+'\">'+d[i].value+' ('+d[i].slug+')</option>'}v.innerHTML=h;})">
         <?php foreach ($cats as $c): $id = (int)$c['id']; ?>
           <option value="<?= htmlspecialchars((string)$id, ENT_QUOTES, 'UTF-8') ?>" <?= $id === $categoryId ? 'selected' : '' ?>>
             <?= htmlspecialchars((string)$c['code'], ENT_QUOTES, 'UTF-8') ?>
@@ -412,7 +413,7 @@ if ($tab === 'categories'):
       </select>
     </div>
     <div><label><?php echo _('Value'); ?></label>
-      <select name="value_id">
+      <select name="value_id" id="admin_pa_value_select">
         <?php foreach ($values as $v): $vid = (int)$v['id']; ?>
           <option value="<?= htmlspecialchars((string)$vid, ENT_QUOTES, 'UTF-8') ?>">
             <?= htmlspecialchars((string)$v['value'], ENT_QUOTES, 'UTF-8') ?> (<?= htmlspecialchars((string)$v['slug'], ENT_QUOTES, 'UTF-8') ?>)
