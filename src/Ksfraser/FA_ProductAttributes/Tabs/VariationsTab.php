@@ -83,6 +83,34 @@ class VariationsTab extends AbstractTab
             echo '</table>';
         }
 
+        $assignments = ($stockId !== '') ? $this->coreDao->listAssignments($stockId) : [];
+        if (!empty($assignments)) {
+            echo '<h5>' . _('Current Attribute Assignments') . '</h5>';
+            echo '<table class="tablestyle2">';
+            echo '<tr><th>' . _('Category') . '</th><th>' . _('Value') . '</th><th>' . _('Sort') . '</th></tr>';
+            foreach ($assignments as $a) {
+                echo '<tr>';
+                echo '<td>' . htmlspecialchars((string)($a['category_label'] ?? '')) . '</td>';
+                echo '<td>' . htmlspecialchars((string)($a['value_label'] ?? '')) . '</td>';
+                echo '<td>' . (int)($a['sort_order'] ?? 0) . '</td>';
+                echo '</tr>';
+            }
+            echo '</table>';
+            echo '<p style="color:#666;font-size:11px">'
+                . _('These attribute values determine the variations that will be generated.')
+                . '</p>';
+        } else {
+            if (!empty($assignedCategories)) {
+                echo '<p style="color:#666;font-size:11px">'
+                    . _('Categories are assigned but no specific values are set. ')
+                    . _('Use the <strong>Product Attributes</strong> tab to assign values, or the')
+                    . ' <a href="' . $GLOBALS['path_to_root'] . '/modules/FA_ProductAttributes/public/index.php">'
+                    . _('admin page') . '</a> '
+                    . _('to manage them.')
+                    . '</p>';
+            }
+        }
+
         if ($stockId !== '' && !empty($allCategories)) {
             $assignedIds = array_column($assignedCategories, 'id');
             $unassigned = array_filter($allCategories, function ($cat) use ($assignedIds) {
