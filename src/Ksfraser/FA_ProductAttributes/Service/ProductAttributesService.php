@@ -26,82 +26,176 @@ class ProductAttributesService
     /**
      * Render the Product Attributes tab HTML for a given product.
      *
+     * Shows:
+     * 1. Summary table of assigned attributes (Category, Value) with delete buttons
+     * 2. Add Assignment section with Category + Value dropdowns + Sort Order + Add button
+     *
      * @param string $stockId
      * @return string HTML
      */
     public function renderProductAttributesTab(string $stockId): string
     {
-        $assignments         = $this->dao->listAssignments($stockId);
-        $assignedCategories  = $this->dao->getAssignedCategoriesForProduct($stockId);
+        $assignments = $stockId !== '' ? $this->dao->listAssignments($stockId) : [];
+        $categories  = $this->dao->listCategories();
 
-        $html  = '<h4>' . _('Product Attributes') . '</h4>';
+        $html = '<h4>' . _('Product Attributes') . '</h4>';
+
+        $html .= '<p style="color:#666;font-size:11px">'
+            . _('Assign attribute values to this product. Manage categories and values on the')
+            . ' <a href="' . $GLOBALS['path_to_root'] . '/modules/FA_ProductAttributes/public/index.php">'
+            . _('Product Attributes Admin page') . '</a>.</p>';
 
         if (empty($assignments)) {
-            $html .= '<p>' . _('No product attributes assigned') . '</p>';
+            $html .= '<p>' . _('No product attributes assigned.') . '</p>';
         } else {
             $html .= '<table class="tablestyle2">';
-            $html .= '<tr><th>' . _('Category') . '</th><th>' . _('Value') . '</th></tr>';
+            $html .= '<tr>';
+            $html .= '<th>' . _('Category') . '</th>';
+            $html .= '<th>' . _('Value') . '</th>';
+            $html .= '<th>' . _('Sort') . '</th>';
+            $html .= '<th>' . _('Action') . '</th>';
+            $html .= '</tr>';
             foreach ($assignments as $row) {
                 $html .= '<tr>';
                 $html .= '<td>' . htmlspecialchars((string)($row['category_label'] ?? '')) . '</td>';
                 $html .= '<td>' . htmlspecialchars((string)($row['value_label'] ?? '')) . '</td>';
+                $html .= '<td>' . (int)($row['sort_order'] ?? 0) . '</td>';
+                $html .= '<td>';
+                $html .= '<input type="submit" name="pa_delete_row" value="' . (int)$row['id'] . '"'
+                    . ' onclick="return confirm(\'' . htmlspecialchars(_('Remove this assignment?'), ENT_QUOTES) . '\')">';
+                $html .= '</td>';
                 $html .= '</tr>';
             }
             $html .= '</table>';
         }
 
-        // Category assignment multi-select (first call to listCategories)
-        $categories = $this->dao->listCategories();
         if (!empty($categories)) {
-            $html .= '<h5>' . _('Assign Category') . '</h5>';
-            $html .= '<select name="assigned_categories[]" multiple>';
-            foreach ($categories as $cat) {
-                $sel   = '';
-                foreach ($assignedCategories as $ac) {
-                    if ((int)$ac['id'] === (int)$cat['id']) {
-                        $sel = ' selected';
-                        break;
-                    }
-                }
-                $html .= '<option value="' . (int)$cat['id'] . '"' . $sel . '>';
-                $html .= htmlspecialchars((string)$cat['label']);
-                $html .= '</option>';
-            }
-            $html .= '</select>';
-        }
+            $html .= '<fieldset><legend>' . _('Add Assignment') . '</legend>';
+            $html .= '<form method="post">';
+            $html .= '<input type="hidden" name="action" value="add_pa_assignment" />';
+            $html .= '<input type="hidden" name="stock_id" value="' . htmlspecialchars($stockId, ENT_QUOTES, 'UTF-8') . '" />';
 
-        // Per-assigned-category value selects
-        foreach ($assignedCategories as $ac) {
-            $catId  = (int)$ac['id'];
-            $values = $this->dao->getValuesForCategory($catId);
-            if (empty($values)) {
-                continue;
-            }
-            $html .= '<div><label>' . htmlspecialchars((string)$ac['label']) . '</label><select name="attribute_values[' . $catId . '][]" multiple>';
-            foreach ($values as $v) {
-                $vidUsed = '';
-                foreach ($assignments as $a) {
-                    if ((int)$a['category_id'] === $catId && (int)$a['value_id'] === (int)$v['id']) {
-                        $vidUsed = ' selected';
-                        break;
-                    }
-                }
-                $html .= '<option value="' . (int)$v['id'] . '"' . $vidUsed . '>' . htmlspecialchars((string)$v['value']) . '</option>';
+            $html .= '<div><label>' . _('Category') . '</label>';
+            $html .= '<select name="category_id" id="pa_category_select">';
+            $html .= '<option value="">' . _('-- Select Category --') . '</option>';
+            foreach ($categories as $cat) {
+                $html .= '<option value="' . (int)$cat['id'] . '">'
+                    . htmlspecialchars((string)$cat['label']) . '</option>';
             }
             $html .= '</select></div>';
-        }
 
-        // Add new assignment section (second call to listCategories)
-        $allCategories = $this->dao->listCategories();
-        $html .= '<h5>' . _('Add Assignment') . '</h5>';
-        $html .= '<select name="add_category_id">';
-        $html .= '<option value="">' . _('-- Select Category --') . '</option>';
-        foreach ($allCategories as $cat) {
-            $html .= '<option value="' . (int)$cat['id'] . '">' . htmlspecialchars((string)$cat['label']) . '</option>';
+            $html .= '<div><label>' . _('Value') . '</label>';
+            $html .= '<select name="value_id" id="pa_value_select">';
+            $html .= '<option value="">' . _('-- Select Category First --') . '</option>';
+            $html .= '</select></div>';
+
+            $html .= '<div><label>' . _('Sort Order') . '</label>';
+            $html .= '<input type="number" name="sort_order" value="0" min="0" /></div>';
+
+            $html .= '<div style="margin-top:8px"><button type="submit">' . _('Add') . '</button></div>';
+            $html .= '</form>';
+            $html .= '</fieldset>';
+
+            $html .= '<script>
+var paCatSelect = document.getElementById("pa_category_select");
+var paValSelect = document.getElementById("pa_value_select");
+var paValues = ' . json_encode($this->buildCategoryValuesMap($categories)) . ';
+
+if (paCatSelect) {
+    paCatSelect.addEventListener("change", function() {
+        var catId = this.value;
+        paValSelect.innerHTML = "";
+        if (!catId || !paValues[catId]) {
+            var opt = document.createElement("option");
+            opt.value = "";
+            opt.textContent = "-- Select Category First --";
+            paValSelect.appendChild(opt);
+            return;
         }
-        $html .= '</select>';
+        var vals = paValues[catId];
+        var def = document.createElement("option");
+        def.value = "";
+        def.textContent = "-- Select Value --";
+        paValSelect.appendChild(def);
+        for (var i = 0; i < vals.length; i++) {
+            var o = document.createElement("option");
+            o.value = vals[i].id;
+            o.textContent = vals[i].value + " (" + vals[i].slug + ")";
+            paValSelect.appendChild(o);
+        }
+    });
+}
+</script>';
+        }
 
         return $html;
+    }
+
+    /**
+     * Build a map of category_id => values for client-side value dropdown.
+     *
+     * @param array $categories
+     * @return array<int, array<int, array{id: int, value: string, slug: string}>>
+     */
+    private function buildCategoryValuesMap(array $categories): array
+    {
+        $map = [];
+        foreach ($categories as $cat) {
+            $catId = (int)$cat['id'];
+            $values = $this->dao->getValuesForCategory($catId);
+            $map[$catId] = [];
+            foreach ($values as $v) {
+                $map[$catId][] = [
+                    'id'    => (int)$v['id'],
+                    'value' => (string)$v['value'],
+                    'slug'  => (string)($v['slug'] ?? ''),
+                ];
+            }
+        }
+        return $map;
+    }
+
+    /**
+     * Handle adding a single assignment from the tab.
+     *
+     * @param string $stockId
+     * @param array<string, mixed> $postData
+     * @return string Success/error message
+     */
+    public function handleAddAssignment(string $stockId, array $postData): string
+    {
+        $categoryId = (int)($postData['category_id'] ?? 0);
+        $valueId    = (int)($postData['value_id'] ?? 0);
+        $sortOrder  = (int)($postData['sort_order'] ?? 0);
+
+        if ($categoryId <= 0 || $valueId <= 0) {
+            return _('Please select both a category and a value.');
+        }
+
+        $assignments = $this->dao->listAssignments($stockId);
+        foreach ($assignments as $a) {
+            if ((int)$a['category_id'] === $categoryId && (int)$a['value_id'] === $valueId) {
+                return _('This category-value pair is already assigned.');
+            }
+        }
+
+        $this->dao->addAssignment($stockId, $categoryId, $valueId, $sortOrder);
+        return _('Assignment added.');
+    }
+
+    /**
+     * Handle deleting a single assignment row from the tab.
+     *
+     * @param int $rowId Assignment row id
+     * @return string Success/error message
+     */
+    public function handleDeleteRow(int $rowId): string
+    {
+        if ($rowId <= 0) {
+            return _('Invalid assignment.');
+        }
+        $this->dao->deleteAssignment($rowId);
+        return _('Assignment removed.');
     }
 
     /**

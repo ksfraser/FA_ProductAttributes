@@ -13,12 +13,11 @@ class ProductAttributesServiceTest extends TestCase
     {
         $dao = $this->createMock(ProductAttributesDao::class);
         $dao->expects($this->once())
-            ->method('getAssignedCategoriesForProduct')
+            ->method('listAssignments')
             ->with('TEST123')
             ->willReturn([]);
         $dao->expects($this->once())
-            ->method('listAssignments')
-            ->with('TEST123')
+            ->method('listCategories')
             ->willReturn([]);
 
         $db = $this->createMock(DbAdapterInterface::class);
@@ -34,32 +33,22 @@ class ProductAttributesServiceTest extends TestCase
     {
         $dao = $this->createMock(ProductAttributesDao::class);
         $dao->expects($this->once())
-            ->method('getAssignedCategoriesForProduct')
-            ->with('TEST123')
-            ->willReturn([
-                ['id' => 1, 'label' => 'Color']
-            ]);
-        $dao->expects($this->once())
             ->method('listAssignments')
             ->with('TEST123')
             ->willReturn([
                 [
+                    'id' => 42,
                     'category_id' => 1,
                     'category_label' => 'Color',
                     'value_id' => 10,
-                    'value_label' => 'Red'
+                    'value_label' => 'Red',
+                    'sort_order' => 0,
                 ]
             ]);
-        $dao->expects($this->exactly(2))
+        $dao->expects($this->once())
             ->method('listCategories')
             ->willReturn([
                 ['id' => 1, 'code' => 'COLOR', 'label' => 'Color']
-            ]);
-        $dao->expects($this->once())
-            ->method('getValuesForCategory')
-            ->with(1)
-            ->willReturn([
-                ['id' => 10, 'value' => 'Red']
             ]);
 
         $db = $this->createMock(DbAdapterInterface::class);
@@ -70,6 +59,8 @@ class ProductAttributesServiceTest extends TestCase
         $this->assertTrue(strpos($result, 'Product Attributes') !== false);
         $this->assertTrue(strpos($result, 'Color') !== false);
         $this->assertTrue(strpos($result, 'Red') !== false);
+        $this->assertTrue(strpos($result, 'pa_delete_row') !== false, 'Should have delete button');
+        $this->assertTrue(strpos($result, 'Add Assignment') !== false, 'Should have Add Assignment section');
     }
 
     public function testSaveProductAttributes(): void

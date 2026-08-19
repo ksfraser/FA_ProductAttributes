@@ -39,6 +39,7 @@ class AttributesTab extends AbstractTab
 
     public function renderTabContent(string $stockId): void
     {
+        $this->handleInlineActions($stockId);
         echo $this->service->renderProductAttributesTab($stockId);
     }
 
@@ -50,5 +51,28 @@ class AttributesTab extends AbstractTab
     public function handleDelete(string $stockId): void
     {
         $this->handler->handle_product_attributes_delete($stockId);
+    }
+
+    /**
+     * Handle inline actions (add assignment, delete row) before rendering.
+     */
+    private function handleInlineActions(string $stockId): void
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST' || $stockId === '') {
+            return;
+        }
+
+        if (isset($_POST['pa_delete_row'])) {
+            $rowId = (int)$_POST['pa_delete_row'];
+            $message = $this->service->handleDeleteRow($rowId);
+            display_notification($message);
+            return;
+        }
+
+        if (isset($_POST['action']) && $_POST['action'] === 'add_pa_assignment') {
+            $message = $this->service->handleAddAssignment($stockId, $_POST);
+            display_notification($message);
+            return;
+        }
     }
 }
