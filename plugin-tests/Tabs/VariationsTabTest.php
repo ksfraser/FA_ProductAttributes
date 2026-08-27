@@ -106,6 +106,43 @@ class VariationsTabTest extends TestCase
         $this->assertStringContainsString('Parent Product', $output);
     }
 
+    /**
+     * Regression: Create Child button should be disabled on child products (issue #52).
+     */
+    public function testCreateChildButtonDisabledOnChildProduct(): void
+    {
+        $_SERVER['REQUEST_METHOD'] = 'GET';
+        $this->dao->expects($this->once())->method('listCategories')->willReturn([]);
+        $this->dao->expects($this->once())->method('getProductParent')->willReturn([
+            'stock_id' => 'PARENT001',
+            'description' => 'Parent Product',
+        ]);
+
+        ob_start();
+        $this->tab->renderTabContent('CHILD001');
+        $output = ob_get_clean();
+
+        $this->assertStringContainsString('disabled', $output, 'Create Child button should be disabled for child products');
+        $this->assertStringContainsString('Cannot create children of a child product', $output);
+    }
+
+    /**
+     * Regression: Action buttons should not render when no product is selected (issue #52).
+     */
+    public function testActionButtonsHiddenWithEmptyStockId(): void
+    {
+        $_SERVER['REQUEST_METHOD'] = 'GET';
+        $this->dao->expects($this->once())->method('listCategories')->willReturn([]);
+        $this->dao->expects($this->once())->method('getProductParent')->willReturn(null);
+
+        ob_start();
+        $this->tab->renderTabContent('');
+        $output = ob_get_clean();
+
+        $this->assertStringNotContainsString('create_child', $output, 'Create Child button should not render with no product');
+        $this->assertStringNotContainsString('generate_variations', $output, 'Generate Variations should not render with no product');
+    }
+
     public function testHandleSaveDoesNothing(): void
     {
         $this->tab->handleSave('SKU001', []);

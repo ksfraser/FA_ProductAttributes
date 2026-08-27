@@ -117,15 +117,6 @@ class MediaTab extends AbstractTab
 
         if (isset($_POST['pa_media_upload']) && isset($_FILES['media_file'])) {
             $this->handleImageUpload($stockId, $_FILES['media_file']);
-            // Redirect to same product/tab so the upload is shown and
-            // browser back-button doesn't re-submit.
-            if (headers_sent() === false) {
-                $uri = $_SERVER['REQUEST_URI'] ?? $_SERVER['PHP_SELF'] ?? '';
-                if ($uri !== '') {
-                    header('Location: ' . $uri);
-                    exit;
-                }
-            }
             return;
         }
 
@@ -136,13 +127,7 @@ class MediaTab extends AbstractTab
                 if ($mediaItem && $mediaItem['stock_id'] === $stockId) {
                     $this->deleteMediaFile((string)($mediaItem['url'] ?? ''));
                     $this->dao->deleteMedia($mediaId);
-                }
-            }
-            if (headers_sent() === false) {
-                $uri = $_SERVER['REQUEST_URI'] ?? $_SERVER['PHP_SELF'] ?? '';
-                if ($uri !== '') {
-                    header('Location: ' . $uri);
-                    exit;
+                    display_notification(_("Media item deleted."));
                 }
             }
             return;

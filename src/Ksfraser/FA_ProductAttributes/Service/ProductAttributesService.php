@@ -61,7 +61,8 @@ class ProductAttributesService
                 $html .= '<td>' . htmlspecialchars((string)($row['value_label'] ?? '')) . '</td>';
                 $html .= '<td>' . (int)($row['sort_order'] ?? 0) . '</td>';
                 $html .= '<td>';
-                $html .= '<input type="submit" name="pa_delete_row" value="' . (int)$row['id'] . '"'
+                $html .= '<input type="hidden" name="pa_delete_row_id" value="' . (int)$row['id'] . '">';
+                $html .= '<input type="submit" name="pa_delete_row_submit" value="' . htmlspecialchars(_('Remove'), ENT_QUOTES) . '"'
                     . ' onclick="return confirm(\'' . htmlspecialchars(_('Remove this assignment?'), ENT_QUOTES) . '\')">';
                 $html .= '</td>';
                 $html .= '</tr>';
