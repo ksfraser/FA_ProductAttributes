@@ -74,7 +74,8 @@ class VariationsTab extends AbstractTab
                 echo '<a href="' . $GLOBALS['path_to_root'] . '/modules/FA_ProductAttributes/public/index.php?tab=values&category_id='
                     . $category['id'] . '">' . _('Manage Values') . '</a> ';
                 if ($stockId !== '') {
-                    echo '<input type="submit" name="unassign_category" value="' . (int)$category['id'] . '"'
+                    echo '<input type="hidden" name="unassign_category_id" value="' . (int)$category['id'] . '">';
+                    echo '<input type="submit" name="unassign_category_submit" value="' . htmlspecialchars(_('Remove'), ENT_QUOTES) . '"'
                         . ' onclick="return confirm(\'' . htmlspecialchars(_('Remove this category from the product?'), ENT_QUOTES) . '\')">';
                 }
                 echo '</td>';
@@ -144,8 +145,17 @@ class VariationsTab extends AbstractTab
             echo '</fieldset>';
         }
 
-        echo '<p><input type="submit" name="generate_variations" value="' . _('Generate Variations') . '"> ';
-        echo '<input type="submit" name="create_child" value="' . _('Create Child Product') . '"></p>';
+        if ($stockId !== '') {
+            $isChild = !empty($parentData);
+            echo '<p><input type="submit" name="generate_variations" value="' . _('Generate Variations') . '"> ';
+            if ($isChild) {
+                echo '<input type="submit" name="create_child" value="' . _('Create Child Product') . '" disabled'
+                    . ' title="' . htmlspecialchars(_('Cannot create children of a child product'), ENT_QUOTES) . '">';
+            } else {
+                echo '<input type="submit" name="create_child" value="' . _('Create Child Product') . '">';
+            }
+            echo '</p>';
+        }
     }
 
     public function handleSave(string $stockId, array $postData): void
@@ -173,8 +183,8 @@ class VariationsTab extends AbstractTab
             return;
         }
 
-        if (isset($_POST['unassign_category'])) {
-            $categoryId = (int)$_POST['unassign_category'];
+        if (isset($_POST['unassign_category_submit'])) {
+            $categoryId = (int)($_POST['unassign_category_id'] ?? 0);
             if ($categoryId > 0) {
                 $this->coreDao->removeCategoryAssignment($stockId, $categoryId);
                 display_notification(_("Category unassigned"));

@@ -49,9 +49,16 @@ class AttributesTabTest extends TestCase
             ->with('SKU001')
             ->willReturn('tab content');
 
+        $saved = $_SERVER['REQUEST_METHOD'] ?? null;
+        $_SERVER['REQUEST_METHOD'] = 'GET';
         ob_start();
         $this->tab->renderTabContent('SKU001');
         $output = ob_get_clean();
+        if ($saved !== null) {
+            $_SERVER['REQUEST_METHOD'] = $saved;
+        } else {
+            unset($_SERVER['REQUEST_METHOD']);
+        }
 
         $this->assertSame('tab content', $output);
     }

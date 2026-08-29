@@ -62,8 +62,8 @@ class AttributesTab extends AbstractTab
             return;
         }
 
-        if (isset($_POST['pa_delete_row'])) {
-            $rowId = (int)$_POST['pa_delete_row'];
+        if (isset($_POST['pa_delete_row_submit'])) {
+            $rowId = (int)($_POST['pa_delete_row_id'] ?? 0);
             $message = $this->service->handleDeleteRow($rowId);
             display_notification($message);
             return;

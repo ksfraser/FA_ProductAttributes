@@ -59,7 +59,7 @@ class ProductAttributesServiceTest extends TestCase
         $this->assertTrue(strpos($result, 'Product Attributes') !== false);
         $this->assertTrue(strpos($result, 'Color') !== false);
         $this->assertTrue(strpos($result, 'Red') !== false);
-        $this->assertTrue(strpos($result, 'pa_delete_row') !== false, 'Should have delete button');
+        $this->assertTrue(strpos($result, 'pa_delete_row_submit') !== false, 'Should have delete button');
         $this->assertTrue(strpos($result, 'Add Assignment') !== false, 'Should have Add Assignment section');
     }
 

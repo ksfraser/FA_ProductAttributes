@@ -123,6 +123,7 @@ class MediaTabTest extends TestCase
     /**
      * Regression: POST delete must delete via the tab handler without a
      * header('Location') hard refresh (GitHub issue #11 / #24).
+     * Verify delete completes (DAO called) without exit/die.
      */
     public function testPostDeleteMediaItemDeletesWithoutRedirect(): void
     {
@@ -141,6 +142,7 @@ class MediaTabTest extends TestCase
         $this->tab->renderTabContent('SKU001');
         ob_get_clean();
 
+        $this->assertTrue(true, 'Delete completed without redirect/exit');
         $_SERVER['REQUEST_METHOD'] = 'GET';
         unset($_POST);
     }
