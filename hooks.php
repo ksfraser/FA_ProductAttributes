@@ -120,6 +120,11 @@ class hooks_FA_ProductAttributes extends hooks
 
     public function activate_extension($company, $check_only = true)
     {
+        if (!defined('KSF_FA_COMMON_LOADER_REGISTERED')) {
+            echo '<div class="alert alert-warning">' . _('ksf_FA_Common is not installed and active. It must be installed and activated BEFORE this module; FA_ProductAttributes depends on the shared library it provides.') . '</div>';
+            return false;
+        }
+
         if (!$check_only) {
             $this->register_hooks();
         }
