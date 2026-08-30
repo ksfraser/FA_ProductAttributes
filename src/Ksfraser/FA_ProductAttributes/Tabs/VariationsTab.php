@@ -49,6 +49,9 @@ class VariationsTab extends AbstractTab
         $assignedCategories = ($stockId !== '') ? $this->dao->listCategoryAssignments($stockId) : [];
         $allCategories = $this->dao->listCategories();
         $parentData = $this->dao->getProductParent($stockId);
+        // A child product is a variation of a parent: its category
+        // assignments are managed on the parent and shown here read-only.
+        $isChild = !empty($parentData);
         $variations = ($stockId !== '') ? $this->dao->getProductVariations($stockId) : [];
 
         if ($parentData) {
@@ -61,8 +64,13 @@ class VariationsTab extends AbstractTab
 
         echo '<fieldset><legend>' . _('Assigned Categories') . '</legend>';
         if (empty($assignedCategories)) {
-            echo '<p>' . _('No categories assigned. Use the dropdown below to assign one.') . '</p>';
+            if ($isChild) {
+                echo '<p>' . _('No categories assigned. Categories are managed on the parent product.') . '</p>';
+            } else {
+                echo '<p>' . _('No categories assigned. Use the dropdown below to assign one.') . '</p>';
+            }
         } else {
+            $isReadOnly = $isChild;
             echo '<table class="tablestyle2">';
             echo '<tr><th>' . _('Category') . '</th><th>' . _('Active Values') . '</th><th>' . _('Actions') . '</th></tr>';
             foreach ($assignedCategories as $category) {
@@ -71,12 +79,16 @@ class VariationsTab extends AbstractTab
                 echo '<td>' . htmlspecialchars($category['label']) . '</td>';
                 echo '<td>' . count($activeValues) . ' ' . _('values') . '</td>';
                 echo '<td>';
-                echo '<a href="' . $GLOBALS['path_to_root'] . '/modules/FA_ProductAttributes/public/index.php?tab=values&category_id='
-                    . $category['id'] . '">' . _('Manage Values') . '</a> ';
-                if ($stockId !== '') {
-                    echo '<input type="hidden" name="unassign_category_id" value="' . (int)$category['id'] . '">';
-                    echo '<input type="submit" name="unassign_category_submit" value="' . htmlspecialchars(_('Remove'), ENT_QUOTES) . '"'
-                        . ' onclick="return confirm(\'' . htmlspecialchars(_('Remove this category from the product?'), ENT_QUOTES) . '\')">';
+                if (!$isReadOnly) {
+                    echo '<a href="' . $GLOBALS['path_to_root'] . '/modules/FA_ProductAttributes/public/index.php?tab=values&category_id='
+                        . $category['id'] . '">' . _('Manage Values') . '</a> ';
+                    if ($stockId !== '') {
+                        echo '<input type="hidden" name="unassign_category_id" value="' . (int)$category['id'] . '">';
+                        echo '<input type="submit" name="unassign_category_submit" value="' . htmlspecialchars(_('Remove'), ENT_QUOTES) . '"'
+                            . ' onclick="return confirm(\'' . htmlspecialchars(_('Remove this category from the product?'), ENT_QUOTES) . '\')">';
+                    }
+                } else {
+                    echo '<span style="color:#666">' . _('inherited from parent') . '</span>';
                 }
                 echo '</td>';
                 echo '</tr>';
@@ -112,7 +124,7 @@ class VariationsTab extends AbstractTab
             }
         }
 
-        if ($stockId !== '' && !empty($allCategories)) {
+        if ($stockId !== '' && !$isChild && !empty($allCategories)) {
             $assignedIds = array_column($assignedCategories, 'id');
             $unassigned = array_filter($allCategories, function ($cat) use ($assignedIds) {
                 return !in_array($cat['id'], $assignedIds, true);
@@ -145,15 +157,9 @@ class VariationsTab extends AbstractTab
             echo '</fieldset>';
         }
 
-        if ($stockId !== '') {
-            $isChild = !empty($parentData);
+        if ($stockId !== '' && !$isChild) {
             echo '<p><input type="submit" name="generate_variations" value="' . _('Generate Variations') . '"> ';
-            if ($isChild) {
-                echo '<input type="submit" name="create_child" value="' . _('Create Child Product') . '" disabled'
-                    . ' title="' . htmlspecialchars(_('Cannot create children of a child product'), ENT_QUOTES) . '">';
-            } else {
-                echo '<input type="submit" name="create_child" value="' . _('Create Child Product') . '">';
-            }
+            echo '<input type="submit" name="create_child" value="' . _('Create Child Product') . '">';
             echo '</p>';
         }
     }

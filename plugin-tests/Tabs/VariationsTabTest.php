@@ -107,23 +107,35 @@ class VariationsTabTest extends TestCase
     }
 
     /**
-     * Regression: Create Child button should be disabled on child products (issue #52).
+     * Regression: Child products show category assignments read-only (issue #52).
+     * No Assign DDL, no Remove / Manage Values actions, no generate or create buttons.
      */
-    public function testCreateChildButtonDisabledOnChildProduct(): void
+    public function testChildProductAssignmentsReadOnly(): void
     {
         $_SERVER['REQUEST_METHOD'] = 'GET';
-        $this->dao->expects($this->once())->method('listCategories')->willReturn([]);
+        $this->dao->expects($this->once())->method('listCategories')->willReturn([[
+            'id' => 1,
+            'label' => 'Colour',
+        ]]);
         $this->dao->expects($this->once())->method('getProductParent')->willReturn([
             'stock_id' => 'PARENT001',
             'description' => 'Parent Product',
         ]);
+        $this->dao->expects($this->once())->method('listCategoryAssignments')->willReturn([[
+            'id' => 1,
+            'label' => 'Colour',
+        ]]);
 
         ob_start();
         $this->tab->renderTabContent('CHILD001');
         $output = ob_get_clean();
 
-        $this->assertStringContainsString('disabled', $output, 'Create Child button should be disabled for child products');
-        $this->assertStringContainsString('Cannot create children of a child product', $output);
+        $this->assertStringContainsString('Parent Product', $output);
+        $this->assertStringContainsString('inherited from parent', $output);
+        $this->assertStringNotContainsString('create_child', $output, 'Create Child must not render on a child product');
+        $this->assertStringNotContainsString('generate_variations', $output, 'Generate Variations must not render on a child product');
+        $this->assertStringNotContainsString('assign_category_submit', $output, 'Assign Category DDL must not render on a child product');
+        $this->assertStringNotContainsString('unassign_category_submit', $output, 'Remove button must not render on a child product');
     }
 
     /**
