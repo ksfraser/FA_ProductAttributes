@@ -10,8 +10,10 @@
  * @package FA_ProductAttributes
  */
 
-// Only patch inside the FA container (session.inc present).
-if (!is_file('/var/www/html/includes/session.inc')) {
+// Only patch inside the FA container (session.inc present), or when
+// explicitly requested via env (host-side composer dumps, bind-mounted to
+// the container, need the same fix).
+if (!is_file('/var/www/html/includes/session.inc') && getenv('KSF_FA_COMMON_PATCH') !== '1') {
     echo "Local dev — skipping autoload patch.\n";
     return;
 }
