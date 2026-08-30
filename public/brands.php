@@ -125,10 +125,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $dao->delete($rowId);
             }
             display_notification(_('Record deleted.'));
-        }
 
-        // Edit: fall through to render the form prefilled with this record.
-        $editRowId = $rowId;
+            // Re-query so the summary table no longer shows the deleted entry
+            // in the same request (issue #57).
+            $entries = $dao->listByType($currentType);
+        } else {
+            // Edit: fall through to render the form prefilled with this record.
+            $editRowId = $rowId;
+        }
     }
 
     if ($action === 'add_entry') {

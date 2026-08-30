@@ -112,10 +112,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $dao->deleteFlag($rowId);
             }
             display_notification(_('Record deleted.'));
-        }
 
-        // Edit: fall through to render the form prefilled with this record.
-        $editRowId = $rowId;
+            // Re-query so the summary table no longer shows the deleted flag
+            // in the same request (issue #57).
+            $flags = $dao->listFlags();
+        } else {
+            // Edit: fall through to render the form prefilled with this record.
+            $editRowId = $rowId;
+        }
     }
 
     if ($action === 'add_flag') {

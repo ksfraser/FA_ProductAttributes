@@ -204,10 +204,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($rowAction['action'] === 'delete') {
             pa_delete_row($tab, $dao, $rowId);
             display_notification(_('Record deleted.'));
-        }
 
-        // Edit: fall through to render the form prefilled with this record.
-        $editRowId = $rowId;
+            // Re-query so the summary table and dropdowns no longer reference
+            // the deleted record in the same request (issue #57).
+            $cats = $dao->listCategories();
+        } else {
+            // Edit: fall through to render the form prefilled with this record.
+            $editRowId = $rowId;
+        }
     }
 
     if ($action === 'upsert_category') {
