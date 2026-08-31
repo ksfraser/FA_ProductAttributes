@@ -131,14 +131,13 @@ class ProductAttributesService
             return _('Please select both a category and a value.');
         }
 
-        $assignments = $this->dao->listAssignments($stockId);
-        foreach ($assignments as $a) {
-            if ((int)$a['category_id'] === $categoryId && (int)$a['value_id'] === $valueId) {
-                return _('This category-value pair is already assigned.');
-            }
-        }
+        $added = $this->dao->assignValues($stockId, [
+            ['category_id' => $categoryId, 'value_id' => $valueId, 'sort_order' => $sortOrder],
+        ]);
 
-        $this->dao->addAssignment($stockId, $categoryId, $valueId, $sortOrder);
+        if (empty($added)) {
+            return _('This category-value pair is already assigned.');
+        }
         return _('Assignment added.');
     }
 

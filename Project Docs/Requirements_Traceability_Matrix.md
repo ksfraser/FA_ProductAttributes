@@ -11,7 +11,7 @@ Each row maps a business requirement → functional requirement → implementati
 | BR-1.1 | FR-1.1 | `ProductAttributesDao::getAssignmentsForProduct()` | `AddAssignmentActionTest` |
 | BR-1.2 | FR-1.2 | `ProductAttributesDao::getValuesForCategory()` | `UpsertValueActionTest` |
 | BR-1.3 | FR-1.3 | `ProductAttributesDao::getAssignmentsForProduct()` | `AddAssignmentActionTest` |
-| BR-1.4 | FR-1.4 | `ProductAttributesDao::addAssignment()` sort_order param | `AddAssignmentActionTest` |
+| BR-1.4 | FR-1.4 | `ProductAttributesDao::assignValues()` (union: dedupe + insert, sort_order) | `ProductAttributesDaoTest` + `AddAssignmentActionTest` |
 | BR-1.5 | FR-1.5 | `ProductAttributesDao::deleteCategory()` soft-deactivate | `DeleteCategoryActionTest` |
 | BR-1.6 | FR-1.6 | `ProductAttributesDao::deleteValue()` soft-deactivate | `DeleteValueActionTest` |
 | BR-1.7 | FR-1.7 | `ProductAttributesDao::addValue()` duplicate check | `UpsertValueActionTest` |

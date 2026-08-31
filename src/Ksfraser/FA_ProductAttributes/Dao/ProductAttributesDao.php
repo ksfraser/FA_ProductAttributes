@@ -245,6 +245,47 @@ class ProductAttributesDao
         );
     }
 
+    /**
+     * Union-assign attribute values to a product: inserts only the category-value
+     * pairs that are not already assigned, leaving existing assignments untouched.
+     *
+     * @param string                                                       $stockId
+     * @param array<int, array{category_id: int, value_id: int, sort_order?: int}> $pairs
+     * @param string|null                                                  $parentStockId
+     * @return array<int, array{category_id: int, value_id: int, sort_order: int}>
+     */
+    public function assignValues(string $stockId, array $pairs, ?string $parentStockId = null): array
+    {
+        $added = [];
+        if ($stockId === '' || empty($pairs)) {
+            return $added;
+        }
+
+        $existing = $this->listAssignments($stockId);
+        $seen = [];
+        foreach ($existing as $a) {
+            $seen[(int)$a['category_id'] . ':' . (int)$a['value_id']] = true;
+        }
+
+        foreach ($pairs as $pair) {
+            $categoryId = (int)($pair['category_id'] ?? 0);
+            $valueId    = (int)($pair['value_id'] ?? 0);
+            if ($categoryId <= 0 || $valueId <= 0) {
+                continue;
+            }
+            $key = $categoryId . ':' . $valueId;
+            if (isset($seen[$key])) {
+                continue;
+            }
+            $sortOrder = (int)($pair['sort_order'] ?? 0);
+            $this->addAssignment($stockId, $categoryId, $valueId, $sortOrder, $parentStockId);
+            $seen[$key] = true;
+            $added[] = ['category_id' => $categoryId, 'value_id' => $valueId, 'sort_order' => $sortOrder];
+        }
+
+        return $added;
+    }
+
     public function deleteAssignment(int $assignmentId): void
     {
         $p = $this->db->getTablePrefix();

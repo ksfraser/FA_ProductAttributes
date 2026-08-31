@@ -21,10 +21,6 @@ use Ksfraser\Frontaccounting\HTML\MasterSummaryTable;
 // Resolve all relative includes from this module directory.
 chdir(__DIR__);
 
-// Register ksf_FA_Common as the canonical autoload source for the shared
-// namespaces before the Composer autoloader maps them to vendored copies.
-require_once dirname(__DIR__) . '/../ksf_FA_Common/src/autoload.php';
-
 // Load the Composer autoloader.
 $vendorAutoload = __DIR__ . '/../vendor/autoload.php';
 if (!is_file($vendorAutoload)) {

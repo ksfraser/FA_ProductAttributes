@@ -247,6 +247,96 @@ class ProductAttributesDaoTest extends TestCase
         $dao->addAssignment('ABC123-Red', 1, 1, 1, 'ABC123');
     }
 
+    public function testAssignValuesEmptyPairsReturnsEmptyWithoutQuery(): void
+    {
+        $db = $this->createMock(DbAdapterInterface::class);
+        $db->expects($this->never())->method('query');
+
+        $dao = new ProductAttributesDao($db);
+        $result = $dao->assignValues('ABC123', []);
+
+        $this->assertSame([], $result);
+    }
+
+    public function testAssignValuesInsertsMissingPairsSkipsInvalidAndDuplicates(): void
+    {
+        $db = $this->createMock(DbAdapterInterface::class);
+        $db->method('getTablePrefix')->willReturn('fa_');
+        $db->expects($this->once())
+            ->method('query')
+            ->with(
+                "SELECT a.*, c.code AS category_code, c.label AS category_label, c.sort_order AS category_sort_order, v.value AS value_label, v.slug AS value_slug\n"
+                . "FROM `fa_product_attribute_assignments` a\n"
+                . "JOIN `fa_product_attribute_categories` c ON c.id = a.category_id\n"
+                . "JOIN `fa_product_attribute_values` v ON v.id = a.value_id\n"
+                . "WHERE a.stock_id = :stock_id\n"
+                . "ORDER BY a.sort_order, c.sort_order, c.code, v.sort_order, v.slug",
+                ['stock_id' => 'ABC123']
+            )
+            ->willReturn([]);
+        $db->expects($this->exactly(2))
+            ->method('execute')
+            ->withConsecutive(
+                [
+                    "INSERT INTO `fa_product_attribute_assignments` (stock_id, category_id, value_id, sort_order, parent_stock_id)\nVALUES (:stock_id, :category_id, :value_id, :sort_order, :parent_stock_id)",
+                    ['stock_id' => 'ABC123', 'category_id' => 1, 'value_id' => 1, 'sort_order' => 0, 'parent_stock_id' => null],
+                ],
+                [
+                    "INSERT INTO `fa_product_attribute_assignments` (stock_id, category_id, value_id, sort_order, parent_stock_id)\nVALUES (:stock_id, :category_id, :value_id, :sort_order, :parent_stock_id)",
+                    ['stock_id' => 'ABC123', 'category_id' => 1, 'value_id' => 2, 'sort_order' => 5, 'parent_stock_id' => null],
+                ]
+            );
+
+        $dao = new ProductAttributesDao($db);
+        $result = $dao->assignValues('ABC123', [
+            ['category_id' => 1, 'value_id' => 1, 'sort_order' => 0],
+            ['category_id' => 1, 'value_id' => 1, 'sort_order' => 9],
+            ['category_id' => 0, 'value_id' => 5],
+            ['category_id' => 1, 'value_id' => 2, 'sort_order' => 5],
+        ]);
+
+        $this->assertCount(2, $result);
+        $this->assertEquals(1, $result[0]['category_id']);
+        $this->assertEquals(1, $result[0]['value_id']);
+        $this->assertEquals(2, $result[1]['value_id']);
+    }
+
+    public function testAssignValuesSkipsExistingPairs(): void
+    {
+        $db = $this->createMock(DbAdapterInterface::class);
+        $db->method('getTablePrefix')->willReturn('fa_');
+        $db->expects($this->once())
+            ->method('query')
+            ->with(
+                "SELECT a.*, c.code AS category_code, c.label AS category_label, c.sort_order AS category_sort_order, v.value AS value_label, v.slug AS value_slug\n"
+                . "FROM `fa_product_attribute_assignments` a\n"
+                . "JOIN `fa_product_attribute_categories` c ON c.id = a.category_id\n"
+                . "JOIN `fa_product_attribute_values` v ON v.id = a.value_id\n"
+                . "WHERE a.stock_id = :stock_id\n"
+                . "ORDER BY a.sort_order, c.sort_order, c.code, v.sort_order, v.slug",
+                ['stock_id' => 'ABC123']
+            )
+            ->willReturn([
+                ['id' => 1, 'stock_id' => 'ABC123', 'category_id' => 1, 'value_id' => 1, 'sort_order' => 0],
+            ]);
+        $db->expects($this->once())
+            ->method('execute')
+            ->with(
+                "INSERT INTO `fa_product_attribute_assignments` (stock_id, category_id, value_id, sort_order, parent_stock_id)\nVALUES (:stock_id, :category_id, :value_id, :sort_order, :parent_stock_id)",
+                ['stock_id' => 'ABC123', 'category_id' => 2, 'value_id' => 3, 'sort_order' => 4, 'parent_stock_id' => null]
+            );
+
+        $dao = new ProductAttributesDao($db);
+        $result = $dao->assignValues('ABC123', [
+            ['category_id' => 1, 'value_id' => 1, 'sort_order' => 0],
+            ['category_id' => 2, 'value_id' => 3, 'sort_order' => 4],
+        ]);
+
+        $this->assertCount(1, $result);
+        $this->assertEquals(2, $result[0]['category_id']);
+        $this->assertEquals(3, $result[0]['value_id']);
+    }
+
     public function testGetAssignedCategoriesForProduct(): void
     {
         $db = $this->createMock(DbAdapterInterface::class);

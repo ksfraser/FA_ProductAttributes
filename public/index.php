@@ -22,10 +22,6 @@ use Ksfraser\Frontaccounting\HTML\TabContext;
 // Resolve all relative includes from this module directory.
 chdir(__DIR__);
 
-// Register ksf_FA_Common as the canonical autoload source for the shared
-// namespaces before the Composer autoloader maps them to vendored copies.
-require_once dirname(__DIR__) . '/../ksf_FA_Common/src/autoload.php';
-
 // Load the Composer autoloader.
 $vendorAutoload = __DIR__ . '/../vendor/autoload.php';
 if (!is_file($vendorAutoload)) {
@@ -250,17 +246,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $sortOrder = (int) ($_POST['sort_order'] ?? 0);
 
         if ($sId !== '' && $catId > 0 && $valueId > 0) {
-            $existing = $dao->listAssignments($sId);
-            $duplicate = false;
-            foreach ($existing as $a) {
-                if ((int)$a['category_id'] === $catId && (int)$a['value_id'] === $valueId) {
-                    $duplicate = true;
-                    break;
-                }
-            }
-            if (!$duplicate) {
-                $dao->addAssignment($sId, $catId, $valueId, $sortOrder);
-            }
+            $dao->assignValues($sId, [
+                ['category_id' => $catId, 'value_id' => $valueId, 'sort_order' => $sortOrder],
+            ]);
         }
 
         header('Location: ' . pa_redirect_for('assignments', $catId, $sId));

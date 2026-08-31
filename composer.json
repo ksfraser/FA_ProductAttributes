@@ -45,10 +45,5 @@
     "platform": {
       "php": "7.3.21"
     }
-  },
-  "scripts": {
-    "post-autoload-dump": [
-      "php scripts/patch-autoload.php"
-    ]
   }
 }

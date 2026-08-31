@@ -120,8 +120,8 @@ class hooks_FA_ProductAttributes extends hooks
 
     public function activate_extension($company, $check_only = true)
     {
-        if (!defined('KSF_FA_COMMON_LOADER_REGISTERED')) {
-            echo '<div class="alert alert-warning">' . _('ksf_FA_Common is not installed and active. It must be installed and activated BEFORE this module; FA_ProductAttributes depends on the shared library it provides.') . '</div>';
+        if (!$this->ksf_fa_common_available()) {
+            echo '<div class="alert alert-warning">' . _('FA_ProductAttributes depends on the ksf-fa-common Composer package, which is not installed. Run composer install/update for this module, then re-activate FA_ProductAttributes.') . '</div>';
             return false;
         }
 
@@ -199,6 +199,11 @@ class hooks_FA_ProductAttributes extends hooks
 
     public function item_display_tab_headers($tabs, $stockId = '')
     {
+        if (!$this->ksf_fa_common_available()) {
+            $this->render_missing_dependency_error();
+            return $tabs;
+        }
+
         if ($this->can_check_access() && !$this->has_product_attributes_access()) {
             return $tabs;
         }
@@ -233,6 +238,11 @@ class hooks_FA_ProductAttributes extends hooks
     {
         $this->load_plugins_on_demand();
 
+        if (!$this->ksf_fa_common_available()) {
+            $this->render_missing_dependency_error();
+            return false;
+        }
+
         if ($this->can_check_access() && !$this->has_product_attributes_access()) {
             return false;
         }
@@ -254,6 +264,11 @@ class hooks_FA_ProductAttributes extends hooks
     public function post_item_write($itemData, $stockId = '')
     {
         $this->load_plugins_on_demand();
+
+        if (!$this->ksf_fa_common_available()) {
+            $this->render_missing_dependency_error();
+            return is_array($itemData) ? $itemData : array();
+        }
 
         if ($this->can_check_access() && !$this->has_product_attributes_access()) {
             return is_array($itemData) ? $itemData : array();
@@ -279,6 +294,11 @@ class hooks_FA_ProductAttributes extends hooks
     public function pre_item_delete($stockId = '')
     {
         $this->load_plugins_on_demand();
+
+        if (!$this->ksf_fa_common_available()) {
+            $this->render_missing_dependency_error();
+            return null;
+        }
 
         if ($this->can_check_access() && !$this->has_product_attributes_access()) {
             return null;
@@ -349,6 +369,37 @@ class hooks_FA_ProductAttributes extends hooks
 
         $GLOBALS['fa_product_attributes_tab_registry'] = $registry;
         return $registry;
+    }
+
+    /**
+     * Guard: every items.php hook that builds the tab registry requires the
+     * shared ksf-fa-common contracts (KsfCommon\Plugin\PluginRegistry and
+     * AbstractPlugin, base classes of the core TabRegistry/tabs).
+     *
+     * These classes ship in the composer package ksfraser/ksf-fa-common and are
+     * resolved from this module's vendor autoload (the ksf_FA_Common module is
+     * a no-op shell and provides no loader any more). Probe with class_exists
+     * so we degrade to a visible warning instead of a fatal when the package
+     * is missing or the autoloader was not (re)generated.
+     */
+    private function ksf_fa_common_available()
+    {
+        return class_exists('KsfCommon\\Plugin\\PluginRegistry')
+            && class_exists('KsfCommon\\Plugin\\AbstractPlugin');
+    }
+
+    private function render_missing_dependency_error()
+    {
+        $msg = _('FA_ProductAttributes is disabled: the ksf-fa-common package is not installed or its autoloader was not (re)generated. '
+            . 'Run composer install / composer update for this module, then re-activate FA_ProductAttributes. '
+            . 'Product attribute tabs are hidden until then.');
+
+        if (function_exists('display_error')) {
+            display_error($msg, true);
+            return;
+        }
+
+        echo '<div class="alert alert-warning">' . htmlspecialchars($msg) . '</div>';
     }
 
     private function can_check_access()
