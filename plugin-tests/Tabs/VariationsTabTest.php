@@ -49,7 +49,7 @@ class VariationsTabTest extends TestCase
     {
         $_SERVER['REQUEST_METHOD'] = 'GET';
         $this->dao->expects($this->once())->method('listCategories')->willReturn([]);
-        $this->dao->expects($this->once())->method('getProductParent')->willReturn(null);
+        $this->dao->expects($this->never())->method('getProductParent');
 
         ob_start();
         $this->tab->renderTabContent('');
@@ -139,13 +139,42 @@ class VariationsTabTest extends TestCase
     }
 
     /**
+     * Regression (#52/#45): A child product whose product_attribute_assignments rows
+     * carry no parent_stock_id must still be recognised as a child via the canonical
+     * product_hierarchy table. Buttons stay hidden and assignments render read-only.
+     */
+    public function testChildDetectedViaCanonicalProductHierarchy(): void
+    {
+        $_SERVER['REQUEST_METHOD'] = 'GET';
+        $this->dao->expects($this->never())->method('getProductParent');
+        $this->coreDao->expects($this->once())
+            ->method('getProductParent')
+            ->with('CHILD001')
+            ->willReturn('PARENT001');
+        $this->dao->expects($this->once())
+            ->method('getParentProductData')
+            ->with('PARENT001')
+            ->willReturn(['stock_id' => 'PARENT001', 'description' => 'Parent Product']);
+        $this->dao->expects($this->once())->method('listCategories')->willReturn([]);
+        $this->dao->expects($this->once())->method('listCategoryAssignments')->willReturn([]);
+
+        ob_start();
+        $this->tab->renderTabContent('CHILD001');
+        $output = ob_get_clean();
+
+        $this->assertStringContainsString('PARENT001', $output);
+        $this->assertStringNotContainsString('create_child', $output, 'Create Child must not render on a child product');
+        $this->assertStringNotContainsString('generate_variations', $output, 'Generate Variations must not render on a child product');
+    }
+
+    /**
      * Regression: Action buttons should not render when no product is selected (issue #52).
      */
     public function testActionButtonsHiddenWithEmptyStockId(): void
     {
         $_SERVER['REQUEST_METHOD'] = 'GET';
         $this->dao->expects($this->once())->method('listCategories')->willReturn([]);
-        $this->dao->expects($this->once())->method('getProductParent')->willReturn(null);
+        $this->dao->expects($this->never())->method('getProductParent');
 
         ob_start();
         $this->tab->renderTabContent('');
@@ -166,6 +195,9 @@ class VariationsTabTest extends TestCase
         $this->dao->expects($this->once())
             ->method('clearParentRelationship')
             ->with('SKU001');
+        $this->coreDao->expects($this->once())
+            ->method('setProductParent')
+            ->with('SKU001', null);
 
         $this->tab->handleDelete('SKU001');
     }

@@ -72,6 +72,9 @@ class CreateChildActionTest extends TestCase
         $this->variationsDao->expects($this->exactly(4))
             ->method('setParentRelationship');
 
+        $this->coreDao->expects($this->exactly(4))
+            ->method('setProductParent');
+
         $this->coreDao->expects($this->exactly(8))
             ->method('addAssignment');
 
@@ -151,6 +154,25 @@ class CreateChildActionTest extends TestCase
 
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage("Parent product '$stockId' not found");
+
+        $this->action->handle($postData);
+    }
+
+    /**
+     * Regression (#45/#52): child products cannot have children created for them.
+     */
+    public function testHandleThrowsWhenProductIsChild(): void
+    {
+        $stockId = 'CHILD001';
+        $postData = ['stock_id' => $stockId];
+
+        $this->coreDao->expects($this->once())
+            ->method('getProductParent')
+            ->with($stockId)
+            ->willReturn('PARENT001');
+
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('already a variation of another product');
 
         $this->action->handle($postData);
     }

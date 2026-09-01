@@ -34,6 +34,15 @@ class GenerateVariationsAction
             return _("Invalid stock ID");
         }
 
+        // Variations can only be generated for parent products, never for a
+        // product that is itself a variation of another product.
+        if ($this->isChildProduct($stockId)) {
+            return sprintf(
+                _("Cannot generate variations for '%s': it is a variation of another product"),
+                $stockId
+            );
+        }
+
         // Get assigned categories for this product
         $assignedCategories = $this->dao->listCategoryAssignments($stockId);
 
@@ -242,6 +251,34 @@ class GenerateVariationsAction
             $variationStockId,
             $this->sortCombinationByRoyalOrder($combination)
         );
+
+        // Record the canonical parent link so the product is always identified
+        // as a variation regardless of its assignment rows (GitHub issues #45/#52).
+        $this->dao->setProductParent($variationStockId, $parentProduct['stock_id']);
+    }
+
+    /**
+     * Determine whether a product is itself a variation of another product.
+     *
+     * Checks the canonical product_hierarchy table first, then falls back to
+     * the legacy parent link recorded on product_attribute_assignments rows.
+     */
+    private function isChildProduct(string $stockId): bool
+    {
+        $parentId = $this->dao->getProductParent($stockId);
+        if (!empty($parentId)) {
+            return true;
+        }
+
+        $p = $this->dbAdapter->getTablePrefix();
+        $rows = $this->dbAdapter->query(
+            "SELECT 1 FROM `{$p}product_attribute_assignments`
+             WHERE stock_id = :stock_id AND parent_stock_id IS NOT NULL AND parent_stock_id != ''
+             LIMIT 1",
+            ['stock_id' => $stockId]
+        );
+
+        return !empty($rows);
     }
 
     /**

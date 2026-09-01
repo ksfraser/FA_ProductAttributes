@@ -317,7 +317,11 @@ class VariationsDao
     }
 
     /**
-     * Clear parent relationship for a product
+     * Clear parent relationship for a product.
+     *
+     * Clears the assignment-derived parent link and mirrors the change in the
+     * canonical product_hierarchy table so the product is no longer detected
+     * as a variation (GitHub issues #45/#52).
      */
     public function clearParentRelationship(string $stockId): void
     {
@@ -326,10 +330,18 @@ class VariationsDao
             "UPDATE `{$p}product_attribute_assignments` SET parent_stock_id = NULL WHERE stock_id = :stock_id",
             ['stock_id' => $stockId]
         );
+        $this->db->execute(
+            "DELETE FROM `{$p}product_hierarchy` WHERE child_stock_id = :child",
+            ['child' => $stockId]
+        );
     }
 
     /**
-     * Set parent relationship for a variation
+     * Set parent relationship for a variation.
+     *
+     * Records the assignment-derived parent link and mirrors the change in the
+     * canonical product_hierarchy table so the product is always detected as a
+     * variation, even when its assignment rows hold no parent_stock_id.
      */
     public function setParentRelationship(string $stockId, string $parentStockId): void
     {
@@ -337,6 +349,11 @@ class VariationsDao
         $this->db->execute(
             "UPDATE `{$p}product_attribute_assignments` SET parent_stock_id = :parent_stock_id WHERE stock_id = :stock_id",
             ['parent_stock_id' => $parentStockId, 'stock_id' => $stockId]
+        );
+        $this->db->execute(
+            "INSERT INTO `{$p}product_hierarchy` (child_stock_id, parent_stock_id) VALUES (:child, :parent)"
+            . " ON DUPLICATE KEY UPDATE parent_stock_id = :parent2",
+            ['child' => $stockId, 'parent' => $parentStockId, 'parent2' => $parentStockId]
         );
     }
 

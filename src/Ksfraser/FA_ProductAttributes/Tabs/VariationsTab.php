@@ -48,7 +48,7 @@ class VariationsTab extends AbstractTab
 
         $assignedCategories = ($stockId !== '') ? $this->dao->listCategoryAssignments($stockId) : [];
         $allCategories = $this->dao->listCategories();
-        $parentData = $this->dao->getProductParent($stockId);
+        $parentData = $this->resolveParentData($stockId);
         // A child product is a variation of a parent: its category
         // assignments are managed on the parent and shown here read-only.
         $isChild = !empty($parentData);
@@ -172,6 +172,33 @@ class VariationsTab extends AbstractTab
     public function handleDelete(string $stockId): void
     {
         $this->dao->clearParentRelationship($stockId);
+        $this->coreDao->setProductParent($stockId, null);
+    }
+
+    /**
+     * Resolve the parent product for a stock id, or null if the product is not
+     * a child (variation) of another product.
+     *
+     * The canonical product_hierarchy table is checked first, then the legacy
+     * parent link recorded on product_attribute_assignments rows.
+     */
+    private function resolveParentData(string $stockId): ?array
+    {
+        if ($stockId === '') {
+            return null;
+        }
+
+        $parentId = $this->coreDao->getProductParent($stockId);
+        if ($parentId !== null && $parentId !== '') {
+            $details = $this->dao->getParentProductData($parentId);
+
+            return [
+                'stock_id'    => $parentId,
+                'description' => $details['description'] ?? '',
+            ];
+        }
+
+        return $this->dao->getProductParent($stockId);
     }
 
     private function handlePostActions(string $stockId): void

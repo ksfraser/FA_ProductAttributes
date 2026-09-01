@@ -38,6 +38,13 @@ class CreateChildAction
             throw new \InvalidArgumentException("Stock ID is required");
         }
 
+        if ($this->isChildProduct($stockId)) {
+            throw new \InvalidArgumentException(sprintf(
+                _("'%s' is already a variation of another product; child products cannot be created for it"),
+                $stockId
+            ));
+        }
+
         $parentData = $this->variationsDao->getParentProductData($stockId);
         if (!$parentData) {
             throw new \InvalidArgumentException("Parent product '$stockId' not found");
@@ -86,6 +93,7 @@ class CreateChildAction
                 $this->variationsDao->createChildProduct($childId, $parentData);
                 $this->variationsDao->copyParentCategoryAssignments($childId, $stockId);
                 $this->variationsDao->setParentRelationship($childId, $stockId);
+                $this->coreDao->setProductParent($childId, $stockId);
                 $this->recordAssignments($childId, $combo, $stockId);
                 $this->cloneProductAttributes($childId, $stockId);
                 $created++;
@@ -125,6 +133,20 @@ class CreateChildAction
     {
         $slugs = array_column($combo, 'slug');
         return $parentId . '-' . implode('-', $slugs);
+    }
+
+    /**
+     * A product is a child (variation) if it has a parent link recorded either in
+     * the canonical product_hierarchy table or on its product_attribute_assignments rows.
+     */
+    private function isChildProduct(string $stockId): bool
+    {
+        $parentId = $this->coreDao->getProductParent($stockId);
+        if (!empty($parentId)) {
+            return true;
+        }
+
+        return $this->variationsDao->getProductParent($stockId) !== null;
     }
 
     private function recordAssignments(string $childId, array $combo, string $parentStockId): void

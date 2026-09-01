@@ -73,11 +73,17 @@ class VariationsDaoTest extends TestCase
     {
         $db = $this->createMock(DbAdapterInterface::class);
         $db->method('getTablePrefix')->willReturn('fa_');
-        $db->expects($this->once())
+        $db->expects($this->exactly(2))
             ->method('execute')
-            ->with(
-                'UPDATE `fa_product_attribute_assignments` SET parent_stock_id = NULL WHERE stock_id = :stock_id',
-                ['stock_id' => 'ABC123']
+            ->withConsecutive(
+                [
+                    'UPDATE `fa_product_attribute_assignments` SET parent_stock_id = NULL WHERE stock_id = :stock_id',
+                    ['stock_id' => 'ABC123']
+                ],
+                [
+                    'DELETE FROM `fa_product_hierarchy` WHERE child_stock_id = :child',
+                    ['child' => 'ABC123']
+                ]
             );
 
         $coreDao = $this->createMock(ProductAttributesDao::class);
@@ -89,11 +95,18 @@ class VariationsDaoTest extends TestCase
     {
         $db = $this->createMock(DbAdapterInterface::class);
         $db->method('getTablePrefix')->willReturn('fa_');
-        $db->expects($this->once())
+        $db->expects($this->exactly(2))
             ->method('execute')
-            ->with(
-                'UPDATE `fa_product_attribute_assignments` SET parent_stock_id = :parent_stock_id WHERE stock_id = :stock_id',
-                ['parent_stock_id' => 'PARENT123', 'stock_id' => 'CHILD123']
+            ->withConsecutive(
+                [
+                    'UPDATE `fa_product_attribute_assignments` SET parent_stock_id = :parent_stock_id WHERE stock_id = :stock_id',
+                    ['parent_stock_id' => 'PARENT123', 'stock_id' => 'CHILD123']
+                ],
+                [
+                    'INSERT INTO `fa_product_hierarchy` (child_stock_id, parent_stock_id) VALUES (:child, :parent)'
+                    . ' ON DUPLICATE KEY UPDATE parent_stock_id = :parent2',
+                    ['child' => 'CHILD123', 'parent' => 'PARENT123', 'parent2' => 'PARENT123']
+                ]
             );
 
         $coreDao = $this->createMock(ProductAttributesDao::class);
