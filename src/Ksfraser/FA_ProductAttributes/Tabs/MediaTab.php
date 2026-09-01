@@ -84,11 +84,17 @@ class MediaTab extends AbstractTab
         }
         echo '</fieldset>';
 
+        global $SysPrefs;
+        $maxUploadSize = isset($SysPrefs->max_image_size) ? (int)$SysPrefs->max_image_size : 500000;
+
         echo '<fieldset><legend>' . _('Upload Image') . '</legend>';
         echo '<form method="post" action="" enctype="multipart/form-data">';
         echo '<input type="hidden" name="stock_id" value="'
             . htmlspecialchars($stockId, ENT_QUOTES, 'UTF-8') . '">';
         echo '<input type="hidden" name="_tabs_sel" value="product_media">';
+        if ($maxUploadSize > 0) {
+            echo '<input type="hidden" name="MAX_FILE_SIZE" value="' . (int)$maxUploadSize . '">';
+        }
         echo '<table class="tablestyle_noborder">';
         echo '<tr><td>' . _('File') . '</td>';
         echo '<td><input type="file" name="media_file" accept="image/jpeg,image/png,image/gif"></td></tr>';
@@ -98,7 +104,9 @@ class MediaTab extends AbstractTab
         echo '<tr><td>' . _('Sort Order') . '</td>';
         echo '<td><input type="number" name="sort_order" min="0" value="0"></td></tr>';
         echo '</table>';
-        echo '<p><small>' . _('Accepted formats: JPEG, PNG, GIF.') . '</small></p>';
+        echo '<p><small>' . _('Accepted formats: JPEG, PNG, GIF.')
+            . ($maxUploadSize > 0 ? ' ' . sprintf(_('Maximum size: %s bytes.'), number_format($maxUploadSize)) : '')
+            . '</small></p>';
         echo '<p><input type="submit" name="pa_media_upload" value="' . _('Upload Image') . '"></p>';
         echo '</form>';
         echo '</fieldset>';
@@ -136,7 +144,27 @@ class MediaTab extends AbstractTab
 
     private function handleImageUpload(string $stockId, array $file): void
     {
-        if ($file['error'] !== UPLOAD_ERR_OK || $file['size'] <= 0) {
+        if ($file['error'] !== UPLOAD_ERR_OK) {
+            switch ($file['error']) {
+                case UPLOAD_ERR_INI_SIZE:
+                    display_error(sprintf(
+                        _('File exceeds PHP upload_max_filesize (%s). Increase upload_max_filesize/post_max_size in php.ini.'),
+                        ini_get('upload_max_filesize') ?: 'unknown'
+                    ));
+                    break;
+                case UPLOAD_ERR_FORM_SIZE:
+                    display_error(_('File exceeds the form MAX_FILE_SIZE limit.'));
+                    break;
+                case UPLOAD_ERR_PARTIAL:
+                    display_error(_('Upload was interrupted — only part of the file was received.'));
+                    break;
+                default:
+                    display_error(_('File upload failed or empty.'));
+            }
+            return;
+        }
+
+        if ($file['size'] <= 0) {
             display_error(_('File upload failed or empty.'));
             return;
         }
@@ -152,8 +180,11 @@ class MediaTab extends AbstractTab
 
         global $SysPrefs;
         $maxSize = isset($SysPrefs->max_image_size) ? (int)$SysPrefs->max_image_size : 500000;
-        if ($file['size'] > $maxSize) {
-            display_error(_('File exceeds maximum image size.'));
+        if ($maxSize > 0 && $file['size'] > $maxSize) {
+            display_error(sprintf(
+                _('File exceeds maximum image size of %s bytes.'),
+                number_format($maxSize)
+            ));
             return;
         }
 
