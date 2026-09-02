@@ -56,6 +56,22 @@ class VariationsDao
         } catch (\Exception $e) {
             // Index might already exist, ignore
         }
+
+        // Persisted combination pool (FR-9.12..9.16, #60)
+        $this->db->execute("
+            CREATE TABLE IF NOT EXISTS `{$p}product_variation_combos` (
+              `id` INT(11) NOT NULL AUTO_INCREMENT,
+              `parent_stock_id` VARCHAR(32) NOT NULL,
+              `value_set_key` VARCHAR(255) NOT NULL COMMENT 'order-independent comma-joined value_ids for dedupe',
+              `slug_key` VARCHAR(255) NOT NULL COMMENT 'Royal Order dash-joined slug chain; child stock_id suffix',
+              `child_stock_id` VARCHAR(32) NULL DEFAULT NULL COMMENT 'filled when Gen Child instantiates this combo',
+              `created_ts` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+              PRIMARY KEY (`id`),
+              UNIQUE KEY `uq_parent_value_set` (`parent_stock_id`, `value_set_key`),
+              KEY `idx_parent` (`parent_stock_id`),
+              KEY `idx_child` (`child_stock_id`)
+            )
+        ");
     }
 
     /**

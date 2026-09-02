@@ -5,8 +5,10 @@ namespace Ksfraser\FA_ProductAttributes\Tabs;
 use FrontAccounting\ProductAttributes\Plugin\AbstractTab;
 use FrontAccounting\ProductAttributes\Variations\Dao\VariationsDao;
 use Ksfraser\FA_ProductAttributes\Actions\CreateChildAction;
-use Ksfraser\FA_ProductAttributes\Actions\GenerateVariationsAction;
+use Ksfraser\FA_ProductAttributes\Actions\GenerateChildAction;
+use Ksfraser\FA_ProductAttributes\Actions\GenerateCombosAction;
 use Ksfraser\FA_ProductAttributes\Dao\ProductAttributesDao;
+use Ksfraser\FA_ProductAttributes\Variations\Dao\CombosDao;
 use Ksfraser\ModulesDAO\Db\DbAdapterInterface;
 
 class VariationsTab extends AbstractTab
@@ -158,7 +160,8 @@ class VariationsTab extends AbstractTab
         }
 
         if ($stockId !== '' && !$isChild) {
-            echo '<p><input type="submit" name="generate_variations" value="' . _('Generate Variations') . '"> ';
+            echo '<p><input type="submit" name="generate_combos" value="' . _('Generate Combinations') . '"> ';
+            echo '<input type="submit" name="generate_child" value="' . _('Generate Child') . '"> ';
             echo '<input type="submit" name="create_child" value="' . _('Create Child Product') . '">';
             echo '</p>';
         }
@@ -225,10 +228,23 @@ class VariationsTab extends AbstractTab
             return;
         }
 
-        if (isset($_POST['generate_variations'])) {
-            $action = new GenerateVariationsAction($this->coreDao, $this->db);
+        if (isset($_POST['generate_combos'])) {
+            $combosDao = new CombosDao($this->db);
+            $action = new GenerateCombosAction($this->coreDao, $combosDao, $this->db);
             $message = $action->handle($_POST);
             display_notification($message);
+            return;
+        }
+
+        if (isset($_POST['generate_child'])) {
+            $combosDao = new CombosDao($this->db);
+            $action = new GenerateChildAction($this->dao, $this->coreDao, $combosDao, $this->db);
+            try {
+                $message = $action->handle($_POST);
+                display_notification($message);
+            } catch (\InvalidArgumentException $e) {
+                display_error($e->getMessage());
+            }
             return;
         }
 

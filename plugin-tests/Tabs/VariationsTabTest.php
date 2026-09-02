@@ -85,7 +85,8 @@ class VariationsTabTest extends TestCase
         $this->tab->renderTabContent('SKU001');
         $output = ob_get_clean();
 
-        $this->assertStringContainsString('generate_variations', $output);
+        $this->assertStringContainsString('generate_combos', $output);
+        $this->assertStringContainsString('generate_child', $output);
         $this->assertStringContainsString('create_child', $output);
     }
 

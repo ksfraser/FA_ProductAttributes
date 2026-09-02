@@ -12,17 +12,23 @@ class VariationsDaoTest extends TestCase
         $db = $this->createMock(DbAdapterInterface::class);
         $db->method('getTablePrefix')->willReturn('fa_');
 
-        // Mock the execute calls for adding column and index
-        $db->expects($this->exactly(2))
+        // execute is called for: add parent_stock_id column, add index, then
+        // create the persisted combination pool table (FR-9.12..9.16, #60).
+        $calls = [];
+        $db->expects($this->exactly(3))
             ->method('execute')
-            ->withConsecutive(
-                ["\n                ALTER TABLE `fa_product_attribute_assignments`\n                ADD COLUMN `parent_stock_id` VARCHAR(50) NULL DEFAULT NULL\n            "],
-                ["\n                ALTER TABLE `fa_product_attribute_assignments`\n                ADD INDEX `idx_parent_stock_id` (`parent_stock_id`)\n            "],
-            );
+            ->willReturnCallback(function ($sql) use (&$calls) {
+                $calls[] = $sql;
+            });
 
         $coreDao = $this->createMock(ProductAttributesDao::class);
         $dao = new VariationsDao($db, $coreDao);
         $dao->ensureVariationsSchema();
+
+        $this->assertCount(3, $calls);
+        $this->assertStringContainsString('ADD COLUMN `parent_stock_id`', $calls[0]);
+        $this->assertStringContainsString('ADD INDEX `idx_parent_stock_id`', $calls[1]);
+        $this->assertStringContainsString('CREATE TABLE IF NOT EXISTS `fa_product_variation_combos`', $calls[2]);
     }
 
     public function testGetProductParent(): void

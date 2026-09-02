@@ -108,6 +108,21 @@ class ActionHandler
                 case 'generate_variations':
                     return (new GenerateVariationsAction($this->productAttributesDao, $this->dbAdapter, $this->shippingAttributesDao))->handle($postData);
 
+                case 'generate_combos':
+                    return (new GenerateCombosAction(
+                        $this->productAttributesDao,
+                        new \Ksfraser\FA_ProductAttributes\Variations\Dao\CombosDao($this->dbAdapter),
+                        $this->dbAdapter
+                    ))->handle($postData);
+
+                case 'generate_child':
+                    return (new GenerateChildAction(
+                        $this->variationsDao,
+                        $this->productAttributesDao,
+                        new \Ksfraser\FA_ProductAttributes\Variations\Dao\CombosDao($this->dbAdapter),
+                        $this->dbAdapter
+                    ))->handle($postData);
+
                 case 'create_child':
                     return (new CreateChildAction($this->variationsDao, $this->productAttributesDao, $this->dbAdapter))->handle($postData);
 
