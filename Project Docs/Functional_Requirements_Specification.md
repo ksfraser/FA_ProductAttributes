@@ -25,6 +25,10 @@ This document specifies the functional behavior of the Product Attributes module
 | FR-1.8 | Categories: create, edit, deactivate, sort |
 | FR-1.9 | Values: create within category, edit, deactivate, sort |
 | FR-1.10 | Assignments: bulk-update product-category-value mappings |
+| FR-1.11 | Assignments sub-tab selection section shows stock item dropdown and Load only; no category dropdown |
+| FR-1.12 | Add Assignment section: category dropdown, value checkboxes (multi-select), "Add All" checkbox, sort order |
+| FR-1.13 | Add Assignment shows a brief Royal Order of Adjectives description (Quantity…Purpose) |
+| FR-1.14 | Add Assignment skips already-assigned category-value pairs (idempotent multi-assign) |
 
 ## 3. Tab: Shipping
 
@@ -171,12 +175,49 @@ This document specifies the functional behavior of the Product Attributes module
 
 ### 10.2 Variation Generation
 
+#### 10.2.1 Generate Combinations (rename of "Generate Variations")
+
+Separates the *definition* of the combination set from the *creation* of child products.
+The combo pool (`product_variation_combos`) is persisted per parent and is **only
+rebuilt on the explicit "Generate Combinations" action** — it is never auto-rewritten
+when a parent's categories or values change.
+
 | ID | Requirement |
 |----|-------------|
-| FR-9.3 | Generate all combinations from attribute assignments |
-| FR-9.4 | Create only missing variations (incremental) |
-| FR-9.5 | Create individual child product |
-| FR-9.6 | Royal Order of Adjectives for consistent sort |
+| FR-9.12 | Persist the cartesian combo pool per parent on explicit "Generate Combinations"; idempotent re-run (upsert by slug chain) |
+| FR-9.13 | Generate Child reconciles **only this parent's** children against the combo pool |
+| FR-9.14 | Per-parent scoping — never delete/inactivate/discontinue a child of another parent or a top-level item |
+| FR-9.15 | Pre-commit confirmation reporting delete / inactive / discontinued / new candidate counts before acting |
+
+#### 10.2.2 Changes to existing FRs
+
+| ID | Requirement |
+|----|-------------|
+| FR-9.3 | *Change:* "Generate all combinations" now **persists combos only** (does not create `stock_master` children) |
+| FR-9.4 | *Change:* "Create only missing variations (incremental)" becomes **Generate Child** — instantiates persisted combos into child products (cloning, inactive on orphans, discontinued on stocked history) |
+| FR-9.5 | *Change:* "Create individual child product" acts on a single persisted combo |
+
+#### 10.2.3 Child reconciliation rules (Gen Child, per parent — FR-9.13/9.14)
+
+| Orphan status (child not in combo pool) | Transaction history (GRN) | Stock on hand | Action |
+|----|----|----|----|
+| Orphan | None | Any | **Delete** stock_id |
+| Orphan | Has history | None | **Set inactive** |
+| Orphan | Has history | > 0 | **Set discontinued** (`stock_master.discontinued` blocks new SO/PO references; stock retained) |
+| New combo (no child yet) | n/a | n/a | **Create/clone** child + assignments |
+
+Rule invariant: a stock_id with transaction history is **never deleted** — at best
+inactive, or discontinued while stock remains.
+
+#### 10.2.4 Empty-value default for added categories
+
+When a category is added to a parent, existing GRN-having children are mapped to a
+default empty (`""`) value for that category so they remain valid. The empty value is
+excluded from the stock_id slug chain (no stock_id rename/migration on category add).
+
+| FR | Requirement |
+|----|-------------|
+| FR-9.16 | Adding a category assigns a default `""` value to existing children; `""` excluded from slug chain |
 
 ### 10.3 Bulk Operations
 

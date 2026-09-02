@@ -15,6 +15,10 @@ Each row maps a business requirement → functional requirement → implementati
 | BR-1.5 | FR-1.5 | `ProductAttributesDao::deleteCategory()` soft-deactivate | `DeleteCategoryActionTest` |
 | BR-1.6 | FR-1.6 | `ProductAttributesDao::deleteValue()` soft-deactivate | `DeleteValueActionTest` |
 | BR-1.7 | FR-1.7 | `ProductAttributesDao::addValue()` duplicate check | `UpsertValueActionTest` |
+| BR-1.1 | FR-1.11 | `public/index.php` assignments selection (stock dropdown + Load only) | `AdminPagesEquivalenceTest` |
+| BR-1.8 | FR-1.12 | `public/index.php` Add Assignment: value checkboxes + "Add All" (`value_ids[]` / `add_all`) | `AdminPagesEquivalenceTest` |
+| BR-1.9 | FR-1.13 | `public/index.php` Royal Order hint rendered in Add Assignment | `AdminPagesEquivalenceTest` |
+| BR-1.8 | FR-1.14 | `public/index.php` `add_assignment` idempotent multi-assign (skips existing) | `AddAssignmentActionTest` |
 
 ## 2. Shipping Attributes
 
@@ -78,6 +82,11 @@ Each row maps a business requirement → functional requirement → implementati
 | BR-7.5 | FR-9.5 | `PricingRulesService::applyRules()` | `PricingRulesServiceTest` |
 | BR-7.6 | FR-9.6 | `MakeInactiveAction` | `MakeInactiveActionTest` |
 | BR-7.7 | FR-9.7 | `ReactivateVariationsAction` | `ReactivateVariationsActionTest` |
+| BR-7.8 | FR-9.12 | `CombosDao::syncCombos()` — persist cartesian combo pool per parent (`product_variation_combos`) on **explicit** "Generate Combinations"; never auto-rewrites | `CombosDaoTest` (new) |
+| BR-7.9 | FR-9.13 | `GenerateChildAction` — reconcile **only this parent's** children against combo pool (create new stock_ids; delete no-history-orphans; inactive history+no-stock; discontinued history+stock) | `GenerateChildActionTest` (new) |
+| BR-7.10 | FR-9.14 | Per-parent scoping: reconciliation restricted to `parent_stock_id` of the current parent (never other parents' children or top-level items) | `GenerateChildActionTest` (new) |
+| BR-7.11 | FR-9.15 | Pre-commit confirmation popup: report X delete / Y inactive / Z discontinued / N new candidates before acting | `GenerateChildActionTest` (new) |
+| BR-7.12 | FR-9.16 | Adding a category maps existing GRN-having children to a default `""` value; `""` excluded from slug chain (no stock_id rename on category add) | `CombosDaoTest` (new) |
 
 ## 8. Tags
 
@@ -107,10 +116,10 @@ Each row maps a business requirement → functional requirement → implementati
 | Lifecycle | 6 | 10 | 2 test files | ✅ Full |
 | Media | 7 | 8 | 2 test files | ✅ Full |
 | Warranty | 4 | 5 | 1 test file | ✅ Full |
-| Variations | 7 | 11 | 12 test files | ✅ Full |
+| Variations | 12 | 16 | 15 test files | ✅ Full |
 | Tags | 4 | 4 | 1 test file | ✅ Full |
 | Hook Integration | 4 | 7 | 2 test files | ✅ Full |
-| **Total** | **48** | **66** | **28 test files** | **✅ Full** |
+| **Total** | **53** | **71** | **31 test files** | **✅ Full** |
 
 ## Gap Analysis
 
@@ -120,3 +129,7 @@ Each row maps a business requirement → functional requirement → implementati
 | GAP-2 | WooCommerce/Square export of new attributes not yet implemented | High | Planned |
 | GAP-3 | ProductAttributesService renders HTML (should be in UI layer) | Low | Tech Debt |
 | GAP-4 | Duplicate code between FA_ProductAttributes and _Core repos | High | Consolidation |
+| GAP-5 | **Combo/child lifecycle migration** — changing a parent's categories/values invalidates existing child stock_ids; needs explicit (never auto) reconciliation via Gen Combos + Gen Child | High | Planned (FR-9.12..15) |
+| GAP-6 | **Deferred inactivation** — `discontinued`→`inactive` auto-flip when last unit consumed requires a stock-movement hook (FA core interaction, not yet implemented) | Medium | Open |
+| GAP-7 | **Open order line migration** — pre-shipment SO/PO lines referencing old child stock_ids on combo regen (force-close vs migrate) | Medium | Open |
+| GAP-8 | **New-category "" default assignment** — GRN-having items mapped to a default empty category value; scope/editing rules TBD | Medium | Open |
