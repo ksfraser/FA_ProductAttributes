@@ -130,6 +130,6 @@ Each row maps a business requirement → functional requirement → implementati
 | GAP-3 | ProductAttributesService renders HTML (should be in UI layer) | Low | Tech Debt |
 | GAP-4 | Duplicate code between FA_ProductAttributes and _Core repos | High | Consolidation |
 | GAP-5 | **Combo/child lifecycle migration** — changing a parent's categories/values invalidates existing child stock_ids; needs explicit (never auto) reconciliation via Gen Combos + Gen Child | High | Planned (FR-9.12..15) |
-| GAP-6 | **Deferred inactivation** — `discontinued`→`inactive` auto-flip when last unit consumed requires a stock-movement hook (FA core interaction, not yet implemented) | Medium | Open |
-| GAP-7 | **Open order line migration** — pre-shipment SO/PO lines referencing old child stock_ids on combo regen (force-close vs migrate) | Medium | Open |
-| GAP-8 | **New-category "" default assignment** — GRN-having items mapped to a default empty category value; scope/editing rules TBD | Medium | Open |
+| GAP-6 | **Deferred inactivation** — `discontinued`→`inactive` auto-flip when last unit consumed. Single core patch: `db_postcommit` hook in `commit_transaction()` (fires once per committed stock doc, transaction-safe); module-side conversion scans its discontinued children's QOH | Medium | Planned (FR-9.17, single-file core patch) |
+| GAP-7 | **Open order line migration** — pre-shipment SO/PO lines referencing old child stock_ids on combo regen. Use FA's native `db_postwrite`/`db_prevoid` hooks; create a task + calendar entry for the owning user to review/migrate order lines | Medium | Planned (native hooks, no core patch) |
+| GAP-8 | **New-category `""` default assignment** — mid-Royal-Order category insert maps older active GRN-having children to a default empty value so WooCommerce/Square option DDLs stay aligned on export; `""` excluded from slug chain (no stock_id rename) | Medium | Planned (FR-9.16) |

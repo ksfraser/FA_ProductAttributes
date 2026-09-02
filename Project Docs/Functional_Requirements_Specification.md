@@ -215,9 +215,48 @@ When a category is added to a parent, existing GRN-having children are mapped to
 default empty (`""`) value for that category so they remain valid. The empty value is
 excluded from the stock_id slug chain (no stock_id rename/migration on category add).
 
+Primary intent: **WooCommerce/Square option alignment.** When a new category is
+inserted *mid Royal Order* into an existing active SKU's attribute chain, older active
+SKUs (with stock and history) auto-map to the `""` option so that the exported option
+DDLs line up correctly across all child products — most relevant for WooCommerce, where
+a product-variation option set must be consistent; Square tolerates but does not require
+this. The `""` mapping keeps every child's slug-chain position aligned without renaming
+existing stock_ids.
+
 | FR | Requirement |
 |----|-------------|
-| FR-9.16 | Adding a category assigns a default `""` value to existing children; `""` excluded from slug chain |
+| FR-9.16 | Adding a category assigns a default `""` value to existing children; `""` excluded from slug chain; ensures WooCommerce/Square option DDL alignment on export |
+
+#### 10.2.5 Deferred inactivation on last-unit consumption (GAP-6)
+
+When a **discontinued** child's stock is fully consumed (QOH reaches zero), it should
+auto-flip to **inactive**. FA derives QOH from `stock_moves` (no denormalized QOH column)
+and provides no module hook on stock movement, so a surgical core patch is required.
+
+*Choke point (single core file):* `commit_transaction()` in
+`includes/db/sql_functions.inc`. FA wraps every stock document (GRN, sales delivery,
+credit, invoice, adjustment, transfer) in nestable `begin_transaction()` /
+`commit_transaction()`. When `$transaction_level` drops to `0` (the outermost commit),
+dispatch a `db_postcommit` hook to registered modules. Because this fires once per
+committed document **after** all moves are committed, it is transaction-safe for
+multi-move documents (unlike a per-`db_query`/per-`add_stock_move` hook, which would
+evaluate QOH mid-transaction).
+
+*Module-side "conversion module" (no core change):* the FA_ProductAttributes module
+registers a `db_postcommit` handler. On each signal it scans only its **discontinued**
+children (per parent, via `product_hierarchy`), computes QOH from `stock_moves`, and
+flips `stock_master.inactive = 1` for those at `QOH <= 0` (`discontinued` may remain set
+for history). This maps directly to the `ksf_common_db` translation-layer pattern
+("interface defines commands; a conversion layer maps to FA `db_*` calls and launches
+table-scoped hooks", per AGENTS.md).
+
+*Minimal divergence:* the core patch is a single guarded `hook_invoke_all('db_postcommit')`
+call that is inert when no module registers for it — tiny, upgrade-tolerant, and
+unobtrusive.
+
+| FR | Requirement |
+|----|-------------|
+| FR-9.17 | Discontinued child auto-flips to inactive when QOH reaches zero via a single `db_postcommit` hook patched into `commit_transaction()` |
 
 ### 10.3 Bulk Operations
 
