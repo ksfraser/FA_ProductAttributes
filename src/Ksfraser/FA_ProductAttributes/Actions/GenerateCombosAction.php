@@ -11,11 +11,11 @@ use Ksfraser\ModulesDAO\Db\DbAdapterInterface;
  *
  * Computes the cartesian product of a parent product's assigned category values
  * and PERSISTS the combination set into the combo pool (product_variation_combos).
- * It does NOT create stock_master children - that is GenerateChildAction's job.
+ * It does NOT create stock_master children - that is CreateChildProductAction's job.
  *
  * Idempotent: combos already in the pool are left untouched. Re-running after a
  * category/value change adds only the newly-produced combos; orphan reconciliation
- * is handled by GenerateChildAction.
+ * is handled by CreateChildProductAction.
  */
 class GenerateCombosAction
 {
@@ -81,9 +81,20 @@ class GenerateCombosAction
             $sorted = $this->sortCombinationByRoyalOrder($combination);
             $valueSetKey = $this->buildValueSetKey($sorted);
             $slugKey = $this->buildSlugKey($sorted);
+            // Per-value combination: lets Create Child record the child's concrete
+            // value assignments (product_attribute_assignments), not just the
+            // dedupe/slug keys.
+            $valueSet = array_map(function ($item) {
+                return [
+                    'category_id' => (int)$item['category_id'],
+                    'value_id' => (int)$item['value_id'],
+                    'slug' => (string)$item['value_slug'],
+                ];
+            }, $sorted);
             $comboRecords[] = [
                 'value_set_key' => $valueSetKey,
                 'slug_key' => $slugKey,
+                'value_set' => $valueSet,
             ];
         }
 

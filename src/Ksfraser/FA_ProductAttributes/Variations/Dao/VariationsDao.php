@@ -64,6 +64,7 @@ class VariationsDao
               `parent_stock_id` VARCHAR(32) NOT NULL,
               `value_set_key` VARCHAR(255) NOT NULL COMMENT 'order-independent comma-joined value_ids for dedupe',
               `slug_key` VARCHAR(255) NOT NULL COMMENT 'Royal Order dash-joined slug chain; child stock_id suffix',
+              `value_set` TEXT NULL COMMENT 'JSON array of {category_id, value_id, slug} so Create Child can record the child value assignments',
               `child_stock_id` VARCHAR(32) NULL DEFAULT NULL COMMENT 'filled when Gen Child instantiates this combo',
               `created_ts` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
               PRIMARY KEY (`id`),
@@ -72,6 +73,17 @@ class VariationsDao
               KEY `idx_child` (`child_stock_id`)
             )
         ");
+
+        // Add the value_set column to a combo table created before it existed
+        // (idempotent: errors if it already exists, which is fine).
+        try {
+            $this->db->execute("
+                ALTER TABLE `{$p}product_variation_combos`
+                ADD COLUMN `value_set` TEXT NULL COMMENT 'JSON array of {category_id, value_id, slug} so Create Child can record the child value assignments' AFTER `slug_key`
+            ");
+        } catch (\Exception $e) {
+            // Column already exists; ignore.
+        }
     }
 
     /**
@@ -391,6 +403,19 @@ class VariationsDao
      */
     public function createChildProduct(string $childStockId, array $parentData): void
     {
+        // Prefer FA's native item save path so a generated child is fully
+        // registered as an invoice-selectable product. FA's add_item() writes
+        // the stock_master row AND the paired item_codes row (which the Direct
+        // Invoice product list, sales_items_list, joins against) plus the
+        // loc_stock rows. A raw stock_master insert alone leaves the child
+        // invisible to invoice product selection.
+        //
+        // add_item() is only defined at FA runtime, so unit tests / standalone
+        // usage fall back to the direct stock_master insert (unchanged).
+        if ($this->tryNativeAddItem($childStockId, $parentData)) {
+            return;
+        }
+
         // Copy most fields from parent, but modify description and set as service item (variation)
         $childData = $parentData;
         $childData['stock_id'] = $childStockId;
@@ -411,11 +436,60 @@ class VariationsDao
     }
 
     /**
+     * Create the child via FA's native add_item() when running inside FA.
+     *
+     * The child mirrors the parent's stock columns with the variation naming
+     * and `mb_flag = 'D'`, but is registered through add_item() so it also
+     * gains its item_codes + loc_stock rows (invoice product selection).
+     *
+     * @param string $childStockId New child stock id.
+     * @param array  $parentData   Full parent stock_master row.
+     * @return bool True when the native path ran and fully created the child.
+     */
+    private function tryNativeAddItem(string $childStockId, array $parentData): bool
+    {
+        if (!function_exists('add_item')) {
+            return false;
+        }
+
+        add_item(
+            $childStockId,
+            $parentData['description'] . ' (Variation)',
+            ($parentData['long_description'] ?? '') . ' - Variation of ' . $parentData['stock_id'],
+            (int)($parentData['category_id'] ?? 0),
+            (int)($parentData['tax_type_id'] ?? 0),
+            (string)($parentData['units'] ?? ''),
+            'D', // mb_flag: Dimension/service item for variations
+            $parentData['sales_account'] ?? '',
+            $parentData['inventory_account'] ?? '',
+            $parentData['cogs_account'] ?? '',
+            $parentData['adjustment_account'] ?? '',
+            $parentData['wip_account'] ?? '',
+            $parentData['dimension_id'] ?? '',
+            $parentData['dimension2_id'] ?? '',
+            (int)($parentData['no_sale'] ?? 0),
+            $parentData['editable'] ?? true,
+            (int)($parentData['no_purchase'] ?? 0)
+        );
+
+        return true;
+    }
+
+    /**
      * Copy parent's category assignments to child
      */
     public function copyParentCategoryAssignments(string $childStockId, string $parentStockId): void
     {
         $p = $this->db->getTablePrefix();
+        // Copy only categories the child does not already carry, so adoption /
+        // repair of a pre-existing product is idempotent.
+        $exists = $this->db->query(
+            "SELECT 1 FROM `{$p}product_attribute_category_assignments` WHERE stock_id = :child_stock_id LIMIT 1",
+            ['child_stock_id' => $childStockId]
+        );
+        if (!empty($exists)) {
+            return;
+        }
         $this->db->execute(
             "INSERT INTO `{$p}product_attribute_category_assignments` (stock_id, category_id)
              SELECT :child_stock_id, category_id FROM `{$p}product_attribute_category_assignments`

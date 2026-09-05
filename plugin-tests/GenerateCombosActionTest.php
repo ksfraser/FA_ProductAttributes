@@ -89,6 +89,10 @@ class GenerateCombosActionTest extends TestCase
                     $keys = array_column($combos, 'value_set_key');
                     $this->assertContains('10,20', $keys);
                     $this->assertContains('11,20', $keys);
+                    // Each persisted combo must carry its per-value set so Create
+                    // Child can record the child's value assignments.
+                    $this->assertCount(2, $combos[0]['value_set']);
+                    $this->assertSame(10, (int)$combos[0]['value_set'][0]['value_id']);
                     return true;
                 })
             )

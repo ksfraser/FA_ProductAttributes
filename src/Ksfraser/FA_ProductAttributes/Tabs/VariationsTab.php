@@ -3,12 +3,16 @@
 namespace Ksfraser\FA_ProductAttributes\Tabs;
 
 use FrontAccounting\ProductAttributes\Plugin\AbstractTab;
-use FrontAccounting\ProductAttributes\Variations\Dao\VariationsDao;
-use Ksfraser\FA_ProductAttributes\Actions\CreateChildAction;
-use Ksfraser\FA_ProductAttributes\Actions\GenerateChildAction;
+use Ksfraser\FA_ProductAttributes\Variations\Dao\VariationsDao;
+use Ksfraser\FA_ProductAttributes\Actions\CreateChildProductAction;
 use Ksfraser\FA_ProductAttributes\Actions\GenerateCombosAction;
 use Ksfraser\FA_ProductAttributes\Dao\ProductAttributesDao;
 use Ksfraser\FA_ProductAttributes\Variations\Dao\CombosDao;
+use Ksfraser\FA_ProductAttributes\Variations\UI\AssignedCategoriesSection;
+use Ksfraser\FA_ProductAttributes\Variations\UI\CurrentAssignmentsSection;
+use Ksfraser\FA_ProductAttributes\Variations\UI\ExistingVariationsSection;
+use Ksfraser\FA_ProductAttributes\Variations\UI\ParentProductSection;
+use Ksfraser\FA_ProductAttributes\Variations\UI\VariationActionButtons;
 use Ksfraser\ModulesDAO\Db\DbAdapterInterface;
 
 class VariationsTab extends AbstractTab
@@ -46,7 +50,9 @@ class VariationsTab extends AbstractTab
 
     public function renderTabContent(string $stockId): void
     {
+        echo "<!-- PA_DEBUG: renderTabContent ENTER stockId=" . htmlspecialchars($stockId) . " -->\n";
         $this->handlePostActions($stockId);
+        echo "<!-- PA_DEBUG: handlePostActions DONE -->\n";
 
         $assignedCategories = ($stockId !== '') ? $this->dao->listCategoryAssignments($stockId) : [];
         $allCategories = $this->dao->listCategories();
@@ -55,116 +61,25 @@ class VariationsTab extends AbstractTab
         // assignments are managed on the parent and shown here read-only.
         $isChild = !empty($parentData);
         $variations = ($stockId !== '') ? $this->dao->getProductVariations($stockId) : [];
-
-        if ($parentData) {
-            echo '<fieldset><legend>' . _('Parent Product') . '</legend>';
-            echo '<p>' . _('This product is a variation of') . ' <strong>'
-                . htmlspecialchars($parentData['stock_id']) . '</strong> — '
-                . htmlspecialchars($parentData['description'] ?? '') . '</p>';
-            echo '</fieldset>';
-        }
-
-        echo '<fieldset><legend>' . _('Assigned Categories') . '</legend>';
-        if (empty($assignedCategories)) {
-            if ($isChild) {
-                echo '<p>' . _('No categories assigned. Categories are managed on the parent product.') . '</p>';
-            } else {
-                echo '<p>' . _('No categories assigned. Use the dropdown below to assign one.') . '</p>';
-            }
-        } else {
-            $isReadOnly = $isChild;
-            echo '<table class="tablestyle2">';
-            echo '<tr><th>' . _('Category') . '</th><th>' . _('Active Values') . '</th><th>' . _('Actions') . '</th></tr>';
-            foreach ($assignedCategories as $category) {
-                $activeValues = $this->coreDao->listActiveValues((int)$category['id']);
-                echo '<tr>';
-                echo '<td>' . htmlspecialchars($category['label']) . '</td>';
-                echo '<td>' . count($activeValues) . ' ' . _('values') . '</td>';
-                echo '<td>';
-                if (!$isReadOnly) {
-                    echo '<a href="' . $GLOBALS['path_to_root'] . '/modules/FA_ProductAttributes/public/index.php?tab=values&category_id='
-                        . $category['id'] . '">' . _('Manage Values') . '</a> ';
-                    if ($stockId !== '') {
-                        echo '<input type="hidden" name="unassign_category_id" value="' . (int)$category['id'] . '">';
-                        echo '<input type="submit" name="unassign_category_submit" value="' . htmlspecialchars(_('Remove'), ENT_QUOTES) . '"'
-                            . ' onclick="return confirm(\'' . htmlspecialchars(_('Remove this category from the product?'), ENT_QUOTES) . '\')">';
-                    }
-                } else {
-                    echo '<span style="color:#666">' . _('inherited from parent') . '</span>';
-                }
-                echo '</td>';
-                echo '</tr>';
-            }
-            echo '</table>';
-        }
-
         $assignments = ($stockId !== '') ? $this->coreDao->listAssignments($stockId) : [];
-        if (!empty($assignments)) {
-            echo '<h5>' . _('Current Attribute Assignments') . '</h5>';
-            echo '<table class="tablestyle2">';
-            echo '<tr><th>' . _('Category') . '</th><th>' . _('Value') . '</th><th>' . _('Sort') . '</th></tr>';
-            foreach ($assignments as $a) {
-                echo '<tr>';
-                echo '<td>' . htmlspecialchars((string)($a['category_label'] ?? '')) . '</td>';
-                echo '<td>' . htmlspecialchars((string)($a['value_label'] ?? '')) . '</td>';
-                echo '<td>' . (int)($a['sort_order'] ?? 0) . '</td>';
-                echo '</tr>';
-            }
-            echo '</table>';
-            echo '<p style="color:#666;font-size:11px">'
-                . _('These attribute values determine the variations that will be generated.')
-                . '</p>';
-        } else {
-            if (!empty($assignedCategories)) {
-                echo '<p style="color:#666;font-size:11px">'
-                    . _('Categories are assigned but no specific values are set. ')
-                    . _('Use the <strong>Product Attributes</strong> tab to assign values, or the')
-                    . ' <a href="' . $GLOBALS['path_to_root'] . '/modules/FA_ProductAttributes/public/index.php">'
-                    . _('admin page') . '</a> '
-                    . _('to manage them.')
-                    . '</p>';
-            }
-        }
+        echo "<!-- PA_DEBUG: data fetched assignedCategories=" . count($assignedCategories) . " variations=" . count($variations) . " assignments=" . count($assignments) . " -->\n";
 
-        if ($stockId !== '' && !$isChild && !empty($allCategories)) {
-            $assignedIds = array_column($assignedCategories, 'id');
-            $unassigned = array_filter($allCategories, function ($cat) use ($assignedIds) {
-                return !in_array($cat['id'], $assignedIds, true);
-            });
-            if (!empty($unassigned)) {
-                echo '<div style="margin-top:8px">';
-                echo '<select name="assign_category_id">';
-                echo '<option value="0">' . _('-- Select category --') . '</option>';
-                foreach ($unassigned as $cat) {
-                    echo '<option value="' . (int)$cat['id'] . '">' . htmlspecialchars($cat['label']) . '</option>';
-                }
-                echo '</select> ';
-                echo '<input type="submit" name="assign_category_submit" value="' . _('Assign Category') . '">';
-                echo '</div>';
-            }
-        }
-        echo '</fieldset>';
+        (new ParentProductSection())->render($parentData);
+        echo "<!-- PA_DEBUG: ParentProductSection rendered -->\n";
 
-        if (!empty($variations)) {
-            echo '<fieldset><legend>' . _('Existing Variations') . '</legend>';
-            echo '<table class="tablestyle2">';
-            echo '<tr><th>' . _('Stock ID') . '</th><th>' . _('Description') . '</th></tr>';
-            foreach ($variations as $v) {
-                echo '<tr>';
-                echo '<td>' . htmlspecialchars($v['stock_id']) . '</td>';
-                echo '<td>' . htmlspecialchars($v['description'] ?? '') . '</td>';
-                echo '</tr>';
-            }
-            echo '</table>';
-            echo '</fieldset>';
-        }
+        $categories = new AssignedCategoriesSection($this->coreDao);
+        $categories->render($stockId, $assignedCategories, $allCategories, $isChild);
+        echo "<!-- PA_DEBUG: AssignedCategoriesSection rendered -->\n";
 
-        if ($stockId !== '' && !$isChild) {
-            echo '<p><input type="submit" name="generate_combos" value="' . _('Generate Combinations') . '"> ';
-            echo '<input type="submit" name="generate_child" value="' . _('Generate Child') . '"> ';
-            echo '<input type="submit" name="create_child" value="' . _('Create Child Product') . '">';
-            echo '</p>';
-        }
+        (new CurrentAssignmentsSection())->render($assignments, !empty($assignedCategories));
+        echo "<!-- PA_DEBUG: CurrentAssignmentsSection rendered -->\n";
+
+        (new ExistingVariationsSection())->render($variations);
+        echo "<!-- PA_DEBUG: ExistingVariationsSection rendered -->\n";
+
+        $buttons = new VariationActionButtons();
+        $buttons->render($stockId !== '' && !$isChild);
+        echo "<!-- PA_DEBUG: VariationActionButtons rendered -->\n";
     }
 
     public function handleSave(string $stockId, array $postData): void
@@ -206,11 +121,19 @@ class VariationsTab extends AbstractTab
 
     private function handlePostActions(string $stockId): void
     {
+        echo "<!-- PA_DEBUG: handlePostActions ENTER method=" . ($_SERVER['REQUEST_METHOD'] ?? '?') . " -->\n";
         if ($_SERVER['REQUEST_METHOD'] !== 'POST' || $stockId === '') {
+            echo "<!-- PA_DEBUG: handlePostActions early return (not POST or empty stockId) -->\n";
             return;
         }
 
+        echo "<!-- PA_DEBUG: handlePostActions activating tabs -->\n";
+        global $Ajax;
+        $Ajax->activate('tabs');
+        echo "<!-- PA_DEBUG: handlePostActions tabs activated -->\n";
+
         if (isset($_POST['assign_category_submit'])) {
+            echo "<!-- PA_DEBUG: handlePostActions assign_category_submit branch -->\n";
             $categoryId = (int)($_POST['assign_category_id'] ?? 0);
             if ($categoryId > 0) {
                 $this->coreDao->addCategoryAssignment($stockId, $categoryId);
@@ -220,6 +143,7 @@ class VariationsTab extends AbstractTab
         }
 
         if (isset($_POST['unassign_category_submit'])) {
+            echo "<!-- PA_DEBUG: handlePostActions unassign_category_submit branch -->\n";
             $categoryId = (int)($_POST['unassign_category_id'] ?? 0);
             if ($categoryId > 0) {
                 $this->coreDao->removeCategoryAssignment($stockId, $categoryId);
@@ -228,35 +152,31 @@ class VariationsTab extends AbstractTab
             return;
         }
 
-        if (isset($_POST['generate_combos'])) {
-            $combosDao = new CombosDao($this->db);
-            $action = new GenerateCombosAction($this->coreDao, $combosDao, $this->db);
-            $message = $action->handle($_POST);
-            display_notification($message);
-            return;
-        }
-
-        if (isset($_POST['generate_child'])) {
-            $combosDao = new CombosDao($this->db);
-            $action = new GenerateChildAction($this->dao, $this->coreDao, $combosDao, $this->db);
+if (isset($_POST['generate_combos'])) {
             try {
+                $combosDao = new CombosDao($this->db);
+                $action = new GenerateCombosAction($this->coreDao, $combosDao, $this->db);
                 $message = $action->handle($_POST);
                 display_notification($message);
-            } catch (\InvalidArgumentException $e) {
+            } catch (\Throwable $e) {
                 display_error($e->getMessage());
             }
             return;
         }
 
-        if (isset($_POST['create_child'])) {
-            $action = new CreateChildAction($this->dao, $this->coreDao, $this->db);
+        if (isset($_POST['create_child_product'])) {
+            $combosDao = new CombosDao($this->db);
             try {
+                $action = new CreateChildProductAction($this->dao, $this->coreDao, $combosDao, $this->db);
                 $message = $action->handle($_POST);
                 display_notification($message);
             } catch (\InvalidArgumentException $e) {
                 display_error($e->getMessage());
+            } catch (\Throwable $e) {
+                display_error($e->getMessage());
             }
             return;
         }
+        echo "<!-- PA_DEBUG: handlePostActions no action matched -->\n";
     }
 }

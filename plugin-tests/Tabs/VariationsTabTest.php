@@ -2,7 +2,7 @@
 
 namespace Ksfraser\FA_ProductAttributes\Test\Tabs;
 
-use FrontAccounting\ProductAttributes\Variations\Dao\VariationsDao;
+use Ksfraser\FA_ProductAttributes\Variations\Dao\VariationsDao;
 use Ksfraser\FA_ProductAttributes\Dao\ProductAttributesDao;
 use Ksfraser\FA_ProductAttributes\Tabs\VariationsTab;
 use Ksfraser\ModulesDAO\Db\DbAdapterInterface;
@@ -86,8 +86,7 @@ class VariationsTabTest extends TestCase
         $output = ob_get_clean();
 
         $this->assertStringContainsString('generate_combos', $output);
-        $this->assertStringContainsString('generate_child', $output);
-        $this->assertStringContainsString('create_child', $output);
+        $this->assertStringContainsString('create_child_product', $output);
     }
 
     public function testRenderShowsParentInfo(): void
@@ -133,7 +132,7 @@ class VariationsTabTest extends TestCase
 
         $this->assertStringContainsString('Parent Product', $output);
         $this->assertStringContainsString('inherited from parent', $output);
-        $this->assertStringNotContainsString('create_child', $output, 'Create Child must not render on a child product');
+        $this->assertStringNotContainsString('create_child_product', $output, 'Create Child must not render on a child product');
         $this->assertStringNotContainsString('generate_variations', $output, 'Generate Variations must not render on a child product');
         $this->assertStringNotContainsString('assign_category_submit', $output, 'Assign Category DDL must not render on a child product');
         $this->assertStringNotContainsString('unassign_category_submit', $output, 'Remove button must not render on a child product');
@@ -164,7 +163,7 @@ class VariationsTabTest extends TestCase
         $output = ob_get_clean();
 
         $this->assertStringContainsString('PARENT001', $output);
-        $this->assertStringNotContainsString('create_child', $output, 'Create Child must not render on a child product');
+        $this->assertStringNotContainsString('create_child_product', $output, 'Create Child must not render on a child product');
         $this->assertStringNotContainsString('generate_variations', $output, 'Generate Variations must not render on a child product');
     }
 
@@ -181,7 +180,7 @@ class VariationsTabTest extends TestCase
         $this->tab->renderTabContent('');
         $output = ob_get_clean();
 
-        $this->assertStringNotContainsString('create_child', $output, 'Create Child button should not render with no product');
+        $this->assertStringNotContainsString('create_child_product', $output, 'Create Child button should not render with no product');
         $this->assertStringNotContainsString('generate_variations', $output, 'Generate Variations should not render with no product');
     }
 

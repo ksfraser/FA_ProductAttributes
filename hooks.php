@@ -30,7 +30,7 @@ use Ksfraser\FA_ProductAttributes\Tabs\UrlsTab;
 use Ksfraser\FA_ProductAttributes\Tabs\WarrantyTab;
 use Ksfraser\FA_ProductAttributes\Tabs\VariationsTab;
 use Ksfraser\FA_ProductAttributes\Tabs\TagsTab;
-use FrontAccounting\ProductAttributes\Variations\Dao\VariationsDao;
+use Ksfraser\FA_ProductAttributes\Variations\Dao\VariationsDao;
 use FrontAccounting\ProductAttributes\Variations\Service\FrontAccountingVariationService;
 use Ksfraser\ModulesDAO\Db\FrontAccountingDbAdapter;
 use FrontAccounting\ProductAttributes\Plugin\TabRegistry;
@@ -163,6 +163,8 @@ class hooks_FA_ProductAttributes extends hooks
             '28_product_related_products.sql',
             '29_product_measurement_units.sql',
             '30_product_attribute_extras.sql',
+            '31_product_variation_combos.sql',
+            '32_widen_stock_id.sql',
         );
 
         foreach ($files as $file) {
@@ -455,7 +457,7 @@ class hooks_FA_ProductAttributes extends hooks
         $cartRulesDao = new ProductCartRulesDao($db);
         $relatedProductsDao = new ProductRelatedProductsDao($db);
         $measurementUnitsDao = new ProductMeasurementUnitsDao($db);
-        $variationsDao = new VariationsDao($db, new \FrontAccounting\ProductAttributes\Dao\ProductAttributesDao($db));
+        $variationsDao = new VariationsDao($db, $dao);
         $service = new ProductAttributesService($dao, $db);
         $handler = new ProductAttributesHandler($service);
 

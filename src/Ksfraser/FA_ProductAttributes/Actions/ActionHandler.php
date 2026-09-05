@@ -115,16 +115,13 @@ class ActionHandler
                         $this->dbAdapter
                     ))->handle($postData);
 
-                case 'generate_child':
-                    return (new GenerateChildAction(
+                case 'create_child_product':
+                    return (new CreateChildProductAction(
                         $this->variationsDao,
                         $this->productAttributesDao,
                         new \Ksfraser\FA_ProductAttributes\Variations\Dao\CombosDao($this->dbAdapter),
                         $this->dbAdapter
                     ))->handle($postData);
-
-                case 'create_child':
-                    return (new CreateChildAction($this->variationsDao, $this->productAttributesDao, $this->dbAdapter))->handle($postData);
 
                 case 'update_product_types':
                     return (new UpdateProductTypesAction($this->productAttributesDao, $this->dbAdapter))->handle($postData);

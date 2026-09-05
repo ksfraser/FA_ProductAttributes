@@ -33,7 +33,7 @@ class CombosDao
      * NOT deleted here (orphan reconciliation is a Gen Child concern).
      *
      * @param string $parentStockId
-     * @param array<int, array{value_set_key:string, slug_key:string}> $combos
+     * @param array<int, array{value_set_key:string, slug_key:string, value_set:array}> $combos
      */
     public function syncCombos(string $parentStockId, array $combos): int
     {
@@ -57,10 +57,13 @@ class CombosDao
                 continue;
             }
 
+            $valueSetJson = json_encode($combo['value_set'] ?? [[]], true);
+            $valueSetJson = is_null($valueSetJson) ? null : (string)$valueSetJson;
+
             $this->db->execute(
                 "INSERT INTO `{$p}product_variation_combos`
-                 (parent_stock_id, value_set_key, slug_key) VALUES (:parent, :vsk, :slug)",
-                ['parent' => $parentStockId, 'vsk' => $valueSetKey, 'slug' => $slugKey]
+                 (parent_stock_id, value_set_key, slug_key, value_set) VALUES (:parent, :vsk, :slug, :vs)",
+                ['parent' => $parentStockId, 'vsk' => $valueSetKey, 'slug' => $slugKey, 'vs' => $valueSetJson]
             );
             $added++;
         }
@@ -71,18 +74,30 @@ class CombosDao
     /**
      * List the persisted combos for a parent, ordered by slug_key.
      *
-     * @return array<int, array<string, string|null>>
+     * @return array<int, array<string, string|array|null>>
      */
     public function listCombos(string $parentStockId): array
     {
         $p = $this->db->getTablePrefix();
-        return $this->db->query(
-            "SELECT id, parent_stock_id, value_set_key, slug_key, child_stock_id
+        $rows = $this->db->query(
+            "SELECT id, parent_stock_id, value_set_key, slug_key, value_set, child_stock_id
              FROM `{$p}product_variation_combos`
              WHERE parent_stock_id = :parent
              ORDER BY slug_key",
             ['parent' => $parentStockId]
         );
+        foreach ($rows as $i => $row) {
+            $valueSet = $row['value_set'] ?? null;
+            if (!is_null($valueSet) && $valueSet !== '') {
+                // Tolerate HTML-escaped legacy payloads: json_decode needs literal
+                // double quotes, so unescape entities first (clean JSON is untouched).
+                $decoded = json_decode(html_entity_decode((string)$valueSet, ENT_QUOTES, 'UTF-8'), true);
+                $rows[$i]['value_set'] = is_array($decoded) ? $decoded : [];
+            } else {
+                $rows[$i]['value_set'] = [];
+            }
+        }
+        return $rows;
     }
 
     /**

@@ -13,9 +13,11 @@ class VariationsDaoTest extends TestCase
         $db->method('getTablePrefix')->willReturn('fa_');
 
         // execute is called for: add parent_stock_id column, add index, then
-        // create the persisted combination pool table (FR-9.12..9.16, #60).
+        // create the persisted combination pool table (FR-9.12..9.16, #60), then
+        // an idempotent ALTER adding the value_set column (migration for pre-existing
+        // combos tables).
         $calls = [];
-        $db->expects($this->exactly(3))
+        $db->expects($this->exactly(4))
             ->method('execute')
             ->willReturnCallback(function ($sql) use (&$calls) {
                 $calls[] = $sql;
@@ -25,10 +27,11 @@ class VariationsDaoTest extends TestCase
         $dao = new VariationsDao($db, $coreDao);
         $dao->ensureVariationsSchema();
 
-        $this->assertCount(3, $calls);
+        $this->assertCount(4, $calls);
         $this->assertStringContainsString('ADD COLUMN `parent_stock_id`', $calls[0]);
         $this->assertStringContainsString('ADD INDEX `idx_parent_stock_id`', $calls[1]);
         $this->assertStringContainsString('CREATE TABLE IF NOT EXISTS `fa_product_variation_combos`', $calls[2]);
+        $this->assertStringContainsString('ADD COLUMN `value_set`', $calls[3]);
     }
 
     public function testGetProductParent(): void
@@ -197,6 +200,20 @@ class VariationsDaoTest extends TestCase
              WHERE stock_id = :parent_stock_id',
                 ['child_stock_id' => 'CHILD123', 'parent_stock_id' => 'PARENT123']
             );
+
+        $coreDao = $this->createMock(ProductAttributesDao::class);
+        $dao = new VariationsDao($db, $coreDao);
+        $dao->copyParentCategoryAssignments('CHILD123', 'PARENT123');
+    }
+
+    public function testCopyParentCategoryAssignmentsSkipsWhenChildAlreadyHasRows(): void
+    {
+        $db = $this->createMock(DbAdapterInterface::class);
+        $db->method('getTablePrefix')->willReturn('fa_');
+        // Child already carries category rows: the copy must be a no-op
+        // (adoption/repair of a pre-existing product is idempotent).
+        $db->method('query')->willReturn([['1' => 1]]);
+        $db->expects($this->never())->method('execute');
 
         $coreDao = $this->createMock(ProductAttributesDao::class);
         $dao = new VariationsDao($db, $coreDao);

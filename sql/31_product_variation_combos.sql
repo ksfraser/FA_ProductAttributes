@@ -14,6 +14,7 @@ CREATE TABLE IF NOT EXISTS `0_product_variation_combos` (
   `parent_stock_id` VARCHAR(32) NOT NULL,
   `value_set_key` VARCHAR(255) NOT NULL COMMENT 'order-independent comma-joined value_ids for dedupe',
   `slug_key` VARCHAR(255) NOT NULL COMMENT 'Royal Order dash-joined slug chain; child stock_id suffix',
+  `value_set` TEXT NULL COMMENT 'JSON array of {category_id, value_id, slug} so Create Child can record the child value assignments',
   `child_stock_id` VARCHAR(32) NULL DEFAULT NULL COMMENT 'filled when Gen Child instantiates this combo',
   `created_ts` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
