@@ -83,10 +83,11 @@ Each row maps a business requirement → functional requirement → implementati
 | BR-7.6 | FR-9.6 | `MakeInactiveAction` | `MakeInactiveActionTest` |
 | BR-7.7 | FR-9.7 | `ReactivateVariationsAction` | `ReactivateVariationsActionTest` |
 | BR-7.8 | FR-9.12 | `CombosDao::syncCombos()` — persist cartesian combo pool per parent (`product_variation_combos`) on **explicit** "Generate Combinations"; never auto-rewrites | `CombosDaoTest` (new) |
-| BR-7.9 | FR-9.13 | `GenerateChildAction` — reconcile **only this parent's** children against combo pool (create new stock_ids; delete no-history-orphans; inactive history+no-stock; discontinued history+stock) | `GenerateChildActionTest` (new) |
-| BR-7.10 | FR-9.14 | Per-parent scoping: reconciliation restricted to `parent_stock_id` of the current parent (never other parents' children or top-level items) | `GenerateChildActionTest` (new) |
-| BR-7.11 | FR-9.15 | Pre-commit confirmation popup: report X delete / Y inactive / Z discontinued / N new candidates before acting | `GenerateChildActionTest` (new) |
+| BR-7.9 | FR-9.13 | `CreateChildProductAction` — instantiate pool combos into stock_id children via native `add_item`; **full PA clone** (recordAssignments + cloneProductAttributes); reconcile **only this parent's** children against the pool (create new; delete no-history-orphans; inactive history+no-stock; leave-active/report history+stock) | `CreateChildProductActionTest` (new) |
+| BR-7.10 | FR-9.14 | Per-parent scoping: reconciliation restricted to `parent_stock_id` of the current parent (never other parents' children or top-level items) | `CreateChildProductActionTest` (new) |
+| BR-7.11 | FR-9.15 | Post-action confirmation summary: report X create / Y remove / Z inactivate / W with-stock after acting | `CreateChildProductActionTest` (new) |
 | BR-7.12 | FR-9.16 | Adding a category maps existing GRN-having children to a default `""` value; `""` excluded from slug chain (no stock_id rename on category add) | `CombosDaoTest` (new) |
+| BR-7.13 | FR-9.5 | **Removed** third creation path: all child creation routes through the pool-driven `CreateChildProductAction`; no standalone single-combo child action remains | `CreateChildProductActionTest` |
 
 ## 8. Tags
 
@@ -129,7 +130,7 @@ Each row maps a business requirement → functional requirement → implementati
 | GAP-2 | WooCommerce/Square export of new attributes not yet implemented | High | Planned |
 | GAP-3 | ProductAttributesService renders HTML (should be in UI layer) | Low | Tech Debt |
 | GAP-4 | Duplicate code between FA_ProductAttributes and _Core repos | High | Consolidation |
-| GAP-5 | **Combo/child lifecycle migration** — changing a parent's categories/values invalidates existing child stock_ids; needs explicit (never auto) reconciliation via Gen Combos + Gen Child | High | Planned (FR-9.12..15) |
+| GAP-5 | **Combo/child lifecycle migration** — changing a parent's categories/values invalidates existing child stock_ids; explicit (never auto) reconciliation via Generate Combinations + Create Child Product. **Reconciliation implemented** (`CreateChildProductAction`); remaining: `""`-default mapping of GRN-having children on category add (GAP-8) and discontinued auto-flip (GAP-6) | High | Partially implemented (FR-9.12..15); GAP-6/8 planned |
 | GAP-6 | **Deferred inactivation** — `discontinued`→`inactive` auto-flip when last unit consumed. Single core patch: `db_postcommit` hook in `commit_transaction()` (fires once per committed stock doc, transaction-safe); module-side conversion scans its discontinued children's QOH | Medium | Planned (FR-9.17, single-file core patch) |
 | GAP-7 | **Open order line migration** — pre-shipment SO/PO lines referencing old child stock_ids on combo regen. Use FA's native `db_postwrite`/`db_prevoid` hooks; create a task + calendar entry for the owning user to review/migrate order lines | Medium | Planned (native hooks, no core patch) |
 | GAP-8 | **New-category `""` default assignment** — mid-Royal-Order category insert maps older active GRN-having children to a default empty value so WooCommerce/Square option DDLs stay aligned on export; `""` excluded from slug chain (no stock_id rename) | Medium | Planned (FR-9.16) |

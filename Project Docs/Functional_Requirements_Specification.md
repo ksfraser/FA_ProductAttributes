@@ -182,20 +182,28 @@ The combo pool (`product_variation_combos`) is persisted per parent and is **onl
 rebuilt on the explicit "Generate Combinations" action** — it is never auto-rewritten
 when a parent's categories or values change.
 
+**Two-button model (agreed).** The Variations tab exposes exactly two buttons / actions:
+(1) **Generate Combinations** (`generate_combos` → `GenerateCombosAction`) persists the
+cartesian combo pool; (2) **Create Child Product** (`create_child_product` →
+`CreateChildProductAction`) instantiates the stored pool into child products and
+applies the full PA clone. There is no third creation button; the legacy "create
+individual child product" path was retired in favour of the pool-driven flow so that
+every creation path performs the same full clone.
+
 | ID | Requirement |
 |----|-------------|
 | FR-9.12 | Persist the cartesian combo pool per parent on explicit "Generate Combinations"; idempotent re-run (upsert by slug chain) |
-| FR-9.13 | Generate Child reconciles **only this parent's** children against the combo pool |
+| FR-9.13 | Create Child Product reconciles **only this parent's** children against the combo pool |
 | FR-9.14 | Per-parent scoping — never delete/inactivate/discontinue a child of another parent or a top-level item |
-| FR-9.15 | Pre-commit confirmation reporting delete / inactive / discontinued / new candidate counts before acting |
+| FR-9.15 | Post-action confirmation summarising delete / inactive / discontinued / new candidate counts after acting |
 
 #### 10.2.2 Changes to existing FRs
 
 | ID | Requirement |
 |----|-------------|
 | FR-9.3 | *Change:* "Generate all combinations" now **persists combos only** (does not create `stock_master` children) |
-| FR-9.4 | *Change:* "Create only missing variations (incremental)" becomes **Generate Child** — instantiates persisted combos into child products (cloning, inactive on orphans, discontinued on stocked history) |
-| FR-9.5 | *Change:* "Create individual child product" acts on a single persisted combo |
+| FR-9.4 | *Change:* "Create only missing variations (incremental)" becomes **Create Child Product** — instantiates persisted combos into child products (full PA clone; inactive on history-less orphans; discontinued/blocked on stocked history) |
+| FR-9.5 | *Retired:* The third "create a single child from a persisted combo" path is **removed** — all child creation now flows through the pool-driven Create Child Product action |
 
 #### 10.2.3 Child reconciliation rules (Gen Child, per parent — FR-9.13/9.14)
 
@@ -203,11 +211,11 @@ when a parent's categories or values change.
 |----|----|----|----|
 | Orphan | None | Any | **Delete** stock_id |
 | Orphan | Has history | None | **Set inactive** |
-| Orphan | Has history | > 0 | **Set discontinued** (`stock_master.discontinued` blocks new SO/PO references; stock retained) |
+| Orphan | Has history | > 0 | **Leave active** + report as "with stock" (blocks further orders); planned follow-on: flag `stock_master.discontinued` so new SO/PO references are blocked (see 10.2.5 / FR-9.17) |
 | New combo (no child yet) | n/a | n/a | **Create/clone** child + assignments |
 
 Rule invariant: a stock_id with transaction history is **never deleted** — at best
-inactive, or discontinued while stock remains.
+inactive, or left active/discontinued while stock remains.
 
 #### 10.2.4 Empty-value default for added categories
 

@@ -119,7 +119,6 @@ FA_ProductAttributes/
 │               ├── RoyalOrderHelper.php
 │               └── Actions/
 │                   ├── GenerateVariationsAction.php
-│                   ├── CreateChildAction.php
 │                   ├── CreateMissingVariationsAction.php
 │                   ├── AssignParentAction.php
 │                   ├── MakeInactiveAction.php
@@ -379,3 +378,40 @@ All tab rendering and save operations check `user_check_access('SA_PRODUCT_ATTRI
 | `0_product_tag_assignments` | Many per product | tag_id FK, stock_id |
 | `0_product_hierarchy` | Many per parent | parent_stock_id, child_stock_id |
 | `0_product_media_variation_links` | Many per media | media_id FK, variation_stock_id |
+| `0_product_variation_combos` | Many per parent | parent_stock_id, value_set_key (dedupe), slug_key (child id suffix), value_set (JSON per-value combo for assignment recording), child_stock_id (instantiation stamp) |
+
+## 8. Variation Generation — Two-Button Flow (agreed design)
+
+The Variations tab exposes exactly two buttons, mapping to two actions wired in
+`Actions\ActionHandler` and `Tabs\VariationsTab::handlePostActions`:
+
+```
+Generate Combinations (generate_combos)        Create Child Product (create_child_product)
+        └─ GenerateCombosAction                       └─ CreateChildProductAction
+              compute cartesian product                     read persisted pool
+              persist to product_variation_combos           for each uninstantiated combo:
+              (value_set_key / slug_key / value_set)          createChildProduct -> native add_item
+                                                              copyParentCategoryAssignments
+                                                              setParentRelationship + setProductParent
+                                                              recordAssignments (from value_set)
+                                                              cloneProductAttributes
+                                                              markInstantiated
+                                                           reconcile this parent's children:
+                                                             no history -> delete
+                                                             history, no stock -> inactive
+                                                             history + stock -> leave active, report
+```
+
+Key design points:
+- Combo *definition* is explicit and persisted; it is never auto-rewritten when a
+  parent's categories/values change (`CombosDao::syncCombos` is idempotent; adds
+  only newly-produced combos).
+- All child creation routes through the native FA `add_item()` chokepoint
+  (`VariationsDao::createChildProduct` → `tryNativeAddItem`), so children gain their
+  `item_codes` row and are selectable in the Direct Invoice / sales item picker.
+- Every raised child receives the FULL PA-attribute clone
+  (`cloneProductAttributes`: identifiers / shipping / warranty / lifecycle flags /
+  tags) plus category and value assignments.
+- Reconciliation is strictly per-parent; a child with transaction history is never
+  deleted. The `""`-default mapping for added categories (FR-9.16) and the
+  discontinued→inactive auto-flip (FR-9.17) are planned follow-ons.
