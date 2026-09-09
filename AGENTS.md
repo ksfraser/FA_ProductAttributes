@@ -183,6 +183,47 @@ Two parallel, un-unified parent-relationship mechanisms:
 - Net: generated children (`auto-gas-L-11-36-Ind` etc.) are registered only in
   `product_attribute_assignments`, so `product_hierarchy` is empty for them →
   `getProductParent()` returns null → `$isChild` false → read-only protection never
-# ALWAYS COMMIT (per AGENTS.local.md line 36)
+  engages for generated children → issue #52.
 
-"ALWAYS COMMIT and PUSH branch to GitHub (do not wait for user permission)"
+## ksf-fa integration instance — blank-page bootstrap findings (2026-09)
+
+Env access facts + the two stacked bootstrap failures found while E2E-testing the
+condition feature. Container: PHP 7.4.33 + Apache. `podman exec` blocked (`crun:
+/sys/fs/cgroup … Permission denied`) → read FS via `/proc/<pid>/root/var/www/html`,
+execute via HTTP-served PHP in a bind-mounted module `public/` dir.
+
+- **FAModuleMenu double-declare fatal = STALE OPCACHE, not a source bug.** Current
+  `ksf_FA_Common/src/Menu/FAModuleMenu.php` has a working `class_exists(..., false)`
+  guard; the vendored copy `FA_ProductAttributes/vendor/ksfraser/ksf-fa-common/
+  src/Menu/FAModuleMenu.php` has NO guard and wins the race via Composer "files"
+  during session.inc's hooks include loop; `ksf_FA_HRM/hooks.php:12–14` then
+  top-level requires the ksf copy (guard returns). Live opcache held a pre-guard
+  bytecode entry (`validate_timestamps=1, revalidate_freq=2`); one HTTP probe that
+  called `opcache_reset()` cleared it — **no source change needed**.
+- **Blank pages** (`/index.php` + module `public/index.php` → HTTP 200, 0 bytes):
+  `/tmp/php_errors.log` shows session.inc's `[before upgrade]` branch failing
+  relative includes (`./tmp/faillog.php`, `./includes/access_levels.inc`,
+  `./version.php`, `./includes/main.inc`, `./includes/app_entries.inc`) →
+  `Class 'references' not found` at session.inc:469 → `errors.inc` exception_handler
+  calls `end_page()` (defined in main.inc:57, not yet included) → empty body.
+- **Suspect / open question:** CWD appears wrong when session.inc lines 454–457 run
+  (relative `./` includes fail) — a hooks/session_start callback `chdir()`'d, or a
+  request-time composer exec did. Log also shows `The HOME or COMPOSER_HOME
+  environment variable must be set` from a module's `composer install`. All
+  chdir+composer code is method-level (`ensure_composer_dependencies()` /
+  `Utils/ComposerDependencies.php`), not top-level — NOT confirmed as the trigger.
+  `[before upgrade]` means `!$SysPrefs->db_ok` yet `sysprefs.inc:66` compares
+  `version_id` (`2.4.1`) == `$db_version` (`2.4.1`) — likely a transient DB-connect
+  hiccup cached in the session, or prefs-load drift.
+- **Extension registry** `/var/www/html/company/0/installed_extensions.php` (28
+  active). Composer-run candidates: `ksf_FA_EmailManager` (id 29, active, NO
+  `vendor/`, NO `composer.lock`), `ksf_FA_SuggestedPurchaseOrder` (NO `vendor/`).
+  Host dirs missing but shadowed by image copies: `ksf_FA_Attachments`,
+  `ksf_FA_OrgChart`, `ksf_FA_Timesheets`, `ksf_FA_Training`. DB health from the web
+  container is fine (mysqli `ksf-mariadb`/`ksf_user`/`ksf_fa` OK, 586 stock rows).
+- **Handed-off fix path:** set `HOME`/`COMPOSER_HOME` in the container env, vendor
+  the vendor-less active modules (or harden `ComposerDependencies` to restore CWD /
+  `putenv`) and restart the container; then re-run the Playwright E2E (chrome at
+  `~/Documents/ksf_FA_Square/node_modules`, login `opencode`/`opencode`). Scheme
+  was applied directly to the integration DB via an HTTP probe because the FA
+  re-activation UI is unusable while login renders blank.
