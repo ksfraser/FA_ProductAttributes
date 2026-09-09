@@ -1,15 +1,18 @@
 <?php
 
 /**
- * Content-equivalence tests for the admin pages rebuilt on the reusable
- * ksf_FA_Common MasterSummaryTable component.
+ * Content-equivalence tests for the consolidated admin hub rebuilt on the
+ * reusable ksf_FA_Common MasterSummaryTable component.
  *
- * Each scenario renders the page in a fresh PHP process (see
- * render-admin-page.php) against the FAMock DB fixture layer, then asserts
- * that every original hard-coded element is still present (titles, per-tab
- * tables, DDLs, forms, empty states) and that the MasterSummaryTable markers
- * (tablestyle, record_id/_tabs_sel hidden fields, Edit/Delete row actions)
- * are present, with no legacy `tablestyle2` tables remaining.
+ * The three former admin pages (index.php, lifecycle-flags.php, brands.php)
+ * were consolidated into the single page public/index.php with four sections
+ * (Attributes, Conditions, Lifecycle Flags, Brands). Each scenario renders the
+ * hub in a fresh PHP process (see render-admin-page.php) against the FAMock DB
+ * fixture layer, then asserts that every original hard-coded element is still
+ * present (titles, per-section tables, DDLs, forms, empty states) and that the
+ * MasterSummaryTable markers (tablestyle, record_id/_tabs_sel hidden fields,
+ * Edit/Delete row actions) are present, with no legacy `tablestyle2` tables
+ * remaining.
  *
  * @package FA_ProductAttributes
  */
@@ -60,6 +63,13 @@ class AdminPagesEquivalenceTest extends TestCase
         ['id' => 6, 'name' => 'Beta'],
     ];
 
+    /** @var array<int, array<string, mixed>> */
+    private const CONDITIONS = [
+        ['id' => 71, 'code' => 'new', 'label' => 'New', 'sort_order' => 10, 'active' => 1, 'is_default' => 1],
+        ['id' => 72, 'code' => 'used_good', 'label' => 'Used - Good', 'sort_order' => 40, 'active' => 0, 'is_default' => 0],
+        ['id' => 73, 'code' => 'as_is', 'label' => 'As Is', 'sort_order' => 70, 'active' => 1, 'is_default' => 0],
+    ];
+
     /**
      * Render a page in a fresh process and return its HTML.
      *
@@ -84,22 +94,61 @@ class AdminPagesEquivalenceTest extends TestCase
         return (string) $decoded['html'];
     }
 
-    // ── index.php ────────────────────────────────────────────────────────────
-
-    public function testIndexCategoriesTabPreservesOriginalElements(): void
+    /**
+     * @return string Fresh-process render of the hub for the given args.
+     */
+    private function renderHub(array $get, array $fixtures): string
     {
-        $html = $this->renderPage([
-            'page' => 'index',
-            'get'  => ['tab' => 'categories'],
-            'fixtures' => [
-                'FROM `0_product_attribute_categories`' => self::CATEGORIES,
-            ],
+        return $this->renderPage([
+            'page'     => 'index',
+            'get'      => $get,
+            'fixtures' => $fixtures,
+        ]);
+    }
+
+    /**
+     * @return string Hub HTML with the four section links present.
+     */
+    private function assertHubNav(string $html): void
+    {
+        foreach (['tab=attributes', 'tab=conditions', 'tab=flags', 'tab=brands'] as $link) {
+            $this->assertStringContainsString($link, $html);
+        }
+    }
+
+    // ── Hub shell ───────────────────────────────────────────────────────────
+
+    public function testHubDefaultSectionIsAttributesCategories(): void
+    {
+        $html = $this->renderHub([], [
+            'FROM `0_product_attribute_categories`' => self::CATEGORIES,
         ]);
 
         $this->assertStringContainsString('<h1>Product Attributes</h1>', $html);
-        $this->assertStringContainsString('?tab=categories', $html);
-        $this->assertStringContainsString('?tab=values', $html);
-        $this->assertStringContainsString('?tab=assignments', $html);
+        $this->assertHubNav($html);
+
+        // The attributes sub-nav is used when the legacy ?tab=… deep links are
+        // not present (default section = attributes, sub-tab = categories).
+        $this->assertStringContainsString('?tab=attributes&sub=categories', $html);
+        $this->assertStringContainsString('<th>Code</th>', $html);
+        $this->assertStringNotContainsString('tablestyle2', $html);
+    }
+
+    // ── Attributes section (categories) ─────────────────────────────────────
+
+    public function testIndexCategoriesTabPreservesOriginalElements(): void
+    {
+        $html = $this->renderHub(
+            ['tab' => 'attributes', 'sub' => 'categories'],
+            ['FROM `0_product_attribute_categories`' => self::CATEGORIES]
+        );
+
+        $this->assertStringContainsString('<h1>Product Attributes</h1>', $html);
+        $this->assertHubNav($html);
+
+        foreach (['?tab=attributes&sub=categories', '?tab=attributes&sub=values', '?tab=attributes&sub=assignments'] as $link) {
+            $this->assertStringContainsString($link, $html);
+        }
 
         foreach (['Code', 'Label', 'Sort', 'Active'] as $header) {
             $this->assertStringContainsString('<th>' . $header . '</th>', $html);
@@ -125,16 +174,31 @@ class AdminPagesEquivalenceTest extends TestCase
         $this->assertStringNotContainsString('tablestyle2', $html);
     }
 
+    public function testIndexCategoriesEditPrefillsForm(): void
+    {
+        $html = $this->renderHub(
+            ['tab' => 'attributes', 'sub' => 'categories', 'edit_id' => 2],
+            ['FROM `0_product_attribute_categories`' => self::CATEGORIES]
+        );
+
+        $this->assertStringContainsString('Edit Category', $html);
+        $this->assertStringContainsString('name="id" value="2"', $html);
+        $this->assertStringContainsString('value="size"', $html);
+        $this->assertStringContainsString('value="Size"', $html);
+        $this->assertStringContainsString('?tab=attributes&sub=categories', $html);
+    }
+
+    // ── Attributes section (values) ─────────────────────────────────────────
+
     public function testIndexValuesTabPreservesOriginalElements(): void
     {
-        $html = $this->renderPage([
-            'page' => 'index',
-            'get'  => ['tab' => 'values', 'category_id' => 1],
-            'fixtures' => [
+        $html = $this->renderHub(
+            ['tab' => 'attributes', 'sub' => 'values', 'category_id' => 1],
+            [
                 'FROM `0_product_attribute_categories`' => self::CATEGORIES,
                 'FROM `0_product_attribute_values` WHERE category_id = 1' => self::VALUES,
-            ],
-        ]);
+            ]
+        );
 
         $this->assertStringContainsString('<select name="category_id" onchange="this.form.submit()">', $html);
         $this->assertStringContainsString('color', $html);
@@ -160,18 +224,19 @@ class AdminPagesEquivalenceTest extends TestCase
         $this->assertStringNotContainsString('tablestyle2', $html);
     }
 
+    // ── Attributes section (assignments) ────────────────────────────────────
+
     public function testIndexAssignmentsTabWithStockPreservesOriginalElements(): void
     {
-        $html = $this->renderPage([
-            'page' => 'index',
-            'get'  => ['tab' => 'assignments', 'stock_id' => 'SKU-100', 'category_id' => 1],
-            'fixtures' => [
+        $html = $this->renderHub(
+            ['tab' => 'attributes', 'sub' => 'assignments', 'stock_id' => 'SKU-100', 'category_id' => 1],
+            [
                 'FROM `0_product_attribute_categories`' => self::CATEGORIES,
                 'FROM `0_product_attribute_values` WHERE category_id = 1' => self::VALUES,
                 'FROM `0_stock_master`' => self::STOCK_ITEMS,
                 'FROM `0_product_attribute_assignments`' => self::ASSIGNMENTS,
-            ],
-        ]);
+            ]
+        );
 
         $this->assertStringContainsString('<h2>Assignments</h2>', $html);
         $this->assertStringContainsString('<select name="stock_id">', $html);
@@ -201,13 +266,10 @@ class AdminPagesEquivalenceTest extends TestCase
 
     public function testIndexAssignmentsTabWithoutStockShowsHint(): void
     {
-        $html = $this->renderPage([
-            'page' => 'index',
-            'get'  => ['tab' => 'assignments'],
-            'fixtures' => [
-                'FROM `0_product_attribute_categories`' => self::CATEGORIES,
-            ],
-        ]);
+        $html = $this->renderHub(
+            ['tab' => 'attributes', 'sub' => 'assignments'],
+            ['FROM `0_product_attribute_categories`' => self::CATEGORIES]
+        );
 
         $this->assertStringContainsString('<h2>Assignments</h2>', $html);
         $this->assertStringContainsString('<select name="stock_id">', $html);
@@ -217,40 +279,113 @@ class AdminPagesEquivalenceTest extends TestCase
         $this->assertStringNotContainsString('tablestyle2', $html);
     }
 
-    public function testIndexCategoriesEditPrefillsForm(): void
-    {
-        $html = $this->renderPage([
-            'page' => 'index',
-            'get'  => ['tab' => 'categories', 'edit_id' => 2],
-            'fixtures' => [
-                'FROM `0_product_attribute_categories`' => self::CATEGORIES,
-            ],
-        ]);
+    // ── Attributes section (legacy deep links) ──────────────────────────────
 
-        $this->assertStringContainsString('Edit Category', $html);
-        $this->assertStringContainsString('name="id" value="2"', $html);
-        $this->assertStringContainsString('value="size"', $html);
-        $this->assertStringContainsString('value="Size"', $html);
-        $this->assertStringContainsString('?tab=categories', $html);
+    public function testLegacyDeepLinksStillRoute(): void
+    {
+        // ?tab=values&category_id=… (used by Variations UI) must keep working.
+        $html = $this->renderHub(
+            ['tab' => 'values', 'category_id' => 1],
+            [
+                'FROM `0_product_attribute_categories`' => self::CATEGORIES,
+                'FROM `0_product_attribute_values` WHERE category_id = 1' => self::VALUES,
+            ]
+        );
+
+        $this->assertStringContainsString('name="_tabs_sel" value="values"', $html);
+        $this->assertStringContainsString('name="edit_11"', $html);
+        $this->assertStringContainsString('Add Value', $html);
     }
 
-    // ── lifecycle-flags.php ──────────────────────────────────────────────────
+    // ── Conditions section ──────────────────────────────────────────────────
+
+    public function testConditionsPreservesOriginalElements(): void
+    {
+        $html = $this->renderHub(
+            ['tab' => 'conditions'],
+            ['FROM `0_product_condition_defs`' => self::CONDITIONS]
+        );
+
+        $this->assertStringContainsString('<h2>Condition Definitions</h2>', $html);
+        $this->assertHubNav($html);
+
+        foreach (['Code', 'Label', 'Sort', 'Active', 'Default'] as $header) {
+            $this->assertStringContainsString('<th>' . $header . '</th>', $html);
+        }
+        $this->assertStringContainsString('new', $html);
+        $this->assertStringContainsString('New', $html);
+        $this->assertStringContainsString('used_good', $html);
+        $this->assertStringContainsString('Used - Good', $html);
+        $this->assertStringContainsString('as_is', $html);
+        $this->assertStringContainsString('As Is', $html);
+        $this->assertStringContainsString('Yes', $html);
+        $this->assertStringContainsString('No', $html);
+
+        $this->assertStringContainsString('value="upsert_condition"', $html);
+        $this->assertStringContainsString('name="code" required placeholder="new" pattern="[a-z0-9_-]+"', $html);
+        $this->assertStringContainsString('name="label" required placeholder="New"', $html);
+        $this->assertStringContainsString('name="sort_order"', $html);
+        $this->assertStringContainsString('name="active"', $html);
+        $this->assertStringContainsString('name="is_default"', $html);
+        $this->assertStringContainsString('Save Condition', $html);
+        $this->assertStringContainsString('Add Condition', $html);
+
+        $this->assertStringContainsString('name="edit_71"', $html);
+        $this->assertStringContainsString('name="delete_72"', $html);
+        $this->assertStringContainsString('name="_tabs_sel" value="conditions"', $html);
+        $this->assertStringNotContainsString('No conditions defined yet.', $html);
+        $this->assertStringNotContainsString('tablestyle2', $html);
+    }
+
+    public function testConditionsEmptyStatePreserved(): void
+    {
+        $html = $this->renderHub(['tab' => 'conditions'], []);
+
+        $this->assertStringContainsString('No conditions defined yet.', $html);
+        $this->assertStringContainsString('name="_tabs_sel" value="conditions"', $html);
+    }
+
+    public function testConditionsEditPrefillsForm(): void
+    {
+        $html = $this->renderHub(
+            ['tab' => 'conditions', 'edit_id' => 71],
+            ['FROM `0_product_condition_defs`' => self::CONDITIONS]
+        );
+
+        $this->assertStringContainsString('Edit Condition', $html);
+        $this->assertStringContainsString('name="id" value="71"', $html);
+        $this->assertStringContainsString('value="new"', $html);
+        $this->assertStringContainsString('value="New"', $html);
+        $this->assertStringContainsString('?tab=conditions', $html);
+    }
+
+    public function testConditionsDefaultMarkedYes(): void
+    {
+        $html = $this->renderHub(
+            ['tab' => 'conditions'],
+            ['FROM `0_product_condition_defs`' => self::CONDITIONS]
+        );
+
+        // The default row shows Yes in its Default column; non-default rows No.
+        $this->assertStringContainsString('<td>Yes</td>', $html);
+        $this->assertStringContainsString('<td>No</td>', $html);
+    }
+
+    // ── Lifecycle Flags section ─────────────────────────────────────────────
 
     public function testLifecycleFlagsPreservesOriginalElements(): void
     {
-        $html = $this->renderPage([
-            'page' => 'lifecycle-flags',
-            'get'  => [],
-            'fixtures' => [
-                'FROM `0_product_lifecycle_flag_defs`' => self::FLAGS,
-            ],
-        ]);
+        $html = $this->renderHub(
+            ['tab' => 'flags'],
+            ['FROM `0_product_lifecycle_flag_defs`' => self::FLAGS]
+        );
 
-        $this->assertStringContainsString('<h1>Lifecycle Flag Definitions</h1>', $html);
+        $this->assertStringContainsString('<h2>Lifecycle Flag Definitions</h2>', $html);
         $this->assertStringContainsString(
             'Manage the storefront flags that appear as checkboxes on the product lifecycle tab.',
             $html
         );
+        $this->assertHubNav($html);
 
         foreach (['Code', 'Label', 'Sort', 'Active'] as $header) {
             $this->assertStringContainsString('<th>' . $header . '</th>', $html);
@@ -278,11 +413,7 @@ class AdminPagesEquivalenceTest extends TestCase
 
     public function testLifecycleFlagsEmptyStatePreserved(): void
     {
-        $html = $this->renderPage([
-            'page' => 'lifecycle-flags',
-            'get'  => [],
-            'fixtures' => [],
-        ]);
+        $html = $this->renderHub(['tab' => 'flags'], []);
 
         $this->assertStringContainsString('No flags defined yet.', $html);
         $this->assertStringContainsString('name="_tabs_sel" value="flags"', $html);
@@ -290,13 +421,10 @@ class AdminPagesEquivalenceTest extends TestCase
 
     public function testLifecycleFlagsEditPrefillsForm(): void
     {
-        $html = $this->renderPage([
-            'page' => 'lifecycle-flags',
-            'get'  => ['edit_id' => 1],
-            'fixtures' => [
-                'FROM `0_product_lifecycle_flag_defs`' => self::FLAGS,
-            ],
-        ]);
+        $html = $this->renderHub(
+            ['tab' => 'flags', 'edit_id' => 1],
+            ['FROM `0_product_lifecycle_flag_defs`' => self::FLAGS]
+        );
 
         $this->assertStringContainsString('Edit Flag', $html);
         $this->assertStringContainsString('name="flag_id" value="1"', $html);
@@ -305,25 +433,23 @@ class AdminPagesEquivalenceTest extends TestCase
         $this->assertStringContainsString('?tab=flags', $html);
     }
 
-    // ── brands.php ───────────────────────────────────────────────────────────
+    // ── Brands section ──────────────────────────────────────────────────────
 
     public function testBrandsBrandTypePreservesOriginalElements(): void
     {
-        $html = $this->renderPage([
-            'page' => 'brands',
-            'get'  => ['type' => 'brand'],
-            'fixtures' => [
-                'WHERE type = brand' => self::BRANDS,
-            ],
-        ]);
+        $html = $this->renderHub(
+            ['tab' => 'brands', 'type' => 'brand'],
+            ['WHERE type = brand' => self::BRANDS]
+        );
 
-        $this->assertStringContainsString('<h1>Brand / Manufacturer Management</h1>', $html);
+        $this->assertStringContainsString('<h2>Brand / Manufacturer Management</h2>', $html);
         $this->assertStringContainsString(
             'Manage the dropdown values that appear in the Product Identifiers tab.',
             $html
         );
-        $this->assertStringContainsString('?type=brand" class="active">Brand', $html);
-        $this->assertStringContainsString('?type=manufacturer', $html);
+        $this->assertHubNav($html);
+        $this->assertStringContainsString('?tab=brands&type=brand" class="active">Brand', $html);
+        $this->assertStringContainsString('?tab=brands&type=manufacturer', $html);
 
         $this->assertStringContainsString('<th>#</th>', $html);
         $this->assertStringContainsString('<th>Name</th>', $html);
@@ -344,32 +470,27 @@ class AdminPagesEquivalenceTest extends TestCase
 
     public function testBrandsManufacturerTypeEmptyStatePreserved(): void
     {
-        $html = $this->renderPage([
-            'page' => 'brands',
-            'get'  => ['type' => 'manufacturer'],
-            'fixtures' => [
-                'WHERE type = manufacturer' => [],
-            ],
-        ]);
+        $html = $this->renderHub(
+            ['tab' => 'brands', 'type' => 'manufacturer'],
+            ['WHERE type = manufacturer' => []]
+        );
 
-        $this->assertStringContainsString('?type=manufacturer" class="active">Manufacturer', $html);
+        $this->assertStringContainsString('?tab=brands&type=manufacturer" class="active">Manufacturer', $html);
         $this->assertStringContainsString('No entries defined yet.', $html);
         $this->assertStringContainsString('name="_tabs_sel" value="manufacturer"', $html);
     }
 
     public function testBrandsEditPrefillsForm(): void
     {
-        $html = $this->renderPage([
-            'page' => 'brands',
-            'get'  => ['type' => 'brand', 'edit_id' => 5],
-            'fixtures' => [
-                'WHERE type = brand' => self::BRANDS,
-            ],
-        ]);
+        $html = $this->renderHub(
+            ['tab' => 'brands', 'type' => 'brand', 'edit_id' => 5],
+            ['WHERE type = brand' => self::BRANDS]
+        );
 
         $this->assertStringContainsString('Edit Brand', $html);
         $this->assertStringContainsString('name="entry_id" value="5"', $html);
         $this->assertStringContainsString('value="Acme"', $html);
         $this->assertStringContainsString('Save Brand', $html);
+        $this->assertStringContainsString('?tab=brands&type=brand', $html);
     }
 }

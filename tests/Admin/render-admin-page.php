@@ -16,8 +16,8 @@
  *
  * Usage: php render-admin-page.php '<json args>'
  *   json args: {
- *     "page":     "index|lifecycle-flags|brands",
- *     "get":      {"tab": "categories", ...},
+ *     "page":     "index",             // consolidated admin hub (all sections)
+ *     "get":      {"tab": "attributes", "sub": "categories", ...},
  *     "post":     {...},                      // optional
  *     "fixtures": {"<sql substring>": [rows]} // optional
  *   }

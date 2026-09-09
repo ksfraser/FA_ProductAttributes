@@ -423,6 +423,188 @@ class ProductAttributesDao
         return !empty($rows) ? (string)$rows[0]['parent_stock_id'] : null;
     }
 
+    // ── Condition Definitions ────────────────────────────────────────────────
+
+    /**
+     * List condition definitions.
+     *
+     * @param bool $activeOnly Only return active (permissible) conditions
+     * @return array<int, array<string, mixed>>
+     */
+    public function listConditions(bool $activeOnly = false): array
+    {
+        $p = $this->db->getTablePrefix();
+        $sql = 'SELECT * FROM `' . $p . 'product_condition_defs`';
+        if ($activeOnly) {
+            $sql .= ' WHERE active = 1';
+        }
+        return $this->db->query($sql . ' ORDER BY sort_order ASC, code ASC');
+    }
+
+    /**
+     * Get a single condition definition.
+     *
+     * @return array<string, mixed>|null
+     */
+    public function getCondition(int $id): ?array
+    {
+        $p    = $this->db->getTablePrefix();
+        $rows = $this->db->query(
+            'SELECT * FROM `' . $p . 'product_condition_defs` WHERE id = :id',
+            ['id' => $id]
+        );
+        return $rows[0] ?? null;
+    }
+
+    /**
+     * Insert or update a condition definition.
+     *
+     * A condition cannot be both inactive and the site default, so marking an
+     * inactive condition as default is ignored (is_default is forced to 0).
+     * Setting a new default clears the flag from every other definition.
+     *
+     * @param array<string, mixed> $data keys: code, label, sort_order, active,
+     *                                   is_default, optional id
+     * @return int The condition definition id (0 on invalid input)
+     */
+    public function upsertCondition(array $data): int
+    {
+        $p     = $this->db->getTablePrefix();
+        $code  = trim((string)($data['code'] ?? ''));
+        $label = trim((string)($data['label'] ?? ''));
+        if ($code === '' || $label === '') {
+            return 0;
+        }
+
+        $sortOrder = (int)($data['sort_order'] ?? 0);
+        $active    = (int)(bool)($data['active'] ?? 1);
+        $isDefault = (int)(bool)($data['is_default'] ?? 0);
+        if ($active === 0) {
+            $isDefault = 0;
+        }
+        $id = (int)($data['id'] ?? 0);
+
+        if ($isDefault === 1) {
+            $this->db->execute(
+                'UPDATE `' . $p . 'product_condition_defs` SET is_default = 0 WHERE is_default = 1 AND id <> :id',
+                ['id' => $id]
+            );
+        }
+
+        if ($id > 0) {
+            $this->db->execute(
+                'UPDATE `' . $p . 'product_condition_defs`'
+                . ' SET code = :code, label = :label, sort_order = :sort_order, active = :active, is_default = :is_default'
+                . ' WHERE id = :id',
+                ['code' => $code, 'label' => $label, 'sort_order' => $sortOrder, 'active' => $active, 'is_default' => $isDefault, 'id' => $id]
+            );
+            return $id;
+        }
+
+        $existing = $this->db->query(
+            'SELECT id FROM `' . $p . 'product_condition_defs` WHERE code = :code',
+            ['code' => $code]
+        );
+        if (!empty($existing)) {
+            $id = (int)$existing[0]['id'];
+            $this->db->execute(
+                'UPDATE `' . $p . 'product_condition_defs`'
+                . ' SET label = :label, sort_order = :sort_order, active = :active, is_default = :is_default'
+                . ' WHERE id = :id',
+                ['label' => $label, 'sort_order' => $sortOrder, 'active' => $active, 'is_default' => $isDefault, 'id' => $id]
+            );
+            return $id;
+        }
+
+        $this->db->execute(
+            'INSERT INTO `' . $p . 'product_condition_defs` (code, label, sort_order, active, is_default)'
+            . ' VALUES (:code, :label, :sort_order, :active, :is_default)',
+            ['code' => $code, 'label' => $label, 'sort_order' => $sortOrder, 'active' => $active, 'is_default' => $isDefault]
+        );
+        return (int)$this->db->lastInsertId();
+    }
+
+    /**
+     * Delete a condition definition and every product assignment to it.
+     */
+    public function deleteCondition(int $id): void
+    {
+        $p = $this->db->getTablePrefix();
+        $this->db->execute(
+            'DELETE FROM `' . $p . 'product_condition_assignments` WHERE condition_id = :id',
+            ['id' => $id]
+        );
+        $this->db->execute(
+            'DELETE FROM `' . $p . 'product_condition_defs` WHERE id = :id',
+            ['id' => $id]
+        );
+    }
+
+    /**
+     * Site-wide default condition id, or the first active condition when none
+     * is explicitly flagged, or null when no active conditions exist.
+     *
+     * @return int|null
+     */
+    public function getDefaultCondition(): ?int
+    {
+        $p    = $this->db->getTablePrefix();
+        $rows = $this->db->query(
+            'SELECT id FROM `' . $p . 'product_condition_defs`'
+            . ' WHERE active = 1 AND is_default = 1 ORDER BY sort_order ASC, code ASC LIMIT 1'
+        );
+        if (!empty($rows)) {
+            return (int)$rows[0]['id'];
+        }
+
+        $rows = $this->db->query(
+            'SELECT id FROM `' . $p . 'product_condition_defs`'
+            . ' WHERE active = 1 ORDER BY sort_order ASC, code ASC LIMIT 1'
+        );
+        return !empty($rows) ? (int)$rows[0]['id'] : null;
+    }
+
+    /**
+     * Get the condition assigned to a product.
+     *
+     * @return int|null condition_id, or null when the product has none
+     */
+    public function getProductCondition(string $stockId): ?int
+    {
+        $p    = $this->db->getTablePrefix();
+        $rows = $this->db->query(
+            'SELECT condition_id FROM `' . $p . 'product_condition_assignments` WHERE stock_id = :stock_id',
+            ['stock_id' => $stockId]
+        );
+        return !empty($rows) ? (int)$rows[0]['condition_id'] : null;
+    }
+
+    /**
+     * Set (or clear) a product's condition. Single-select: at most one row per
+     * stock item (UNIQUE on stock_id), so INSERT … ON DUPLICATE KEY UPDATE.
+     *
+     * @param string     $stockId
+     * @param int|null   $conditionId Condition definition id, or null to clear
+     */
+    public function setProductCondition(string $stockId, ?int $conditionId): void
+    {
+        $p = $this->db->getTablePrefix();
+        if ($conditionId === null || $conditionId <= 0) {
+            $this->db->execute(
+                'DELETE FROM `' . $p . 'product_condition_assignments` WHERE stock_id = :stock_id',
+                ['stock_id' => $stockId]
+            );
+            return;
+        }
+
+        $this->db->execute(
+            'INSERT INTO `' . $p . 'product_condition_assignments` (stock_id, condition_id)'
+            . ' VALUES (:stock_id, :condition_id)'
+            . ' ON DUPLICATE KEY UPDATE condition_id = :condition_id2',
+            ['stock_id' => $stockId, 'condition_id' => $conditionId, 'condition_id2' => $conditionId]
+        );
+    }
+
     /**
      * Get the database adapter
      */

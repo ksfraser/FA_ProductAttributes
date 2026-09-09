@@ -695,4 +695,288 @@ class ProductAttributesDaoTest extends TestCase
         $dao = new ProductAttributesDao($db);
         $dao->updateValueColor(3, null);
     }
+
+    public function testListConditions(): void
+    {
+        $db = $this->createMock(DbAdapterInterface::class);
+        $db->method('getTablePrefix')->willReturn('fa_');
+        $db->expects($this->once())
+            ->method('query')
+            ->with('SELECT * FROM `fa_product_condition_defs` ORDER BY sort_order ASC, code ASC')
+            ->willReturn([
+                ['id' => 72, 'code' => 'used_good', 'label' => 'Used - Good', 'sort_order' => 40, 'active' => 0, 'is_default' => 0],
+                ['id' => 71, 'code' => 'new', 'label' => 'New', 'sort_order' => 10, 'active' => 1, 'is_default' => 1],
+            ]);
+
+        $dao = new ProductAttributesDao($db);
+        $result = $dao->listConditions();
+
+        $this->assertCount(2, $result);
+        $this->assertEquals('new', $result[1]['code']);
+    }
+
+    public function testListConditionsActiveOnly(): void
+    {
+        $db = $this->createMock(DbAdapterInterface::class);
+        $db->method('getTablePrefix')->willReturn('fa_');
+        $db->expects($this->once())
+            ->method('query')
+            ->with('SELECT * FROM `fa_product_condition_defs` WHERE active = 1 ORDER BY sort_order ASC, code ASC')
+            ->willReturn([
+                ['id' => 71, 'code' => 'new', 'label' => 'New', 'sort_order' => 10, 'active' => 1, 'is_default' => 1],
+            ]);
+
+        $dao = new ProductAttributesDao($db);
+        $result = $dao->listConditions(true);
+
+        $this->assertCount(1, $result);
+        $this->assertEquals('new', $result[0]['code']);
+    }
+
+    public function testGetCondition(): void
+    {
+        $db = $this->createMock(DbAdapterInterface::class);
+        $db->method('getTablePrefix')->willReturn('fa_');
+        $db->expects($this->once())
+            ->method('query')
+            ->with('SELECT * FROM `fa_product_condition_defs` WHERE id = :id', ['id' => 71])
+            ->willReturn([
+                ['id' => 71, 'code' => 'new', 'label' => 'New'],
+            ]);
+
+        $dao = new ProductAttributesDao($db);
+        $result = $dao->getCondition(71);
+
+        $this->assertEquals('new', $result['code']);
+    }
+
+    public function testGetConditionReturnsNullWhenMissing(): void
+    {
+        $db = $this->createMock(DbAdapterInterface::class);
+        $db->method('getTablePrefix')->willReturn('fa_');
+        $db->method('query')->willReturn([]);
+
+        $dao = new ProductAttributesDao($db);
+        $result = $dao->getCondition(999);
+
+        $this->assertNull($result);
+    }
+
+    public function testUpsertConditionEmptyCodeReturnsZero(): void
+    {
+        $db = $this->createMock(DbAdapterInterface::class);
+        $db->expects($this->never())->method('execute');
+        $db->expects($this->never())->method('query');
+
+        $dao = new ProductAttributesDao($db);
+        $result = $dao->upsertCondition(['code' => ' ', 'label' => 'New']);
+
+        $this->assertEquals(0, $result);
+    }
+
+    public function testUpsertConditionEmptyLabelReturnsZero(): void
+    {
+        $db = $this->createMock(DbAdapterInterface::class);
+        $db->expects($this->never())->method('execute');
+        $db->expects($this->never())->method('query');
+
+        $dao = new ProductAttributesDao($db);
+        $result = $dao->upsertCondition(['code' => 'new', 'label' => '']);
+
+        $this->assertEquals(0, $result);
+    }
+
+    public function testUpsertConditionInsertWithDefaultClearsOthers(): void
+    {
+        $db = $this->createMock(DbAdapterInterface::class);
+        $db->method('getTablePrefix')->willReturn('fa_');
+        $db->method('lastInsertId')->willReturn(9);
+        $db->expects($this->once())
+            ->method('query')
+            ->with('SELECT id FROM `fa_product_condition_defs` WHERE code = :code', ['code' => 'new'])
+            ->willReturn([]);
+        $db->expects($this->exactly(2))
+            ->method('execute')
+            ->withConsecutive(
+                ['UPDATE `fa_product_condition_defs` SET is_default = 0 WHERE is_default = 1 AND id <> :id', ['id' => 0]],
+                [
+                    'INSERT INTO `fa_product_condition_defs` (code, label, sort_order, active, is_default)'
+                    . ' VALUES (:code, :label, :sort_order, :active, :is_default)',
+                    ['code' => 'new', 'label' => 'New', 'sort_order' => 10, 'active' => 1, 'is_default' => 1],
+                ]
+            );
+
+        $dao = new ProductAttributesDao($db);
+        $result = $dao->upsertCondition([
+            'code' => 'new', 'label' => 'New', 'sort_order' => 10, 'active' => 1, 'is_default' => 1,
+        ]);
+
+        $this->assertEquals(9, $result);
+    }
+
+    public function testUpsertConditionUpdateById(): void
+    {
+        $db = $this->createMock(DbAdapterInterface::class);
+        $db->method('getTablePrefix')->willReturn('fa_');
+        $db->expects($this->once())
+            ->method('execute')
+            ->with(
+                'UPDATE `fa_product_condition_defs`'
+                . ' SET code = :code, label = :label, sort_order = :sort_order, active = :active, is_default = :is_default'
+                . ' WHERE id = :id',
+                ['code' => 'used_good', 'label' => 'Used - Good', 'sort_order' => 40, 'active' => 1, 'is_default' => 0, 'id' => 72]
+            );
+
+        $dao = new ProductAttributesDao($db);
+        $id = $dao->upsertCondition([
+            'id' => 72, 'code' => 'used_good', 'label' => 'Used - Good', 'sort_order' => 40, 'active' => 1, 'is_default' => 0,
+        ]);
+
+        $this->assertEquals(72, $id);
+    }
+
+    public function testUpsertConditionInactiveForcesIsDefaultZero(): void
+    {
+        $db = $this->createMock(DbAdapterInterface::class);
+        $db->method('getTablePrefix')->willReturn('fa_');
+        $db->expects($this->once())
+            ->method('execute')
+            ->with(
+                'INSERT INTO `fa_product_condition_defs` (code, label, sort_order, active, is_default)'
+                . ' VALUES (:code, :label, :sort_order, :active, :is_default)',
+                ['code' => 'as_is', 'label' => 'As Is', 'sort_order' => 70, 'active' => 0, 'is_default' => 0]
+            );
+
+        $dao = new ProductAttributesDao($db);
+        $dao->upsertCondition([
+            'code' => 'as_is', 'label' => 'As Is', 'sort_order' => 70, 'active' => 0, 'is_default' => 1,
+        ]);
+    }
+
+    public function testDeleteConditionRemovesAssignmentsThenDef(): void
+    {
+        $db = $this->createMock(DbAdapterInterface::class);
+        $db->method('getTablePrefix')->willReturn('fa_');
+        $db->expects($this->exactly(2))
+            ->method('execute')
+            ->withConsecutive(
+                ['DELETE FROM `fa_product_condition_assignments` WHERE condition_id = :id', ['id' => 71]],
+                ['DELETE FROM `fa_product_condition_defs` WHERE id = :id', ['id' => 71]]
+            );
+
+        $dao = new ProductAttributesDao($db);
+        $dao->deleteCondition(71);
+    }
+
+    public function testGetDefaultConditionReturnsFlagged(): void
+    {
+        $db = $this->createMock(DbAdapterInterface::class);
+        $db->method('getTablePrefix')->willReturn('fa_');
+        $db->expects($this->once())
+            ->method('query')
+            ->with(
+                'SELECT id FROM `fa_product_condition_defs`'
+                . ' WHERE active = 1 AND is_default = 1 ORDER BY sort_order ASC, code ASC LIMIT 1'
+            )
+            ->willReturn([['id' => 71]]);
+
+        $dao = new ProductAttributesDao($db);
+        $result = $dao->getDefaultCondition();
+
+        $this->assertEquals(71, $result);
+    }
+
+    public function testGetDefaultConditionFallsBackToFirstActive(): void
+    {
+        $db = $this->createMock(DbAdapterInterface::class);
+        $db->method('getTablePrefix')->willReturn('fa_');
+        $db->expects($this->exactly(2))
+            ->method('query')
+            ->withConsecutive(
+                [
+                    'SELECT id FROM `fa_product_condition_defs`'
+                    . ' WHERE active = 1 AND is_default = 1 ORDER BY sort_order ASC, code ASC LIMIT 1',
+                    [],
+                ],
+                [
+                    'SELECT id FROM `fa_product_condition_defs`'
+                    . ' WHERE active = 1 ORDER BY sort_order ASC, code ASC LIMIT 1',
+                    [],
+                ]
+            )
+            ->willReturnOnConsecutiveCalls([], [['id' => 73]]);
+
+        $dao = new ProductAttributesDao($db);
+        $result = $dao->getDefaultCondition();
+
+        $this->assertEquals(73, $result);
+    }
+
+    public function testGetDefaultConditionNullWhenNoActive(): void
+    {
+        $db = $this->createMock(DbAdapterInterface::class);
+        $db->method('getTablePrefix')->willReturn('fa_');
+        $db->method('query')->willReturn([]);
+
+        $dao = new ProductAttributesDao($db);
+        $result = $dao->getDefaultCondition();
+
+        $this->assertNull($result);
+    }
+
+    public function testGetProductCondition(): void
+    {
+        $db = $this->createMock(DbAdapterInterface::class);
+        $db->method('getTablePrefix')->willReturn('fa_');
+        $db->expects($this->once())
+            ->method('query')
+            ->with('SELECT condition_id FROM `fa_product_condition_assignments` WHERE stock_id = :stock_id', ['stock_id' => 'ABC123'])
+            ->willReturn([['condition_id' => 71]]);
+
+        $dao = new ProductAttributesDao($db);
+        $result = $dao->getProductCondition('ABC123');
+
+        $this->assertEquals(71, $result);
+    }
+
+    public function testGetProductConditionNullWhenUnassigned(): void
+    {
+        $db = $this->createMock(DbAdapterInterface::class);
+        $db->method('getTablePrefix')->willReturn('fa_');
+        $db->method('query')->willReturn([]);
+
+        $dao = new ProductAttributesDao($db);
+        $result = $dao->getProductCondition('ABC123');
+
+        $this->assertNull($result);
+    }
+
+    public function testSetProductConditionInsertsUpsert(): void
+    {
+        $db = $this->createMock(DbAdapterInterface::class);
+        $db->method('getTablePrefix')->willReturn('fa_');
+        $db->expects($this->once())
+            ->method('execute')
+            ->with(
+                'INSERT INTO `fa_product_condition_assignments` (stock_id, condition_id)'
+                . ' VALUES (:stock_id, :condition_id)'
+                . ' ON DUPLICATE KEY UPDATE condition_id = :condition_id2',
+                ['stock_id' => 'ABC123', 'condition_id' => 71, 'condition_id2' => 71]
+            );
+
+        $dao = new ProductAttributesDao($db);
+        $dao->setProductCondition('ABC123', 71);
+    }
+
+    public function testSetProductConditionNullDeletesRow(): void
+    {
+        $db = $this->createMock(DbAdapterInterface::class);
+        $db->method('getTablePrefix')->willReturn('fa_');
+        $db->expects($this->once())
+            ->method('execute')
+            ->with('DELETE FROM `fa_product_condition_assignments` WHERE stock_id = :stock_id', ['stock_id' => 'ABC123']);
+
+        $dao = new ProductAttributesDao($db);
+        $dao->setProductCondition('ABC123', null);
+    }
 }

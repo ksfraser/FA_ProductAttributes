@@ -245,4 +245,167 @@ class ProductAttributesServiceTest extends TestCase
 
         $service->deleteProductAttributes('TEST123');
     }
+
+    public function testRenderProductAttributesTabPreselectsProductCondition(): void
+    {
+        $dao = $this->createMock(ProductAttributesDao::class);
+        $dao->expects($this->once())
+            ->method('listAssignments')
+            ->with('TEST123')
+            ->willReturn([]);
+        $dao->expects($this->once())
+            ->method('listCategories')
+            ->willReturn([]);
+        $dao->expects($this->once())
+            ->method('listConditions')
+            ->with(true)
+            ->willReturn([
+                ['id' => 71, 'code' => 'new', 'label' => 'New', 'sort_order' => 10],
+                ['id' => 73, 'code' => 'as_is', 'label' => 'As Is', 'sort_order' => 70],
+            ]);
+        $dao->expects($this->once())
+            ->method('getProductCondition')
+            ->with('TEST123')
+            ->willReturn(73);
+        $dao->expects($this->never())
+            ->method('getDefaultCondition');
+
+        $db = $this->createMock(DbAdapterInterface::class);
+
+        $service = new ProductAttributesService($dao, $db);
+        $result = $service->renderProductAttributesTab('TEST123');
+
+        $this->assertTrue(strpos($result, 'Condition') !== false, 'Should render Condition box');
+        $this->assertTrue(strpos($result, 'name="pa_condition" value="71"') !== false, 'Should have New radio');
+        $this->assertTrue(strpos($result, 'name="pa_condition" value="73" checked') !== false, 'Product condition should be checked');
+        $this->assertTrue(strpos($result, 'name="pa_condition" value="71" id="pa_condition_71"') !== false, 'New radio should be unchecked');
+    }
+
+    public function testRenderProductAttributesTabFallsBackToDefaultCondition(): void
+    {
+        $dao = $this->createMock(ProductAttributesDao::class);
+        $dao->expects($this->once())
+            ->method('listAssignments')
+            ->with('TEST123')
+            ->willReturn([]);
+        $dao->expects($this->once())
+            ->method('listCategories')
+            ->willReturn([]);
+        $dao->expects($this->once())
+            ->method('listConditions')
+            ->with(true)
+            ->willReturn([
+                ['id' => 71, 'code' => 'new', 'label' => 'New', 'sort_order' => 10],
+            ]);
+        $dao->expects($this->once())
+            ->method('getProductCondition')
+            ->with('TEST123')
+            ->willReturn(null);
+        $dao->expects($this->once())
+            ->method('getDefaultCondition')
+            ->willReturn(71);
+
+        $db = $this->createMock(DbAdapterInterface::class);
+
+        $service = new ProductAttributesService($dao, $db);
+        $result = $service->renderProductAttributesTab('TEST123');
+
+        $this->assertTrue(strpos($result, 'name="pa_condition" value="71" checked') !== false, 'Default condition should be checked');
+    }
+
+    public function testRenderProductAttributesTabSkipsConditionBoxWhenNoActiveConditions(): void
+    {
+        $dao = $this->createMock(ProductAttributesDao::class);
+        $dao->expects($this->once())
+            ->method('listAssignments')
+            ->with('TEST123')
+            ->willReturn([]);
+        $dao->expects($this->once())
+            ->method('listCategories')
+            ->willReturn([]);
+        $dao->expects($this->once())
+            ->method('listConditions')
+            ->with(true)
+            ->willReturn([]);
+        $dao->expects($this->never())
+            ->method('getProductCondition');
+
+        $db = $this->createMock(DbAdapterInterface::class);
+
+        $service = new ProductAttributesService($dao, $db);
+        $result = $service->renderProductAttributesTab('TEST123');
+
+        $this->assertTrue(strpos($result, 'name="pa_condition"') === false, 'No radios when no active conditions');
+    }
+
+    public function testSaveProductAttributesPersistsCondition(): void
+    {
+        $dao = $this->createMock(ProductAttributesDao::class);
+        $dao->expects($this->once())
+            ->method('setProductCondition')
+            ->with('TEST123', 73);
+
+        $db = $this->createMock(DbAdapterInterface::class);
+
+        $service = new ProductAttributesService($dao, $db);
+
+        $postData = [
+            'pa_condition' => '73',
+        ];
+
+        $service->saveProductAttributes('TEST123', $postData);
+    }
+
+    public function testSaveProductAttributesClearsConditionWhenEmptySelection(): void
+    {
+        $dao = $this->createMock(ProductAttributesDao::class);
+        $dao->expects($this->once())
+            ->method('setProductCondition')
+            ->with('TEST123', null);
+
+        $db = $this->createMock(DbAdapterInterface::class);
+
+        $service = new ProductAttributesService($dao, $db);
+
+        $postData = [
+            'pa_condition' => '',
+        ];
+
+        $service->saveProductAttributes('TEST123', $postData);
+    }
+
+    public function testSaveProductAttributesSkipsConditionWhenFieldAbsent(): void
+    {
+        $dao = $this->createMock(ProductAttributesDao::class);
+        $dao->expects($this->never())
+            ->method('setProductCondition');
+
+        $db = $this->createMock(DbAdapterInterface::class);
+
+        $service = new ProductAttributesService($dao, $db);
+
+        $postData = [
+            'attribute_values' => [],
+        ];
+
+        $service->saveProductAttributes('TEST123', $postData);
+    }
+
+    public function testDeleteProductAttributesClearsCondition(): void
+    {
+        $dao = $this->createMock(ProductAttributesDao::class);
+        $dao->expects($this->once())
+            ->method('listAssignments')
+            ->with('TEST123')
+            ->willReturn([]);
+        $dao->expects($this->once())
+            ->method('setProductCondition')
+            ->with('TEST123', null);
+
+        $db = $this->createMock(DbAdapterInterface::class);
+
+        $service = new ProductAttributesService($dao, $db);
+
+        $service->deleteProductAttributes('TEST123');
+    }
 }

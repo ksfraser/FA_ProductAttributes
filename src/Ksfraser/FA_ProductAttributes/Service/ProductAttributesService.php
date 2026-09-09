@@ -70,6 +70,8 @@ class ProductAttributesService
             $html .= '</table>';
         }
 
+        $this->appendConditionBox($html, $stockId);
+
         if (!empty($categories)) {
             $ajaxUrl = $GLOBALS['path_to_root'] . '/modules/FA_ProductAttributes/public/ajax_get_values.php';
             $escapedAjaxUrl = htmlspecialchars($ajaxUrl, ENT_QUOTES);
@@ -201,6 +203,13 @@ class ProductAttributesService
                 }
             }
         }
+
+        // Single-select condition (radio box). Persisted whenever the field is
+        // present in the item form; a cleared selection removes the row.
+        if (array_key_exists('pa_condition', $postData)) {
+            $conditionId = (int)$postData['pa_condition'];
+            $this->dao->setProductCondition($stockId, $conditionId > 0 ? $conditionId : null);
+        }
     }
 
     /**
@@ -214,5 +223,44 @@ class ProductAttributesService
         foreach ($existing as $row) {
             $this->dao->deleteAssignment((int)$row['id']);
         }
+        $this->dao->setProductCondition($stockId, null);
+    }
+
+    /**
+     * Append the single-select Condition radio box to the tab HTML, when any
+     * active condition definitions exist. The preselected value is the
+     * product's own condition, falling back to the site-wide default (so new
+     * products default to the seeded "New" until saved).
+     *
+     * @param string $html    Rendered tab HTML (appended in place)
+     * @param string $stockId
+     */
+    private function appendConditionBox(string &$html, string $stockId): void
+    {
+        $conditions = $this->dao->listConditions(true);
+        if (empty($conditions)) {
+            return;
+        }
+
+        $current = $this->dao->getProductCondition($stockId);
+        if ($current === null) {
+            $default = $this->dao->getDefaultCondition();
+            $current = $default;
+        }
+        $current = (int)$current;
+
+        $html .= '<fieldset><legend>' . _('Condition') . '</legend>';
+        $html .= '<table class="tablestyle_noborder">';
+        foreach ($conditions as $cond) {
+            $condId  = (int)($cond['id'] ?? 0);
+            $checked = ($condId === $current) ? ' checked' : '';
+            $label   = htmlspecialchars((string)($cond['label'] ?? ''), ENT_QUOTES, 'UTF-8');
+            $html .= '<tr>';
+            $html .= '<td><input type="radio" name="pa_condition" value="' . $condId . '"' . $checked
+                . ' id="pa_condition_' . $condId . '"></td>';
+            $html .= '<td><label for="pa_condition_' . $condId . '">' . $label . '</label></td>';
+            $html .= '</tr>';
+        }
+        $html .= '</table></fieldset>';
     }
 }

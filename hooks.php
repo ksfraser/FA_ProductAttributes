@@ -77,22 +77,13 @@ class hooks_FA_ProductAttributes extends hooks
 
         switch ($app->id) {
             case 'stock':
+                // All admin screens live in the single consolidated Product
+                // Attributes hub (see public/index.php); the former Lifecycle
+                // Flags and Brands / Manufacturers pages redirect here.
                 $app->add_rapp_function(
                     2,
                     _('Product Attributes'),
                     $path_to_root . '/modules/' . $this->module_name . '/public/index.php',
-                    'SA_OPEN'
-                );
-                $app->add_rapp_function(
-                    2,
-                    _('Lifecycle Flags'),
-                    $path_to_root . '/modules/' . $this->module_name . '/public/lifecycle-flags.php',
-                    'SA_OPEN'
-                );
-                $app->add_rapp_function(
-                    2,
-                    _('Brands / Manufacturers'),
-                    $path_to_root . '/modules/' . $this->module_name . '/public/brands.php',
                     'SA_OPEN'
                 );
                 break;
@@ -165,6 +156,9 @@ class hooks_FA_ProductAttributes extends hooks
             '30_product_attribute_extras.sql',
             '31_product_variation_combos.sql',
             '32_widen_stock_id.sql',
+            '33_product_condition_defs.sql',
+            '34_product_condition_assignments.sql',
+            '35_product_condition_defs_seed.sql',
         );
 
         foreach ($files as $file) {

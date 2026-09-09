@@ -125,8 +125,9 @@ FA_ProductAttributes/
 │                   ├── ReactivateVariationsAction.php
 │                   └── UpdateProductTypesAction.php
 ├── public/
-│   ├── index.php                      # Standalone admin entry
-│   └── lifecycle-flags.php            # Flag definitions admin
+│   ├── index.php                      # Consolidated admin hub (attributes, conditions, flags, brands)
+│   ├── lifecycle-flags.php            # Redirect stub → index.php?tab=flags
+│   └── brands.php                     # Redirect stub → index.php?tab=brands
 ├── sql/
 │   ├── install.sql                    # Schema creation
 │   └── seed.sql                       # Royal Order seed data
