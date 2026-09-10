@@ -185,6 +185,27 @@ Two parallel, un-unified parent-relationship mechanisms:
   `getProductParent()` returns null → `$isChild` false → read-only protection never
   engages for generated children → issue #52.
 
+## FA_ProductAttributes Generate Combinations semantics (2026-09)
+
+- Combos derive from the product's OWN value assignments
+  (`product_attribute_assignments`), **one value per category** — NOT from every
+  active value of its assigned categories. A product assigned 4 Awesomeness + 1
+  Shoe Size produces 4 × 1 = 4 combos. (Before: stock 101 `ipad` produced 168
+  because all 7 Color × 2 Shoe × 3 Clothes × 4 Awe taxonomy values were fed in.)
+  Implemented in `GenerateCombosAction::assignedCategoryValues()`.
+- Re-running **Generate** now reconciles the pool: `CombosDao::pruneStale()`
+  deletes uninstantiated rows no longer produced (`child_stock_id IS NULL` only);
+  rows stamped with a child are always preserved. The `syncCombos` insert-only
+  doctrine is gone; orphan reconciliation stays a Create Child concern for
+  *children*, while *pool* staleness is Generate's concern.
+- The Variations tab renders the persisted pool in a "Saved Combinations"
+  fieldset (`VariationSections`... `CombinationPoolSection` +
+  `CombosDao::listCombos`), so the generated set is visible immediately —
+  "changing tabs and coming back shows nothing" was fixed by this, plus
+  `Existing Variations` still lists only instantiated children (Create Child).
+- Live-verified on stock 101: `Combination set saved: 4 new / 4 total. 168 stale
+  combinations pruned.`
+
 ## ksf-fa integration instance — blank-page bootstrap findings (2026-09)
 
 Env access facts + the two stacked bootstrap failures found while E2E-testing the

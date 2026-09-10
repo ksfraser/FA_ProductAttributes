@@ -14,8 +14,15 @@
 
 use Ksfraser\ModulesDAO\Db\FrontAccountingDbAdapter;
 
-// Resolve all relative includes from this module directory.
+// Resolve all relative includes from this module directory. Restore CWD on
+// shutdown so Apache mod_php does not leak it into subsequent requests.
 chdir(__DIR__);
+register_shutdown_function(function () {
+    $target = isset($_SERVER['DOCUMENT_ROOT']) ? $_SERVER['DOCUMENT_ROOT'] : getcwd();
+    if (is_string($target) && is_dir($target)) {
+        @chdir($target);
+    }
+});
 
 // Load the Composer autoloader.
 $vendorAutoload = __DIR__ . '/../vendor/autoload.php';
