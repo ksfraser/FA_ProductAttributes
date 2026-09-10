@@ -230,7 +230,8 @@ class CreateChildProductAction
 
     /**
      * Clone the parent's "other PA attributes" onto the child: identifiers,
-     * shipping attributes, warranty, lifecycle flags and tag assignments.
+     * shipping attributes, warranty, lifecycle flags, tag assignments and the
+     * product condition.
      * Only tables where the parent actually has a row are cloned; each copied
      * row rebinds stock_id to the child (the surrogate `id` is not copied).
      *
@@ -247,6 +248,7 @@ class CreateChildProductAction
             'product_warranty',
             'product_lifecycle_flag_assignments',
             'product_tag_assignments',
+            'product_condition_assignments',
         ];
 
         foreach ($clonableTables as $table) {
