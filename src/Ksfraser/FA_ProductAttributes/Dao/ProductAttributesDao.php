@@ -219,6 +219,54 @@ class ProductAttributesDao
         );
     }
 
+    /**
+     * Categories that actually have at least one value assignment for the stock
+     * item. "Assigned Category" is defined by the presence of options — a
+     * category-level row with no values is not truly assigned.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    public function listCategoriesWithAssignedValues(string $stockId): array
+    {
+        $p = $this->db->getTablePrefix();
+        return $this->db->query(
+            "SELECT DISTINCT c.* FROM `{$p}product_attribute_categories` c
+             JOIN `{$p}product_attribute_assignments` a ON c.id = a.category_id
+             WHERE a.stock_id = :stock_id
+             ORDER BY c.sort_order, c.code",
+            ['stock_id' => $stockId]
+        );
+    }
+
+    /**
+     * Fetch a single product_attribute_assignments row by id.
+     *
+     * @return array<string, mixed>|null
+     */
+    public function getAssignmentById(int $assignmentId): ?array
+    {
+        $p = $this->db->getTablePrefix();
+        $rows = $this->db->query(
+            "SELECT * FROM `{$p}product_attribute_assignments` WHERE id = :id",
+            ['id' => $assignmentId]
+        );
+        return $rows[0] ?? null;
+    }
+
+    /**
+     * Number of value assignments a stock item still has in a category.
+     */
+    public function countCategoryValueAssignments(string $stockId, int $categoryId): int
+    {
+        $p = $this->db->getTablePrefix();
+        $rows = $this->db->query(
+            "SELECT COUNT(*) AS cnt FROM `{$p}product_attribute_assignments`
+             WHERE stock_id = :stock_id AND category_id = :category_id",
+            ['stock_id' => $stockId, 'category_id' => $categoryId]
+        );
+        return (int)($rows[0]['cnt'] ?? 0);
+    }
+
     public function removeCategoryAssignment(string $stockId, int $categoryId): void
     {
         $p = $this->db->getTablePrefix();

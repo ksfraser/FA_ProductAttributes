@@ -35,11 +35,11 @@ class GenerateCombosActionTest extends TestCase
         $this->assertStringContainsString('variation of another product', $result);
     }
 
-    public function testHandleWithNoCategoriesReturnsMessage(): void
+    public function testHandleWithNoAssignmentsReturnsMessage(): void
     {
         $coreDao = $this->createMock(ProductAttributesDao::class);
         $coreDao->method('getProductParent')->willReturn(null);
-        $coreDao->method('listCategoryAssignments')->willReturn([]);
+        $coreDao->method('listAssignments')->willReturn([]);
 
         $combosDao = $this->createMock(CombosDao::class);
         $db        = $this->createMock(DbAdapterInterface::class);
@@ -47,29 +47,19 @@ class GenerateCombosActionTest extends TestCase
         $action = new GenerateCombosAction($coreDao, $combosDao, $db);
         $result = $action->handle(['stock_id' => 'SHIRT']);
 
-        $this->assertStringContainsString('No categories', $result);
+        $this->assertStringContainsString('No attribute values', $result);
     }
 
-    public function testHandlePersistsCartesianProductToPool(): void
+    public function testHandlePersistsCartesianProductOfAssignedValuesToPool(): void
     {
         $coreDao = $this->createMock(ProductAttributesDao::class);
         $coreDao->method('getProductParent')->willReturn(null);
-        $coreDao->method('listCategoryAssignments')
-            ->willReturn([['id' => 1], ['id' => 2]]);
-
-        $coreDao->method('listActiveValues')
-            ->willReturnCallback(function (int $categoryId) {
-                if ($categoryId === 1) {
-                    return [
-                        ['id' => 10, 'slug' => 'red', 'value' => 'Red'],
-                        ['id' => 11, 'slug' => 'blue', 'value' => 'Blue'],
-                    ];
-                }
-                // category 2
-                return [
-                    ['id' => 20, 'slug' => 'm', 'value' => 'M'],
-                ];
-            });
+        $coreDao->method('listAssignments')
+            ->willReturn([
+                ['category_id' => 1, 'value_id' => 10, 'value_label' => 'Red',  'value_slug' => 'red'],
+                ['category_id' => 1, 'value_id' => 11, 'value_label' => 'Blue', 'value_slug' => 'blue'],
+                ['category_id' => 2, 'value_id' => 20, 'value_label' => 'M',    'value_slug' => 'm'],
+            ]);
 
         // Categories 1 and 2 have sort orders to make Royal Order deterministic.
         $coreDao->method('listCategories')
@@ -84,7 +74,7 @@ class GenerateCombosActionTest extends TestCase
             ->with(
                 'SHIRT',
                 $this->callback(function (array $combos) {
-                    // 2 (color) x 1 (size) = 2 combos
+                    // 2 (assigned colour values) x 1 (assigned size) = 2 combos
                     $this->assertCount(2, $combos);
                     $keys = array_column($combos, 'value_set_key');
                     $this->assertContains('10,20', $keys);
@@ -97,6 +87,10 @@ class GenerateCombosActionTest extends TestCase
                 })
             )
             ->willReturn(2);
+        $combosDao->expects($this->once())
+            ->method('pruneStale')
+            ->with('SHIRT', ['10,20', '11,20'])
+            ->willReturn(0);
 
         $db = $this->createMock(DbAdapterInterface::class);
 
@@ -106,21 +100,56 @@ class GenerateCombosActionTest extends TestCase
         $this->assertStringContainsString('2 new', $result);
     }
 
+    /**
+     * Regression (issue #52): the combination count must derive from the
+     * product's OWN value assignments, never from EVERY active value of the
+     * assigned categories. Category 1 has three active values in the taxonomy,
+     * but the product only assigned two — so exactly 2 combos are produced.
+     */
+    public function testHandleUsesOnlyAssignedValuesNotAllCategoryValues(): void
+    {
+        $coreDao = $this->createMock(ProductAttributesDao::class);
+        $coreDao->method('getProductParent')->willReturn(null);
+        $coreDao->method('listAssignments')
+            ->willReturn([
+                ['category_id' => 1, 'value_id' => 10, 'value_label' => 'Red',  'value_slug' => 'red'],
+                ['category_id' => 1, 'value_id' => 11, 'value_label' => 'Blue', 'value_slug' => 'blue'],
+            ]);
+        $coreDao->method('listCategories')->willReturn([['id' => 1, 'sort_order' => 1]]);
+
+        $combosDao = $this->createMock(CombosDao::class);
+        $combosDao->expects($this->once())
+            ->method('syncCombos')
+            ->with('SHIRT', $this->callback(function (array $combos) {
+                $this->assertCount(2, $combos);
+                return true;
+            }))
+            ->willReturn(2);
+        $combosDao->method('pruneStale')->willReturn(0);
+
+        $action = new GenerateCombosAction($coreDao, $combosDao, $this->createMock(DbAdapterInterface::class));
+        $result = $action->handle(['stock_id' => 'SHIRT']);
+
+        $this->assertStringContainsString('2 new', $result);
+    }
+
     public function testHandleNoNewCombosReportsUpToDate(): void
     {
         $coreDao = $this->createMock(ProductAttributesDao::class);
         $coreDao->method('getProductParent')->willReturn(null);
-        $coreDao->method('listCategoryAssignments')
-            ->willReturn([['id' => 1]]);
-        $coreDao->method('listActiveValues')
-            ->with(1)
-            ->willReturn([['id' => 5, 'slug' => 'xl', 'value' => 'XL']]);
+        $coreDao->method('listAssignments')
+            ->willReturn([
+                ['category_id' => 1, 'value_id' => 5, 'value_label' => 'XL', 'value_slug' => 'xl'],
+            ]);
         $coreDao->method('listCategories')
             ->willReturn([['id' => 1, 'sort_order' => 1]]);
 
         $combosDao = $this->createMock(CombosDao::class);
         $combosDao->expects($this->once())
             ->method('syncCombos')
+            ->willReturn(0);
+        $combosDao->expects($this->once())
+            ->method('pruneStale')
             ->willReturn(0);
 
         $db = $this->createMock(DbAdapterInterface::class);
@@ -129,5 +158,27 @@ class GenerateCombosActionTest extends TestCase
         $result = $action->handle(['stock_id' => 'SHIRT']);
 
         $this->assertStringContainsString('already up to date', $result);
+    }
+
+    public function testHandleReportsPrunedStaleCombos(): void
+    {
+        $coreDao = $this->createMock(ProductAttributesDao::class);
+        $coreDao->method('getProductParent')->willReturn(null);
+        $coreDao->method('listAssignments')
+            ->willReturn([
+                ['category_id' => 1, 'value_id' => 5, 'value_label' => 'XL', 'value_slug' => 'xl'],
+            ]);
+        $coreDao->method('listCategories')->willReturn([['id' => 1, 'sort_order' => 1]]);
+
+        $combosDao = $this->createMock(CombosDao::class);
+        $combosDao->method('syncCombos')->willReturn(0);
+        $combosDao->expects($this->once())->method('pruneStale')->willReturn(12);
+
+        $db = $this->createMock(DbAdapterInterface::class);
+
+        $action = new GenerateCombosAction($coreDao, $combosDao, $db);
+        $result = $action->handle(['stock_id' => 'SHIRT']);
+
+        $this->assertStringContainsString('12 stale combinations pruned', $result);
     }
 }

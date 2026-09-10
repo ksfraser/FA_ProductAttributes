@@ -62,14 +62,15 @@ class AttributesTab extends AbstractTab
             return;
         }
 
-        if (isset($_POST['pa_delete_row_submit'])) {
-            $rowId = (int)($_POST['pa_delete_row_id'] ?? 0);
-            $message = $this->service->handleDeleteRow($rowId);
-            display_notification($message);
-            return;
+        foreach ((array)$_POST as $key => $value) {
+            if (preg_match('/^pa_delete_row_(\d+)$/', (string)$key, $matches)) {
+                $message = $this->service->handleDeleteRow((int)$matches[1]);
+                display_notification($message);
+                return;
+            }
         }
 
-        if (isset($_POST['action']) && $_POST['action'] === 'add_pa_assignment') {
+        if (isset($_POST['add_pa_assignment'])) {
             $message = $this->service->handleAddAssignment($stockId, $_POST);
             display_notification($message);
             return;

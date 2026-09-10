@@ -72,6 +72,45 @@ class CombosDao
     }
 
     /**
+     * Prune stale combos for a parent.
+     *
+     * Removes uninstantiated pool rows whose production set no longer includes
+     * them (e.g. after the parent's value assignments changed). Rows already
+     * stamped with a child_stock_id are never touched — the child must keep its
+     * pool identity.
+     *
+     * @param string $parentStockId
+     * @param array<int,string> $keepValueSetKeys value_set_keys the current selection produces
+     * @return int number of rows pruned
+     */
+    public function pruneStale(string $parentStockId, array $keepValueSetKeys): int
+    {
+        $p = $this->db->getTablePrefix();
+
+        $removed = 0;
+        $existing = $this->db->query(
+            "SELECT id, value_set_key FROM `{$p}product_variation_combos`
+             WHERE parent_stock_id = :parent AND child_stock_id IS NULL",
+            ['parent' => $parentStockId]
+        ) ?: [];
+        $keep = array_flip($keepValueSetKeys);
+
+        foreach ($existing as $row) {
+            $key = (string)($row['value_set_key'] ?? '');
+            if ($key === '' || isset($keep[$key])) {
+                continue;
+            }
+            $this->db->execute(
+                "DELETE FROM `{$p}product_variation_combos` WHERE id = :id",
+                ['id' => (int)$row['id']]
+            );
+            $removed++;
+        }
+
+        return $removed;
+    }
+
+    /**
      * List the persisted combos for a parent, ordered by slug_key.
      *
      * @return array<int, array<string, string|array|null>>
@@ -85,7 +124,7 @@ class CombosDao
              WHERE parent_stock_id = :parent
              ORDER BY slug_key",
             ['parent' => $parentStockId]
-        );
+        ) ?: [];
         foreach ($rows as $i => $row) {
             $valueSet = $row['value_set'] ?? null;
             if (!is_null($valueSet) && $valueSet !== '') {

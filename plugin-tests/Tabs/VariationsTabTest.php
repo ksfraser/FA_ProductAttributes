@@ -113,7 +113,7 @@ class VariationsTabTest extends TestCase
             'stock_id' => 'PARENT001',
             'description' => 'Parent Product',
         ]);
-        $this->dao->expects($this->once())->method('listCategoryAssignments')->willReturn([[
+        $this->coreDao->expects($this->once())->method('listCategoriesWithAssignedValues')->willReturn([[
             'id' => 1,
             'label' => 'Colour',
         ]]);
@@ -147,7 +147,7 @@ class VariationsTabTest extends TestCase
             ->method('getParentProductData')
             ->with('PARENT001')
             ->willReturn(['stock_id' => 'PARENT001', 'description' => 'Parent Product']);
-        $this->dao->expects($this->once())->method('listCategoryAssignments')->willReturn([]);
+        $this->coreDao->expects($this->once())->method('listCategoriesWithAssignedValues')->willReturn([]);
 
         ob_start();
         $this->tab->renderTabContent('CHILD001');
@@ -183,7 +183,7 @@ class VariationsTabTest extends TestCase
     {
         $_SERVER['REQUEST_METHOD'] = 'GET';
         $this->dao->expects($this->once())->method('getProductParent')->willReturn(null);
-        $this->dao->expects($this->once())->method('listCategoryAssignments')->willReturn([[
+        $this->coreDao->expects($this->once())->method('listCategoriesWithAssignedValues')->willReturn([[
             'id' => 1,
             'label' => 'Colour',
         ]]);
@@ -199,6 +199,47 @@ class VariationsTabTest extends TestCase
         $this->assertStringNotContainsString('unassign_category_submit', $output, 'Remove button must not render on the Variations tab');
         $this->assertStringNotContainsString('Manage Values', $output, 'Manage Values belongs on the admin page');
         $this->assertStringNotContainsString('<th>Actions</th>', $output, 'No Actions column in display-only mode');
+    }
+
+    /**
+     * "Generate Combinations" persists a combo pool that must be visible on the
+     * tab even before any child products exist (issue #52 user report: "saved
+     * 168 but switching tabs shows nothing").
+     */
+    public function testRenderShowsSavedCombinationPool(): void
+    {
+        $_SERVER['REQUEST_METHOD'] = 'GET';
+        $this->dao->expects($this->once())->method('getProductParent')->willReturn(null);
+        $this->db->method('getTablePrefix')->willReturn('fa_');
+        $this->db->method('query')->willReturn([
+            ['id' => 1, 'value_set_key' => '16', 'slug_key' => 'Awesome', 'value_set' => '[]', 'child_stock_id' => null],
+            ['id' => 2, 'value_set_key' => '17', 'slug_key' => 'OK', 'value_set' => null, 'child_stock_id' => '101-OK'],
+        ]);
+
+        ob_start();
+        $this->tab->renderTabContent('101');
+        $output = ob_get_clean();
+
+        $this->assertStringContainsString('Saved Combinations', $output);
+        $this->assertStringContainsString('Awesome', $output);
+        $this->assertStringContainsString('Pending', $output);
+        $this->assertStringContainsString('Created as 101-OK', $output);
+    }
+
+    public function testRenderPoolHiddenForChildProduct(): void
+    {
+        $_SERVER['REQUEST_METHOD'] = 'GET';
+        $this->dao->expects($this->once())->method('getProductParent')->willReturn([
+            'stock_id' => 'PARENT001',
+            'description' => 'Parent Product',
+        ]);
+        $this->db->expects($this->never())->method('query');
+
+        ob_start();
+        $this->tab->renderTabContent('CHILD001');
+        $output = ob_get_clean();
+
+        $this->assertStringNotContainsString('Saved Combinations', $output);
     }
 
     public function testHandleSaveDoesNothing(): void

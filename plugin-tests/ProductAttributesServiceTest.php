@@ -59,7 +59,7 @@ class ProductAttributesServiceTest extends TestCase
         $this->assertTrue(strpos($result, 'Product Attributes') !== false);
         $this->assertTrue(strpos($result, 'Color') !== false);
         $this->assertTrue(strpos($result, 'Red') !== false);
-        $this->assertTrue(strpos($result, 'pa_delete_row_submit') !== false, 'Should have delete button');
+        $this->assertTrue(strpos($result, 'name="pa_delete_row_42"') !== false, 'Should have per-row delete button');
         $this->assertTrue(strpos($result, 'Add Assignment') !== false, 'Should have Add Assignment section');
     }
 
@@ -130,12 +130,79 @@ class ProductAttributesServiceTest extends TestCase
                 [100],
                 [101]
             );
+        $dao->expects($this->once())
+            ->method('listCategoryAssignments')
+            ->with('TEST123')
+            ->willReturn([]);
 
         $db = $this->createMock(DbAdapterInterface::class);
 
         $service = new ProductAttributesService($dao, $db);
 
         $service->deleteProductAttributes('TEST123');
+    }
+
+    public function testHandleDeleteRowUnassignsCategoryWhenLastValueRemoved(): void
+    {
+        $dao = $this->createMock(ProductAttributesDao::class);
+        $dao->expects($this->once())
+            ->method('getAssignmentById')
+            ->with(42)
+            ->willReturn(['id' => 42, 'stock_id' => 'SKU001', 'category_id' => 6]);
+        $dao->expects($this->once())
+            ->method('deleteAssignment')
+            ->with(42);
+        $dao->expects($this->once())
+            ->method('countCategoryValueAssignments')
+            ->with('SKU001', 6)
+            ->willReturn(0);
+        $dao->expects($this->once())
+            ->method('removeCategoryAssignment')
+            ->with('SKU001', 6);
+
+        $db = $this->createMock(DbAdapterInterface::class);
+
+        $service = new ProductAttributesService($dao, $db);
+        $this->assertSame('Assignment removed.', $service->handleDeleteRow(42));
+    }
+
+    public function testHandleDeleteRowKeepsCategoryWhenValuesRemain(): void
+    {
+        $dao = $this->createMock(ProductAttributesDao::class);
+        $dao->expects($this->once())
+            ->method('getAssignmentById')
+            ->with(42)
+            ->willReturn(['id' => 42, 'stock_id' => 'SKU001', 'category_id' => 6]);
+        $dao->expects($this->once())
+            ->method('deleteAssignment')
+            ->with(42);
+        $dao->expects($this->once())
+            ->method('countCategoryValueAssignments')
+            ->with('SKU001', 6)
+            ->willReturn(2);
+        $dao->expects($this->never())
+            ->method('removeCategoryAssignment');
+
+        $db = $this->createMock(DbAdapterInterface::class);
+
+        $service = new ProductAttributesService($dao, $db);
+        $this->assertSame('Assignment removed.', $service->handleDeleteRow(42));
+    }
+
+    public function testHandleDeleteRowRejectsUnknownRow(): void
+    {
+        $dao = $this->createMock(ProductAttributesDao::class);
+        $dao->expects($this->once())
+            ->method('getAssignmentById')
+            ->with(999)
+            ->willReturn(null);
+        $dao->expects($this->never())
+            ->method('deleteAssignment');
+
+        $db = $this->createMock(DbAdapterInterface::class);
+
+        $service = new ProductAttributesService($dao, $db);
+        $this->assertSame('Invalid assignment.', $service->handleDeleteRow(999));
     }
 
     public function testSaveProductAttributesWithCategoryAssignments(): void
@@ -240,6 +307,10 @@ class ProductAttributesServiceTest extends TestCase
         $dao->expects($this->exactly(2))
             ->method('deleteAssignment')
             ->withConsecutive([100], [101]);
+        $dao->expects($this->once())
+            ->method('listCategoryAssignments')
+            ->with('TEST123')
+            ->willReturn([]);
 
         $service = new ProductAttributesService($dao, $db);
 
@@ -283,7 +354,7 @@ class ProductAttributesServiceTest extends TestCase
             ->with('TEST123')
             ->willReturn([]);
         $dao->expects($this->once())
-            ->method('listCategoryAssignments')
+            ->method('listCategoriesWithAssignedValues')
             ->with('TEST123')
             ->willReturn([]);
         $dao->expects($this->once())
@@ -451,6 +522,10 @@ class ProductAttributesServiceTest extends TestCase
         $dao = $this->createMock(ProductAttributesDao::class);
         $dao->expects($this->once())
             ->method('listAssignments')
+            ->with('TEST123')
+            ->willReturn([]);
+        $dao->expects($this->once())
+            ->method('listCategoryAssignments')
             ->with('TEST123')
             ->willReturn([]);
         $dao->expects($this->once())

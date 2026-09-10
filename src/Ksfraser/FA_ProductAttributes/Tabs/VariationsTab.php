@@ -9,6 +9,7 @@ use Ksfraser\FA_ProductAttributes\Actions\GenerateCombosAction;
 use Ksfraser\FA_ProductAttributes\Dao\ProductAttributesDao;
 use Ksfraser\FA_ProductAttributes\Variations\Dao\CombosDao;
 use Ksfraser\FA_ProductAttributes\Variations\UI\AssignedCategoriesSection;
+use Ksfraser\FA_ProductAttributes\Variations\UI\CombinationPoolSection;
 use Ksfraser\FA_ProductAttributes\Variations\UI\CurrentAssignmentsSection;
 use Ksfraser\FA_ProductAttributes\Variations\UI\ExistingVariationsSection;
 use Ksfraser\FA_ProductAttributes\Variations\UI\ParentProductSection;
@@ -52,7 +53,7 @@ class VariationsTab extends AbstractTab
     {
         $this->handlePostActions($stockId);
 
-        $assignedCategories = ($stockId !== '') ? $this->dao->listCategoryAssignments($stockId) : [];
+        $assignedCategories = ($stockId !== '') ? $this->coreDao->listCategoriesWithAssignedValues($stockId) : [];
         $parentData = $this->resolveParentData($stockId);
         // A child product is a variation of a parent: its category
         // assignments are managed on the parent and shown here read-only.
@@ -68,6 +69,13 @@ class VariationsTab extends AbstractTab
         (new CurrentAssignmentsSection())->render($assignments, !empty($assignedCategories));
 
         (new ExistingVariationsSection())->render($variations);
+
+        // Show the persisted combination pool so Generate's result is visible
+        // even before Create Child instantiates any children.
+        if ($stockId !== '' && !$isChild) {
+            $pool = (new CombosDao($this->db))->listCombos($stockId);
+            (new CombinationPoolSection())->render($pool);
+        }
 
         $buttons = new VariationActionButtons();
         $buttons->render($stockId !== '' && !$isChild);

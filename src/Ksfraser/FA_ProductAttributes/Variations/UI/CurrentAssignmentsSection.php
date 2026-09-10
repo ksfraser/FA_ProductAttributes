@@ -34,8 +34,8 @@ class CurrentAssignmentsSection
                 echo '<td>' . (int)($a['sort_order'] ?? 0) . '</td>';
                 if ($enableRemove) {
                     echo '<td>';
-                    echo '<input type="hidden" name="pa_delete_row_id" value="' . (int)$a['id'] . '">';
-                    echo '<input type="submit" name="pa_delete_row_submit" value="' . htmlspecialchars(_('Remove'), ENT_QUOTES) . '"'
+                    echo '<input type="submit" name="pa_delete_row_' . (int)$a['id'] . '" value="'
+                        . htmlspecialchars(_('Remove'), ENT_QUOTES) . '"'
                         . ' onclick="return confirm(\'' . htmlspecialchars(_('Remove this assignment?'), ENT_QUOTES) . '\')">';
                     echo '</td>';
                 }

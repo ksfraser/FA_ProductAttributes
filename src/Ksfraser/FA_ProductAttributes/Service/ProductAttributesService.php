@@ -39,7 +39,7 @@ class ProductAttributesService
     public function renderProductAttributesTab(string $stockId): string
     {
         $assignments        = $stockId !== '' ? $this->dao->listAssignments($stockId) : [];
-        $assignedCategories = $stockId !== '' ? $this->dao->listCategoryAssignments($stockId) : [];
+        $assignedCategories = $stockId !== '' ? $this->dao->listCategoriesWithAssignedValues($stockId) : [];
         $categories         = $this->dao->listCategories();
 
         $html = '<h4>' . _('Product Attributes') . '</h4>';
@@ -132,7 +132,21 @@ class ProductAttributesService
         if ($rowId <= 0) {
             return _('Invalid assignment.');
         }
+        $row = $this->dao->getAssignmentById($rowId);
+        if ($row === null) {
+            return _('Invalid assignment.');
+        }
+        $stockId    = (string)($row['stock_id'] ?? '');
+        $categoryId = (int)($row['category_id'] ?? 0);
         $this->dao->deleteAssignment($rowId);
+
+        // Un-assign a category once its last value is removed so "Assigned
+        // Categories" stays aligned with categories that actually have options.
+        if ($stockId !== '' && $categoryId > 0
+            && $this->dao->countCategoryValueAssignments($stockId, $categoryId) === 0) {
+            $this->dao->removeCategoryAssignment($stockId, $categoryId);
+        }
+
         return _('Assignment removed.');
     }
 
@@ -207,6 +221,10 @@ class ProductAttributesService
         $existing = $this->dao->listAssignments($stockId);
         foreach ($existing as $row) {
             $this->dao->deleteAssignment((int)$row['id']);
+        }
+        $categories = $this->dao->listCategoryAssignments($stockId);
+        foreach ($categories as $cat) {
+            $this->dao->removeCategoryAssignment($stockId, (int)$cat['id']);
         }
         $this->dao->setProductCondition($stockId, null);
     }

@@ -433,6 +433,71 @@ class ProductAttributesDaoTest extends TestCase
         ], $result);
     }
 
+    public function testListCategoriesWithAssignedValues(): void
+    {
+        $db = $this->createMock(DbAdapterInterface::class);
+        $db->method('getTablePrefix')->willReturn('fa_');
+        $db->expects($this->once())
+            ->method('query')
+            ->with("SELECT DISTINCT c.* FROM `fa_product_attribute_categories` c
+             JOIN `fa_product_attribute_assignments` a ON c.id = a.category_id
+             WHERE a.stock_id = :stock_id
+             ORDER BY c.sort_order, c.code", ['stock_id' => 'ABC123'])
+            ->willReturn([
+                ['id' => 1, 'code' => 'COLOR', 'label' => 'Color'],
+                ['id' => 3, 'code' => 'SIZE', 'label' => 'Size'],
+            ]);
+
+        $dao = new ProductAttributesDao($db);
+        $result = $dao->listCategoriesWithAssignedValues('ABC123');
+
+        $this->assertCount(2, $result);
+        $this->assertSame(3, (int)$result[1]['id']);
+    }
+
+    public function testGetAssignmentById(): void
+    {
+        $db = $this->createMock(DbAdapterInterface::class);
+        $db->method('getTablePrefix')->willReturn('fa_');
+        $db->expects($this->once())
+            ->method('query')
+            ->with('SELECT * FROM `fa_product_attribute_assignments` WHERE id = :id', ['id' => 123])
+            ->willReturn([['id' => 123, 'stock_id' => 'ABC123', 'category_id' => 6]]);
+
+        $dao = new ProductAttributesDao($db);
+        $row = $dao->getAssignmentById(123);
+
+        $this->assertSame('ABC123', $row['stock_id']);
+        $this->assertSame(6, (int)$row['category_id']);
+    }
+
+    public function testGetAssignmentByIdMissing(): void
+    {
+        $db = $this->createMock(DbAdapterInterface::class);
+        $db->method('getTablePrefix')->willReturn('fa_');
+        $db->expects($this->once())
+            ->method('query')
+            ->with('SELECT * FROM `fa_product_attribute_assignments` WHERE id = :id', ['id' => 999])
+            ->willReturn([]);
+
+        $dao = new ProductAttributesDao($db);
+        $this->assertNull($dao->getAssignmentById(999));
+    }
+
+    public function testCountCategoryValueAssignments(): void
+    {
+        $db = $this->createMock(DbAdapterInterface::class);
+        $db->method('getTablePrefix')->willReturn('fa_');
+        $db->expects($this->once())
+            ->method('query')
+            ->with("SELECT COUNT(*) AS cnt FROM `fa_product_attribute_assignments`
+             WHERE stock_id = :stock_id AND category_id = :category_id", ['stock_id' => 'ABC123', 'category_id' => 6])
+            ->willReturn([['cnt' => 3]]);
+
+        $dao = new ProductAttributesDao($db);
+        $this->assertSame(3, $dao->countCategoryValueAssignments('ABC123', 6));
+    }
+
     public function testAddCategoryAssignment(): void
     {
         $db = $this->createMock(DbAdapterInterface::class);

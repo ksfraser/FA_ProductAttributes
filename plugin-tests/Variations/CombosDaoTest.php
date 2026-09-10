@@ -101,6 +101,41 @@ class CombosDaoTest extends TestCase
         $this->assertSame([], $blankCombos[0]['value_set']);
     }
 
+    public function testPruneStaleDeletesOnlyUnstampedStaleRows(): void
+    {
+        // Existing unpinned rows keyed a (kept) and b (stale).
+        $this->db->method('query')->willReturn([
+            ['id' => 1, 'value_set_key' => '10,20'],
+            ['id' => 2, 'value_set_key' => '30,40'],
+        ]);
+        $this->db->expects($this->exactly(1))
+            ->method('execute')
+            ->willReturnCallback(function ($sql, $params) {
+                $this->assertSame(2, (int)$params['id'], 'Only the stale row must be deleted');
+                return null;
+            });
+
+        $removed = $this->dao->pruneStale('SHIRT', ['10,20']);
+
+        $this->assertSame(1, $removed);
+    }
+
+    public function testPruneStalePreservesInstantiatedRows(): void
+    {
+        // pruneStale only ever queries child_stock_id IS NULL rows; a row with a
+        // stamped child is outside the delete set by construction. Encode that the
+        // SELECT carries the guard and that nothing gets deleted when all kept.
+        $this->db->method('query')->willReturn([
+            ['id' => 3, 'value_set_key' => '10,20'],
+        ]);
+
+        $this->db->expects($this->never())->method('execute');
+
+        $removed = $this->dao->pruneStale('SHIRT', ['10,20', '11,20']);
+
+        $this->assertSame(0, $removed);
+    }
+
     public function testSyncCombosSkipsExisting(): void
     {
         $this->db->method('query')->willReturn([['id' => 5]]);

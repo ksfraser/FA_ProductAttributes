@@ -9,13 +9,18 @@ use Ksfraser\ModulesDAO\Db\DbAdapterInterface;
 /**
  * "Generate Combinations" (renamed from "Generate Variations", FR-9.12, #60).
  *
- * Computes the cartesian product of a parent product's assigned category values
- * and PERSISTS the combination set into the combo pool (product_variation_combos).
+ * Computes the cartesian product of a parent product's CONCRETE value
+ * assignments (product_attribute_assignments — one value per category) and
+ * PERSISTS the combination set into the combo pool (product_variation_combos).
  * It does NOT create stock_master children - that is CreateChildProductAction's job.
  *
- * Idempotent: combos already in the pool are left untouched. Re-running after a
- * category/value change adds only the newly-produced combos; orphan reconciliation
- * is handled by CreateChildProductAction.
+ * The cartesian input is the product's own value assignments, NOT every active
+ * value of its assigned categories: a product assigned 4 Awesomeness + 1 Shoe
+ * Size produces 4 x 1 = 4 combos (issue #52).
+ *
+ * Re-running reconciles the pool to the current selection: combos no longer
+ * produced are pruned (unless already instantiated into a child); new ones are
+ * added.
  */
 class GenerateCombosAction
 {
@@ -53,22 +58,9 @@ class GenerateCombosAction
             );
         }
 
-        $assignedCategories = $this->dao->listCategoryAssignments($stockId);
-        if (empty($assignedCategories)) {
-            return _("No categories assigned to this product");
-        }
-
-        $categoryValues = [];
-        foreach ($assignedCategories as $category) {
-            $categoryId = (int)$category['id'];
-            $values = $this->dao->listActiveValues($categoryId);
-            if (!empty($values)) {
-                $categoryValues[$categoryId] = $values;
-            }
-        }
-
+        $categoryValues = $this->assignedCategoryValues($stockId);
         if (empty($categoryValues)) {
-            return _("No values found for assigned categories");
+            return _("No attribute values assigned to this product");
         }
 
         $combinations = $this->generateCombinations($categoryValues);
@@ -99,12 +91,53 @@ class GenerateCombosAction
         }
 
         $added = $this->combosDao->syncCombos($stockId, $comboRecords);
+        $removed = $this->combosDao->pruneStale($stockId, array_column($comboRecords, 'value_set_key'));
 
-        if ($added === 0) {
+        if ($added === 0 && $removed === 0) {
             return sprintf(_("Combination set is already up to date (%d combinations persist)"), count($comboRecords));
         }
 
-        return sprintf(_("Combination set saved: %d new / %d total"), $added, count($comboRecords));
+        $message = sprintf(_("Combination set saved: %d new / %d total"), $added, count($comboRecords));
+        if ($removed > 0) {
+            $message .= '. ' . sprintf(_('%d stale combination%s pruned.'), $removed, $removed === 1 ? '' : 's');
+        }
+
+        return $message;
+    }
+
+    /**
+     * Group a product's concrete value assignments by category.
+     *
+     * Each category contributes exactly its assigned values (deduped by value_id),
+     * so the cartesian product below uses ONLY the values the user assigned to
+     * the product — never the category's full active list.
+     *
+     * @param string $stockId
+     * @return array<int, array<int, array<string, mixed>>> category_id => values
+     */
+    private function assignedCategoryValues(string $stockId): array
+    {
+        $groups = [];
+        foreach ($this->dao->listAssignments($stockId) as $assignment) {
+            $categoryId = (int)($assignment['category_id'] ?? 0);
+            $valueId    = (int)($assignment['value_id'] ?? 0);
+            if ($categoryId <= 0 || $valueId <= 0) {
+                continue;
+            }
+            $groups[$categoryId][$valueId] = [
+                'category_id' => $categoryId,
+                'id'          => $valueId,
+                'value'       => (string)($assignment['value_label'] ?? ''),
+                'slug'        => (string)($assignment['value_slug'] ?? ''),
+            ];
+        }
+
+        foreach ($groups as &$values) {
+            $values = array_values($values);
+        }
+        unset($values);
+
+        return $groups;
     }
 
     /**

@@ -81,4 +81,70 @@ class AttributesTabTest extends TestCase
 
         $this->tab->handleDelete('SKU001');
     }
+
+    public function testRenderTabContentDeletesRowViaPerRowButtonName(): void
+    {
+        $this->service->expects($this->once())
+            ->method('handleDeleteRow')
+            ->with(42)
+            ->willReturn('Assignment removed.');
+        $this->service->expects($this->once())
+            ->method('renderProductAttributesTab')
+            ->with('SKU001')
+            ->willReturn('tab content');
+
+        $saved        = $this->saveRequest('POST', ['stock_id' => 'SKU001', 'pa_delete_row_42' => 'Remove']);
+        unset($GLOBALS['test_notifications']);
+        ob_start();
+        $this->tab->renderTabContent('SKU001');
+        $output   = ob_get_clean();
+        $this->restoreRequest($saved);
+
+        $this->assertSame('tab content', $output);
+        $this->assertSame(['Assignment removed.'], $GLOBALS['test_notifications']);
+    }
+
+    public function testRenderTabContentAddsAssignmentFromPost(): void
+    {
+        $post = ['stock_id' => 'SKU001', 'category_id' => 6, 'value_ids' => [14, 15], 'add_pa_assignment' => '1'];
+        $this->service->expects($this->once())
+            ->method('handleAddAssignment')
+            ->with('SKU001', $post)
+            ->willReturn('1 assignment(s) added.');
+        $this->service->expects($this->once())
+            ->method('renderProductAttributesTab')
+            ->with('SKU001')
+            ->willReturn('tab content');
+
+        $saved        = $this->saveRequest('POST', $post);
+        unset($GLOBALS['test_notifications']);
+        ob_start();
+        $this->tab->renderTabContent('SKU001');
+        $output   = ob_get_clean();
+        $this->restoreRequest($saved);
+
+        $this->assertSame('tab content', $output);
+        $this->assertSame(['1 assignment(s) added.'], $GLOBALS['test_notifications']);
+    }
+
+    private function saveRequest(string $method, array $post): array
+    {
+        $saved = [
+            'method' => $_SERVER['REQUEST_METHOD'] ?? null,
+            'post'   => $_POST ?? null,
+        ];
+        $_SERVER['REQUEST_METHOD'] = $method;
+        $_POST = $post;
+        return $saved;
+    }
+
+    private function restoreRequest(array $saved): void
+    {
+        if ($saved['method'] === null) {
+            unset($_SERVER['REQUEST_METHOD']);
+        } else {
+            $_SERVER['REQUEST_METHOD'] = $saved['method'];
+        }
+        $_POST = $saved['post'] ?? [];
+    }
 }
