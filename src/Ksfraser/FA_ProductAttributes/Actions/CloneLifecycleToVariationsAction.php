@@ -3,6 +3,7 @@
 namespace Ksfraser\FA_ProductAttributes\Actions;
 
 use Ksfraser\FA_ProductAttributes\Dao\ProductLifecycleDao;
+use Ksfraser\FA_ProductAttributes\Dao\ProductAttributesDao;
 
 /**
  * Single Responsibility: Copies a parent product's lifecycle / status flags to
@@ -17,9 +18,13 @@ class CloneLifecycleToVariationsAction
     /** @var ProductLifecycleDao */
     private $dao;
 
-    public function __construct(ProductLifecycleDao $dao)
+    /** @var ProductAttributesDao */
+    private $conditionDao;
+
+    public function __construct(ProductLifecycleDao $dao, ProductAttributesDao $conditionDao)
     {
         $this->dao = $dao;
+        $this->conditionDao = $conditionDao;
     }
 
     /**
@@ -47,11 +52,19 @@ class CloneLifecycleToVariationsAction
         $cloneData = $parentData;
         unset($cloneData['stock_id']);
 
+        // Carried alongside the lifecycle row: the parent's product condition
+        // (xref table, one row per stock). Only copied when the parent has one
+        // set; variations without a parent condition keep their own.
+        $parentCondition = $this->conditionDao->getProductCondition($parentId);
+
         $count = 0;
         foreach ($varIds as $varId) {
             $varId = (string)$varId;
             if ($varId !== '') {
                 $this->dao->upsert($varId, $cloneData);
+                if ($parentCondition !== null) {
+                    $this->conditionDao->setProductCondition($varId, (int)$parentCondition);
+                }
                 $count++;
             }
         }

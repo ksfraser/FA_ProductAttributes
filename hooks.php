@@ -36,6 +36,16 @@ use Ksfraser\ModulesDAO\Db\FrontAccountingDbAdapter;
 use FrontAccounting\ProductAttributes\Plugin\TabRegistry;
 
 if (!class_exists('hooks')) {
+ini_set('log_errors', '1');
+ini_set('ignore_repeated_errors', '0');
+ini_set('display_errors', 'stderr');
+ini_set('error_log', '/tmp/pa_err.log');
+$_prevExc = set_exception_handler(function ($e) use (&$_prevExc) {
+    file_put_contents('/tmp/pa_exc.log', date('c') . ' EXC ' . get_class($e) . ': ' . $e->getMessage() . ' @ ' . $e->getFile() . ':' . $e->getLine() . "\n" . $e->getTraceAsString() . "\n---\n", FILE_APPEND);
+    if (is_callable($_prevExc)) { return call_user_func($_prevExc, $e); }
+    return null;
+});
+
     class hooks
     {
     }
@@ -326,10 +336,14 @@ class hooks_FA_ProductAttributes extends hooks
             return;
         }
 
+        $prevCwd = getcwd();
         chdir(__DIR__);
         $output = [];
         $returnCode = 0;
         exec('composer install --no-interaction --prefer-dist 2>&1', $output, $returnCode);
+        if (is_string($prevCwd) && $prevCwd !== '') {
+            @chdir($prevCwd);
+        }
 
         if (is_file($autoloadPath)) {
             require_once $autoloadPath;
@@ -356,7 +370,7 @@ class hooks_FA_ProductAttributes extends hooks
         $registry->register(new AttributesTab($services['service'], $services['handler']));
         $registry->register(new ShippingTab($services['shipping_dao']));
         $registry->register(new IdentifiersTab($services['identifiers_dao'], $services['identifier_lookups_dao']));
-        $registry->register(new LifecycleTab($services['lifecycle_dao'], $services['lifecycle_flag_defs_dao']));
+        $registry->register(new LifecycleTab($services['lifecycle_dao'], $services['lifecycle_flag_defs_dao'], $services['dao']));
         $registry->register(new MediaTab($services['media_dao']));
         $registry->register(new UrlsTab($services['media_attachments_dao']));
         $registry->register(new WarrantyTab($services['warranty_dao']));

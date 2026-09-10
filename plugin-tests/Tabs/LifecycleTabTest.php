@@ -4,6 +4,7 @@ namespace Ksfraser\FA_ProductAttributes\Test\Tabs;
 
 use Ksfraser\FA_ProductAttributes\Actions\UpsertProductLifecycleAction;
 use Ksfraser\FA_ProductAttributes\Dao\LifecycleFlagDefsDao;
+use Ksfraser\FA_ProductAttributes\Dao\ProductAttributesDao;
 use Ksfraser\FA_ProductAttributes\Dao\ProductLifecycleDao;
 use Ksfraser\FA_ProductAttributes\Tabs\LifecycleTab;
 use PHPUnit\Framework\TestCase;
@@ -16,6 +17,9 @@ class LifecycleTabTest extends TestCase
     /** @var LifecycleFlagDefsDao|\PHPUnit\Framework\MockObject\MockObject */
     private $flagDefsDao;
 
+    /** @var ProductAttributesDao|\PHPUnit\Framework\MockObject\MockObject */
+    private $conditionDao;
+
     /** @var LifecycleTab */
     private $tab;
 
@@ -23,7 +27,8 @@ class LifecycleTabTest extends TestCase
     {
         $this->lifecycleDao = $this->createMock(ProductLifecycleDao::class);
         $this->flagDefsDao  = $this->createMock(LifecycleFlagDefsDao::class);
-        $this->tab          = new LifecycleTab($this->lifecycleDao, $this->flagDefsDao);
+        $this->conditionDao = $this->createMock(ProductAttributesDao::class);
+        $this->tab          = new LifecycleTab($this->lifecycleDao, $this->flagDefsDao, $this->conditionDao);
     }
 
     public function testGetName(): void
@@ -89,6 +94,84 @@ class LifecycleTabTest extends TestCase
         $this->assertStringNotContainsString('</form>', $output);
     }
 
+    public function testRenderConditionDropdownWithCurrentCondition(): void
+    {
+        $_SERVER['REQUEST_METHOD'] = 'GET';
+        $this->lifecycleDao->expects($this->once())
+            ->method('get')
+            ->with('SKU001')
+            ->willReturn(['status' => 'active']);
+        $this->flagDefsDao->method('getAssignedFlagIds')->willReturn([]);
+        $this->flagDefsDao->method('listActiveFlags')->willReturn([]);
+        $this->conditionDao->expects($this->once())
+            ->method('getProductCondition')
+            ->with('SKU001')
+            ->willReturn(73);
+        $this->conditionDao->expects($this->once())
+            ->method('listConditions')
+            ->with(true)
+            ->willReturn([
+                ['id' => 71, 'code' => 'new', 'label' => 'New', 'sort_order' => 10],
+                ['id' => 73, 'code' => 'as_is', 'label' => 'As Is', 'sort_order' => 70],
+            ]);
+
+        ob_start();
+        $this->tab->renderTabContent('SKU001');
+        $output = ob_get_clean();
+
+        $this->assertStringContainsString('name="condition_id"', $output);
+        $this->assertStringContainsString('-- Default --', $output);
+        $this->assertStringContainsString('<option value="73" selected>', $output);
+        $this->assertStringContainsString('<option value="71">', $output);
+    }
+
+    public function testRenderConditionDropdownFallsBackToDefaultWhenNoRow(): void
+    {
+        $_SERVER['REQUEST_METHOD'] = 'GET';
+        $this->flagDefsDao->method('getAssignedFlagIds')->willReturn([]);
+        $this->flagDefsDao->method('listActiveFlags')->willReturn([]);
+        $this->conditionDao->expects($this->once())
+            ->method('getProductCondition')
+            ->with('SKU001')
+            ->willReturn(null);
+        $this->conditionDao->expects($this->once())
+            ->method('getDefaultCondition')
+            ->willReturn(1);
+        $this->conditionDao->expects($this->once())
+            ->method('listConditions')
+            ->with(true)
+            ->willReturn([
+                ['id' => 1, 'code' => 'new', 'label' => 'New', 'sort_order' => 10],
+            ]);
+
+        ob_start();
+        $this->tab->renderTabContent('SKU001');
+        $output = ob_get_clean();
+
+        $this->assertStringContainsString('<option value="1" selected>', $output);
+    }
+
+    public function testRenderSkipsConditionDropdownWhenNoActiveConditions(): void
+    {
+        $_SERVER['REQUEST_METHOD'] = 'GET';
+        $this->flagDefsDao->method('getAssignedFlagIds')->willReturn([]);
+        $this->flagDefsDao->method('listActiveFlags')->willReturn([]);
+        $this->conditionDao->expects($this->once())
+            ->method('getProductCondition')
+            ->with('SKU001')
+            ->willReturn(null);
+        $this->conditionDao->expects($this->once())
+            ->method('listConditions')
+            ->with(true)
+            ->willReturn([]);
+
+        ob_start();
+        $this->tab->renderTabContent('SKU001');
+        $output = ob_get_clean();
+
+        $this->assertStringNotContainsString('name="condition_id"', $output);
+    }
+
     public function testHandleSaveCallsLifecycleUpsert(): void
     {
         $this->lifecycleDao->expects($this->once())
@@ -109,6 +192,50 @@ class LifecycleTabTest extends TestCase
             ->with('SKU001', [1, 2]);
 
         $this->tab->handleSave('SKU001', ['status' => 'active', 'lifecycle_flags' => ['1', '2']]);
+    }
+
+    public function testHandleSavePersistsConditionId(): void
+    {
+        $this->lifecycleDao->expects($this->once())
+            ->method('upsert')
+            ->with('SKU001', $this->arrayHasKey('status'));
+        $this->flagDefsDao->expects($this->once())
+            ->method('setAssignedFlags')
+            ->with('SKU001', []);
+        $this->conditionDao->expects($this->once())
+            ->method('setProductCondition')
+            ->with('SKU001', 6);
+
+        $this->tab->handleSave('SKU001', ['status' => 'active', 'condition_id' => '6']);
+    }
+
+    public function testHandleSaveClearsConditionOnDefaultSelection(): void
+    {
+        $this->lifecycleDao->expects($this->once())
+            ->method('upsert')
+            ->with('SKU001', $this->arrayHasKey('status'));
+        $this->flagDefsDao->expects($this->once())
+            ->method('setAssignedFlags')
+            ->with('SKU001', []);
+        $this->conditionDao->expects($this->once())
+            ->method('setProductCondition')
+            ->with('SKU001', null);
+
+        $this->tab->handleSave('SKU001', ['status' => 'active', 'condition_id' => '']);
+    }
+
+    public function testHandleSaveWithoutConditionIdLeavesConditionUntouched(): void
+    {
+        $this->lifecycleDao->expects($this->once())
+            ->method('upsert')
+            ->with('SKU001', $this->arrayHasKey('status'));
+        $this->flagDefsDao->expects($this->once())
+            ->method('setAssignedFlags')
+            ->with('SKU001', []);
+        $this->conditionDao->expects($this->never())
+            ->method('setProductCondition');
+
+        $this->tab->handleSave('SKU001', ['status' => 'active']);
     }
 
     public function testHandleDeleteCallsBothDaos(): void

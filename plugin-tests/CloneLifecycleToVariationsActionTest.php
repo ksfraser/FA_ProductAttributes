@@ -3,6 +3,7 @@
 namespace Ksfraser\FA_ProductAttributes\Test\Actions;
 
 use Ksfraser\FA_ProductAttributes\Actions\CloneLifecycleToVariationsAction;
+use Ksfraser\FA_ProductAttributes\Dao\ProductAttributesDao;
 use Ksfraser\FA_ProductAttributes\Dao\ProductLifecycleDao;
 use PHPUnit\Framework\TestCase;
 
@@ -11,13 +12,17 @@ class CloneLifecycleToVariationsActionTest extends TestCase
     /** @var ProductLifecycleDao|\PHPUnit\Framework\MockObject\MockObject */
     private $dao;
 
+    /** @var ProductAttributesDao|\PHPUnit\Framework\MockObject\MockObject */
+    private $conditionDao;
+
     /** @var CloneLifecycleToVariationsAction */
     private $action;
 
     protected function setUp(): void
     {
-        $this->dao    = $this->createMock(ProductLifecycleDao::class);
-        $this->action = new CloneLifecycleToVariationsAction($this->dao);
+        $this->dao          = $this->createMock(ProductLifecycleDao::class);
+        $this->conditionDao = $this->createMock(ProductAttributesDao::class);
+        $this->action       = new CloneLifecycleToVariationsAction($this->dao, $this->conditionDao);
     }
 
     public function testHandleReturnErrorWhenStockIdMissing(): void
@@ -76,6 +81,41 @@ class CloneLifecycleToVariationsActionTest extends TestCase
         $this->dao->expects($this->once())
             ->method('upsert')
             ->with('VAR1', $this->logicalNot($this->arrayHasKey('stock_id')));
+
+        $this->action->handle([
+            'stock_id'            => 'PARENT',
+            'variation_stock_ids' => ['VAR1'],
+        ]);
+    }
+
+    public function testHandleCopiesParentConditionToVariations(): void
+    {
+        $this->dao->method('get')->willReturn(['stock_id' => 'PARENT', 'status' => 'active']);
+        $this->conditionDao->expects($this->once())
+            ->method('getProductCondition')
+            ->with('PARENT')
+            ->willReturn(6);
+        $this->conditionDao->expects($this->exactly(2))
+            ->method('setProductCondition')
+            ->withConsecutive(['PARENT-RED', 6], ['PARENT-BLUE', 6]);
+
+        $result = $this->action->handle([
+            'stock_id'            => 'PARENT',
+            'variation_stock_ids' => ['PARENT-RED', 'PARENT-BLUE'],
+        ]);
+
+        $this->assertStringContainsString('2', $result);
+    }
+
+    public function testHandleSkipsConditionCopyWhenParentHasNone(): void
+    {
+        $this->dao->method('get')->willReturn(['stock_id' => 'PARENT', 'status' => 'active']);
+        $this->conditionDao->expects($this->once())
+            ->method('getProductCondition')
+            ->with('PARENT')
+            ->willReturn(null);
+        $this->conditionDao->expects($this->never())
+            ->method('setProductCondition');
 
         $this->action->handle([
             'stock_id'            => 'PARENT',

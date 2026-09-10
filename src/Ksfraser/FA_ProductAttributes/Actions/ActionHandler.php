@@ -170,7 +170,10 @@ class ActionHandler
 
                 case 'clone_lifecycle_to_variations':
                     if ($this->lifecycleDao !== null) {
-                        return (new CloneLifecycleToVariationsAction($this->lifecycleDao))->handle($postData);
+                        return (new CloneLifecycleToVariationsAction(
+                            $this->lifecycleDao,
+                            $this->productAttributesDao
+                        ))->handle($postData);
                     }
                     return null;
 

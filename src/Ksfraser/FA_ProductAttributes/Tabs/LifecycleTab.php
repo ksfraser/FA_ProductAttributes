@@ -3,6 +3,7 @@
 namespace Ksfraser\FA_ProductAttributes\Tabs;
 
 use FrontAccounting\ProductAttributes\Plugin\AbstractTab;
+use Ksfraser\FA_ProductAttributes\Dao\ProductAttributesDao;
 use Ksfraser\FA_ProductAttributes\Dao\ProductLifecycleDao;
 use Ksfraser\FA_ProductAttributes\Dao\LifecycleFlagDefsDao;
 use Ksfraser\FA_ProductAttributes\Actions\UpsertProductLifecycleAction;
@@ -15,10 +16,17 @@ class LifecycleTab extends AbstractTab
     /** @var LifecycleFlagDefsDao */
     private $flagDefsDao;
 
-    public function __construct(ProductLifecycleDao $lifecycleDao, LifecycleFlagDefsDao $flagDefsDao)
-    {
+    /** @var ProductAttributesDao */
+    private $conditionDao;
+
+    public function __construct(
+        ProductLifecycleDao $lifecycleDao,
+        LifecycleFlagDefsDao $flagDefsDao,
+        ProductAttributesDao $conditionDao
+    ) {
         $this->lifecycleDao = $lifecycleDao;
         $this->flagDefsDao = $flagDefsDao;
+        $this->conditionDao = $conditionDao;
     }
 
     public function getName(): string
@@ -48,6 +56,13 @@ class LifecycleTab extends AbstractTab
         $statusCurrent = (string)($data['status'] ?? 'active');
         $statuses = ['active' => 'Active', 'draft' => 'Draft', 'discontinued' => 'Discontinued', 'archived' => 'Archived'];
 
+        $conditionCurrent = $this->conditionDao->getProductCondition($stockId);
+        if ($conditionCurrent === null) {
+            $conditionCurrent = $this->conditionDao->getDefaultCondition();
+        }
+        $conditionCurrent = (int)$conditionCurrent;
+        $conditions = $this->conditionDao->listConditions(true);
+
         echo '<input type="hidden" name="action"   value="save_product_lifecycle">';
 
         echo '<fieldset><legend>' . _('Status') . '</legend>';
@@ -58,7 +73,21 @@ class LifecycleTab extends AbstractTab
             $sel = ($statusCurrent === $val) ? ' selected' : '';
             echo '<option value="' . $val . '"' . $sel . '>' . $label . '</option>';
         }
-        echo '</select></td></tr></table></fieldset>';
+        echo '</select></td></tr>';
+        if (!empty($conditions)) {
+            echo '<tr>';
+            echo '<td>' . _('Product Condition') . '</td>';
+            echo '<td><select name="condition_id">';
+            echo '<option value="">' . _('-- Default --') . '</option>';
+            foreach ($conditions as $cond) {
+                $condId = (int)($cond['id'] ?? 0);
+                $label  = htmlspecialchars((string)($cond['label'] ?? ''), ENT_QUOTES, 'UTF-8');
+                $sel    = ($condId === $conditionCurrent) ? ' selected' : '';
+                echo '<option value="' . $condId . '"' . $sel . '>' . $label . '</option>';
+            }
+            echo '</select></td></tr>';
+        }
+        echo '</table></fieldset>';
 
         if (!empty($flags)) {
             echo '<fieldset><legend>' . _('Storefront Flags') . '</legend>';
@@ -130,6 +159,11 @@ class LifecycleTab extends AbstractTab
             $flagIds = array_map('intval', $postData['lifecycle_flags']);
         }
         $this->flagDefsDao->setAssignedFlags($stockId, $flagIds);
+
+        if (array_key_exists('condition_id', $postData)) {
+            $conditionId = (int)$postData['condition_id'];
+            $this->conditionDao->setProductCondition($stockId, $conditionId > 0 ? $conditionId : null);
+        }
     }
 
     public function handleDelete(string $stockId): void
