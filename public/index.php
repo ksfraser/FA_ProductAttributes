@@ -30,11 +30,22 @@ use Ksfraser\ModulesDAO\Db\FrontAccountingDbAdapter;
 use Ksfraser\FA_ProductAttributes\Dao\IdentifierLookupsDao;
 use Ksfraser\FA_ProductAttributes\Dao\LifecycleFlagDefsDao;
 use Ksfraser\FA_ProductAttributes\Dao\ProductAttributesDao;
+use Ksfraser\FA_ProductAttributes\UI\AddAssignmentForm;
 use Ksfraser\Frontaccounting\HTML\MasterSummaryTable;
 use Ksfraser\Frontaccounting\HTML\TabContext;
 
-// Resolve all relative includes from this module directory.
+// Resolve all relative includes from this module directory. Apache mod_php
+// persists CWD across requests, so an un-restored chdir() here blanks every
+// later request handled by this worker (blank-page "on refresh" incident).
+// Restore on shutdown, targeting DOCUMENT_ROOT so this self-heals workers that
+// were already parked in a module directory.
 chdir(__DIR__);
+register_shutdown_function(function () {
+    $target = isset($_SERVER['DOCUMENT_ROOT']) ? $_SERVER['DOCUMENT_ROOT'] : getcwd();
+    if (is_string($target) && is_dir($target)) {
+        @chdir($target);
+    }
+});
 
 // Load the Composer autoloader.
 $vendorAutoload = __DIR__ . '/../vendor/autoload.php';
@@ -149,6 +160,47 @@ function pa_build_summary(string $tab, ProductAttributesDao $dao, int $categoryI
         $dao->listCategories(),
         ['edit' => true, 'delete' => true],
         array_merge($opts, ['delete_confirm_message' => _('Delete this category, its values and assignments?')])
+    );
+}
+
+/**
+ * Build the MasterSummaryTable of categories assigned to a stock item
+ * (category-level assignments), with a per-row unassign action.
+ *
+ * @param string              $stockId Selected stock id
+ * @param ProductAttributesDao $dao    Data access object
+ * @return MasterSummaryTable
+ *
+ * @since 1.0.0
+ */
+function pa_assigned_categories_summary(string $stockId, ProductAttributesDao $dao): MasterSummaryTable
+{
+    $rows = [];
+    foreach ($stockId !== '' ? $dao->listCategoryAssignments($stockId) : [] as $cat) {
+        $count = count($dao->listActiveValues((int) $cat['id']));
+        $rows[] = [
+            'id'            => (int) ($cat['id'] ?? 0),
+            'category_label'=> (string) ($cat['label'] ?? ''),
+            'active_values' => $count . ' ' . _('values'),
+        ];
+    }
+
+    return new MasterSummaryTable(
+        [
+            ['key' => 'category_label', 'label' => _('Category')],
+            ['key' => 'active_values', 'label' => _('Active Values')],
+        ],
+        $rows,
+        $stockId !== '' ? ['delete' => true] : [],
+        [
+            'record_id_field'        => 'id',
+            'row_id_field'           => 'id',
+            'tab_sel'                => 'assign_categories',
+            'show_footer'            => false,
+            'ajax'                   => false,
+            'empty_message'          => _('No categories assigned to this item yet.'),
+            'delete_confirm_message' => _('Unassign this category from the item?'),
+        ]
     );
 }
 
@@ -347,6 +399,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (in_array($postTabSel, $attributeSubTabs, true)) {
         $postSection = 'attributes';
         $postSub = $postTabSel;
+    } elseif ($postTabSel === 'assign_categories') {
+        $postSection = 'attributes';
+        $postSub = 'assign_categories';
     } elseif ($postTabSel === 'conditions') {
         $postSection = 'conditions';
     } elseif ($postTabSel === 'flags') {
@@ -361,18 +416,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stockId    = trim((string) ($_GET['stock_id'] ?? ($_POST['stock_id'] ?? '')));
 
         $cats = $dao->listCategories();
-        if ($categoryId === 0 && count($cats) > 0) {
+        // Only the values sub-tab defaults the category selector (to the first
+        // category); on assignments the Add Assignment box owns category choice,
+        // so a new-assignment workflow starts with no category preselected.
+        if ($categoryId === 0 && $postSub === 'values' && count($cats) > 0) {
             $categoryId = (int) $cats[0]['id'];
         }
 
-        $rowAction = pa_build_summary($postSub, $dao, $categoryId, $stockId)->getPostedAction($_POST);
+        $rowAction = $postSub === 'assign_categories'
+            ? pa_assigned_categories_summary($stockId, $dao)->getPostedAction($_POST)
+            : pa_build_summary($postSub, $dao, $categoryId, $stockId)->getPostedAction($_POST);
         $action    = (string) ($_POST['action'] ?? '');
 
         if ($rowAction !== null) {
             $rowId = (int) $rowAction['id'];
 
             if ($rowAction['action'] === 'delete') {
-                pa_delete_row($postSub, $dao, $rowId);
+                if ($postSub === 'assign_categories') {
+                    if ($stockId !== '' && $rowId > 0) {
+                        $dao->removeCategoryAssignment($stockId, $rowId);
+                    }
+                } else {
+                    pa_delete_row($postSub, $dao, $rowId);
+                }
                 display_notification(_('Record deleted.'));
 
                 // Re-query so the summary table and dropdowns no longer reference
@@ -427,6 +493,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $valueIds = array_values(array_unique($valueIds));
             }
 
+            if ($sId !== '' && $catId > 0) {
+                $dao->addCategoryAssignment($sId, $catId);
+            }
             if ($sId !== '' && $catId > 0 && $valueIds !== []) {
                 $pairs = [];
                 foreach ($valueIds as $vid) {
@@ -628,7 +697,7 @@ if ($section === 'attributes'):
     $stockId    = trim((string) ($_GET['stock_id'] ?? ($_POST['stock_id'] ?? '')));
 
     $cats = $dao->listCategories();
-    if ($categoryId === 0 && count($cats) > 0) {
+    if ($categoryId === 0 && $sub === 'values' && count($cats) > 0) {
         $categoryId = (int) $cats[0]['id'];
     }
 
@@ -648,6 +717,7 @@ if ($section === 'attributes'):
 
     <fieldset>
       <legend><?php echo $editing ? _('Edit Category') : _('Add Category'); ?></legend>
+      <p class="royal-order-hint"><?php echo _('Sort orders follow the Royal Order of Adjectives: Quantity (1), Opinion (2), Size (3), Age (4), Shape (5), Color (6), Proper adjective (7), Material (8), Purpose (9).'); ?></p>
       <form method="post">
         <input type="hidden" name="action" value="upsert_category" />
         <?php if ($editing): ?>
@@ -745,45 +815,21 @@ if ($section === 'attributes'):
     <?php if ($stockId !== ''): ?>
     <?php
         echo '<form method="post">';
+        echo '<input type="hidden" name="stock_id" value="' . htmlspecialchars($stockId, ENT_QUOTES, 'UTF-8') . '" />';
+        pa_assigned_categories_summary($stockId, $dao)->render();
+        echo '</form>';
+    ?>
+    <?php
+        echo '<form method="post">';
         echo '<input type="hidden" name="category_id" value="' . htmlspecialchars((string)$categoryId, ENT_QUOTES, 'UTF-8') . '" />';
         echo '<input type="hidden" name="stock_id" value="' . htmlspecialchars($stockId, ENT_QUOTES, 'UTF-8') . '" />';
         pa_build_summary('assignments', $dao, $categoryId, $stockId)->render();
         echo '</form>';
     ?>
 
-    <fieldset>
-      <legend><?php echo _('Add Assignment'); ?></legend>
-      <p class="royal-order-hint"><?php echo _('Sort orders follow the Royal Order of Adjectives: Quantity (1), Opinion (2), Size (3), Age (4), Shape (5), Color (6), Proper adjective (7), Material (8), Purpose (9).'); ?></p>
-      <form method="post">
-        <input type="hidden" name="action" value="add_assignment" />
-        <input type="hidden" name="stock_id" value="<?= htmlspecialchars($stockId, ENT_QUOTES, 'UTF-8') ?>" />
-        <div><label><?php echo _('Category'); ?></label>
-          <select name="category_id" id="admin_pa_category_select"
-            onchange="var box=document.getElementById('admin_pa_values_box');box.innerHTML='<em>Loading...</em>';fetch('ajax_get_values.php?category_id='+this.value).then(function(r){return r.json()}).then(function(d){var h='';for(var i=0;i<d.length;i++){h+='<label class=\"pa-value-check\"><input type=\"checkbox\" name=\"value_ids[]\" value=\"'+d[i].id+'\" /> '+d[i].value+' ('+d[i].slug+')</label>';}box.innerHTML=(h||'<em><?php echo _('No values defined.'); ?></em>');})">
-            <?php foreach ($cats as $c): $id = (int)$c['id']; ?>
-              <option value="<?= htmlspecialchars((string)$id, ENT_QUOTES, 'UTF-8') ?>" <?= $id === $categoryId ? 'selected' : '' ?>>
-                <?= htmlspecialchars((string)$c['code'], ENT_QUOTES, 'UTF-8') ?>
-              </option>
-            <?php endforeach; ?>
-          </select>
-        </div>
-        <div><label><?php echo _('Values'); ?></label>
-          <div id="admin_pa_values_box">
-            <?php foreach ($values as $v): $vid = (int)$v['id']; ?>
-              <label class="pa-value-check">
-                <input type="checkbox" name="value_ids[]" value="<?= htmlspecialchars((string)$vid, ENT_QUOTES, 'UTF-8') ?>" />
-                <?= htmlspecialchars((string)$v['value'], ENT_QUOTES, 'UTF-8') ?> (<?= htmlspecialchars((string)$v['slug'], ENT_QUOTES, 'UTF-8') ?>)
-              </label>
-            <?php endforeach; ?>
-          </div>
-          <div style="margin-top:4px">
-            <label><input type="checkbox" name="add_all" value="1" /> <?php echo _('Add All'); ?></label>
-          </div>
-        </div>
-        <div><label><?php echo _('Sort order'); ?></label><input type="number" name="sort_order" value="0" /></div>
-        <div style="margin-top:8px"><button type="submit"><?php echo _('Add'); ?></button></div>
-      </form>
-    </fieldset>
+    <form method="post">
+      <?php echo (new AddAssignmentForm($cats, $stockId, $categoryId, $values, 'admin_pa_', ['name' => '', 'value' => '', 'label' => 'Add'], ['action' => 'add_assignment']))->render(); ?>
+    </form>
 
     <?php else: ?>
     <p><?php echo _('Enter a Stock ID to view/add assignments.'); ?></p>

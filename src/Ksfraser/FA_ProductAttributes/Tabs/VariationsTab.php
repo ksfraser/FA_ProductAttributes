@@ -50,36 +50,27 @@ class VariationsTab extends AbstractTab
 
     public function renderTabContent(string $stockId): void
     {
-        echo "<!-- PA_DEBUG: renderTabContent ENTER stockId=" . htmlspecialchars($stockId) . " -->\n";
         $this->handlePostActions($stockId);
-        echo "<!-- PA_DEBUG: handlePostActions DONE -->\n";
 
         $assignedCategories = ($stockId !== '') ? $this->dao->listCategoryAssignments($stockId) : [];
-        $allCategories = $this->dao->listCategories();
         $parentData = $this->resolveParentData($stockId);
         // A child product is a variation of a parent: its category
         // assignments are managed on the parent and shown here read-only.
         $isChild = !empty($parentData);
         $variations = ($stockId !== '') ? $this->dao->getProductVariations($stockId) : [];
         $assignments = ($stockId !== '') ? $this->coreDao->listAssignments($stockId) : [];
-        echo "<!-- PA_DEBUG: data fetched assignedCategories=" . count($assignedCategories) . " variations=" . count($variations) . " assignments=" . count($assignments) . " -->\n";
 
         (new ParentProductSection())->render($parentData);
-        echo "<!-- PA_DEBUG: ParentProductSection rendered -->\n";
 
         $categories = new AssignedCategoriesSection($this->coreDao);
-        $categories->render($stockId, $assignedCategories, $allCategories, $isChild);
-        echo "<!-- PA_DEBUG: AssignedCategoriesSection rendered -->\n";
+        $categories->render($stockId, $assignedCategories, $isChild);
 
         (new CurrentAssignmentsSection())->render($assignments, !empty($assignedCategories));
-        echo "<!-- PA_DEBUG: CurrentAssignmentsSection rendered -->\n";
 
         (new ExistingVariationsSection())->render($variations);
-        echo "<!-- PA_DEBUG: ExistingVariationsSection rendered -->\n";
 
         $buttons = new VariationActionButtons();
         $buttons->render($stockId !== '' && !$isChild);
-        echo "<!-- PA_DEBUG: VariationActionButtons rendered -->\n";
     }
 
     public function handleSave(string $stockId, array $postData): void
@@ -121,38 +112,14 @@ class VariationsTab extends AbstractTab
 
     private function handlePostActions(string $stockId): void
     {
-        echo "<!-- PA_DEBUG: handlePostActions ENTER method=" . ($_SERVER['REQUEST_METHOD'] ?? '?') . " -->\n";
         if ($_SERVER['REQUEST_METHOD'] !== 'POST' || $stockId === '') {
-            echo "<!-- PA_DEBUG: handlePostActions early return (not POST or empty stockId) -->\n";
             return;
         }
 
-        echo "<!-- PA_DEBUG: handlePostActions activating tabs -->\n";
         global $Ajax;
         $Ajax->activate('tabs');
-        echo "<!-- PA_DEBUG: handlePostActions tabs activated -->\n";
 
-        if (isset($_POST['assign_category_submit'])) {
-            echo "<!-- PA_DEBUG: handlePostActions assign_category_submit branch -->\n";
-            $categoryId = (int)($_POST['assign_category_id'] ?? 0);
-            if ($categoryId > 0) {
-                $this->coreDao->addCategoryAssignment($stockId, $categoryId);
-                display_notification(_("Category assigned"));
-            }
-            return;
-        }
-
-        if (isset($_POST['unassign_category_submit'])) {
-            echo "<!-- PA_DEBUG: handlePostActions unassign_category_submit branch -->\n";
-            $categoryId = (int)($_POST['unassign_category_id'] ?? 0);
-            if ($categoryId > 0) {
-                $this->coreDao->removeCategoryAssignment($stockId, $categoryId);
-                display_notification(_("Category unassigned"));
-            }
-            return;
-        }
-
-if (isset($_POST['generate_combos'])) {
+        if (isset($_POST['generate_combos'])) {
             try {
                 $combosDao = new CombosDao($this->db);
                 $action = new GenerateCombosAction($this->coreDao, $combosDao, $this->db);
@@ -177,6 +144,5 @@ if (isset($_POST['generate_combos'])) {
             }
             return;
         }
-        echo "<!-- PA_DEBUG: handlePostActions no action matched -->\n";
     }
 }

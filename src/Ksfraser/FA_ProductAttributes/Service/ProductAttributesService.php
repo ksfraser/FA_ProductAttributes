@@ -3,6 +3,9 @@
 namespace Ksfraser\FA_ProductAttributes\Service;
 
 use Ksfraser\FA_ProductAttributes\Dao\ProductAttributesDao;
+use Ksfraser\FA_ProductAttributes\UI\AddAssignmentForm;
+use Ksfraser\FA_ProductAttributes\Variations\UI\AssignedCategoriesSection;
+use Ksfraser\FA_ProductAttributes\Variations\UI\CurrentAssignmentsSection;
 use Ksfraser\ModulesDAO\Db\DbAdapterInterface;
 
 /**
@@ -28,15 +31,16 @@ class ProductAttributesService
      *
      * Shows:
      * 1. Summary table of assigned attributes (Category, Value) with delete buttons
-     * 2. Add Assignment section with Category + Value dropdowns + Sort Order + Add button
+     * 2. Add Assignment section with Category + Value checkboxes + Sort Order + Add button
      *
      * @param string $stockId
      * @return string HTML
      */
     public function renderProductAttributesTab(string $stockId): string
     {
-        $assignments = $stockId !== '' ? $this->dao->listAssignments($stockId) : [];
-        $categories  = $this->dao->listCategories();
+        $assignments        = $stockId !== '' ? $this->dao->listAssignments($stockId) : [];
+        $assignedCategories = $stockId !== '' ? $this->dao->listCategoryAssignments($stockId) : [];
+        $categories         = $this->dao->listCategories();
 
         $html = '<h4>' . _('Product Attributes') . '</h4>';
 
@@ -45,102 +49,76 @@ class ProductAttributesService
             . ' <a href="' . $GLOBALS['path_to_root'] . '/modules/FA_ProductAttributes/public/index.php">'
             . _('Product Attributes Admin page') . '</a>.</p>';
 
-        if (empty($assignments)) {
-            $html .= '<p>' . _('No product attributes assigned.') . '</p>';
-        } else {
-            $html .= '<table class="tablestyle2">';
-            $html .= '<tr>';
-            $html .= '<th>' . _('Category') . '</th>';
-            $html .= '<th>' . _('Value') . '</th>';
-            $html .= '<th>' . _('Sort') . '</th>';
-            $html .= '<th>' . _('Action') . '</th>';
-            $html .= '</tr>';
-            foreach ($assignments as $row) {
-                $html .= '<tr>';
-                $html .= '<td>' . htmlspecialchars((string)($row['category_label'] ?? '')) . '</td>';
-                $html .= '<td>' . htmlspecialchars((string)($row['value_label'] ?? '')) . '</td>';
-                $html .= '<td>' . (int)($row['sort_order'] ?? 0) . '</td>';
-                $html .= '<td>';
-                $html .= '<input type="hidden" name="pa_delete_row_id" value="' . (int)$row['id'] . '">';
-                $html .= '<input type="submit" name="pa_delete_row_submit" value="' . htmlspecialchars(_('Remove'), ENT_QUOTES) . '"'
-                    . ' onclick="return confirm(\'' . htmlspecialchars(_('Remove this assignment?'), ENT_QUOTES) . '\')">';
-                $html .= '</td>';
-                $html .= '</tr>';
-            }
-            $html .= '</table>';
-        }
+        // Assigned Categories + Current Attribute Assignments use the same SRP
+        // section classes as the Variations tab (display-only here).
+        ob_start();
+        (new AssignedCategoriesSection($this->dao))->render($stockId, $assignedCategories, false);
+        $html .= ob_get_clean();
 
-        $this->appendConditionBox($html, $stockId);
+        ob_start();
+        (new CurrentAssignmentsSection())->render($assignments, !empty($assignedCategories), true);
+        $html .= ob_get_clean();
 
         if (!empty($categories)) {
-            $ajaxUrl = $GLOBALS['path_to_root'] . '/modules/FA_ProductAttributes/public/ajax_get_values.php';
-            $escapedAjaxUrl = htmlspecialchars($ajaxUrl, ENT_QUOTES);
-
-            $html .= '<fieldset><legend>' . _('Add Assignment') . '</legend>';
-
-            $html .= '<input type="hidden" name="action" value="add_pa_assignment" />';
-            $html .= '<input type="hidden" name="stock_id" value="' . htmlspecialchars($stockId, ENT_QUOTES, 'UTF-8') . '" />';
-
-            $html .= '<div><label>' . _('Category') . '</label>';
-            $html .= '<select name="category_id" id="pa_category_select"'
-                . ' onchange="'
-                . 'var v=document.getElementById(\'pa_value_select\');'
-                . 'v.innerHTML=\'<option value="">Loading...</option>\';'
-                . 'fetch(\'' . $escapedAjaxUrl . '?category_id=\'+this.value)'
-                . '.then(function(r){return r.json()})'
-                . '.then(function(d){'
-                . 'var h=\'<option value="">-- Select Value --</option>\';'
-                . 'for(var i=0;i<d.length;i++){h+=\'<option value="\'+d[i].id+\'">\'+d[i].value+\' (\'+d[i].slug+\')</option>\'}'
-                . 'v.innerHTML=h;'
-                . '})'
-                . '">';
-            $html .= '<option value="">' . _('-- Select Category --') . '</option>';
-            foreach ($categories as $cat) {
-                $html .= '<option value="' . (int)$cat['id'] . '">'
-                    . htmlspecialchars((string)$cat['label']) . '</option>';
-            }
-            $html .= '</select></div>';
-
-            $html .= '<div><label>' . _('Value') . '</label>';
-            $html .= '<select name="value_id" id="pa_value_select">';
-            $html .= '<option value="">' . _('-- Select Category First --') . '</option>';
-            $html .= '</select></div>';
-
-            $html .= '<div><label>' . _('Sort Order') . '</label>';
-            $html .= '<input type="number" name="sort_order" value="0" min="0" /></div>';
-
-            $html .= '<div style="margin-top:8px"><button type="submit">' . _('Add') . '</button></div>';
-            $html .= '</fieldset>';
+            $html .= (new AddAssignmentForm($categories, $stockId))->render();
         }
 
         return $html;
     }
 
     /**
-     * Handle adding a single assignment from the tab.
+     * Handle adding assignments from the tab.
      *
-     * @param string $stockId
+     * Accepts the same multi-value payload as the admin page: `value_ids[]`
+     * checkboxes plus the "Add All" flag. The category-level assignment row is
+     * upserted so the category shows as assigned on the Variations tab.
+     *
+     * @param string               $stockId
      * @param array<string, mixed> $postData
      * @return string Success/error message
      */
     public function handleAddAssignment(string $stockId, array $postData): string
     {
         $categoryId = (int)($postData['category_id'] ?? 0);
-        $valueId    = (int)($postData['value_id'] ?? 0);
         $sortOrder  = (int)($postData['sort_order'] ?? 0);
 
-        if ($categoryId <= 0 || $valueId <= 0) {
-            return _('Please select both a category and a value.');
+        if ($stockId === '' || $categoryId <= 0) {
+            return _('Please select a category.');
         }
 
-        $added = $this->dao->assignValues($stockId, [
-            ['category_id' => $categoryId, 'value_id' => $valueId, 'sort_order' => $sortOrder],
-        ]);
+        $addAll = isset($postData['add_all']) && (int)$postData['add_all'] === 1;
+
+        $valueIds = array_values(array_unique(array_filter(
+            array_map('intval', (array)($postData['value_ids'] ?? [])),
+            function ($id) {
+                return $id > 0;
+            }
+        )));
+
+        if ($addAll) {
+            $valueIds = array_values(array_unique(array_merge(
+                $valueIds,
+                array_map('intval', array_column($this->dao->listActiveValues($categoryId), 'id'))
+            )));
+        }
+
+        if (empty($valueIds)) {
+            return _('Please select at least one value, or check "Add All".');
+        }
+
+        $this->dao->addCategoryAssignment($stockId, $categoryId);
+
+        $rows = [];
+        foreach ($valueIds as $vid) {
+            $rows[] = ['category_id' => $categoryId, 'value_id' => $vid, 'sort_order' => $sortOrder];
+        }
+
+        $added = $this->dao->assignValues($stockId, $rows);
 
         if (empty($added)) {
-            return _('This category-value pair is already assigned.');
+            return _('Those category-value pairs are already assigned.');
         }
-        return _('Assignment added.');
+        return sprintf(_('%d assignment(s) added.'), count($added));
     }
 
     /**
@@ -210,6 +188,13 @@ class ProductAttributesService
             $conditionId = (int)$postData['pa_condition'];
             $this->dao->setProductCondition($stockId, $conditionId > 0 ? $conditionId : null);
         }
+
+        // Condition dropdown rendered on the Lifecycle tab. Persisted from the
+        // main item form save as well so both save paths stay consistent.
+        if (array_key_exists('condition_id', $postData)) {
+            $conditionId = (int)$postData['condition_id'];
+            $this->dao->setProductCondition($stockId, $conditionId > 0 ? $conditionId : null);
+        }
     }
 
     /**
@@ -224,43 +209,5 @@ class ProductAttributesService
             $this->dao->deleteAssignment((int)$row['id']);
         }
         $this->dao->setProductCondition($stockId, null);
-    }
-
-    /**
-     * Append the single-select Condition radio box to the tab HTML, when any
-     * active condition definitions exist. The preselected value is the
-     * product's own condition, falling back to the site-wide default (so new
-     * products default to the seeded "New" until saved).
-     *
-     * @param string $html    Rendered tab HTML (appended in place)
-     * @param string $stockId
-     */
-    private function appendConditionBox(string &$html, string $stockId): void
-    {
-        $conditions = $this->dao->listConditions(true);
-        if (empty($conditions)) {
-            return;
-        }
-
-        $current = $this->dao->getProductCondition($stockId);
-        if ($current === null) {
-            $default = $this->dao->getDefaultCondition();
-            $current = $default;
-        }
-        $current = (int)$current;
-
-        $html .= '<fieldset><legend>' . _('Condition') . '</legend>';
-        $html .= '<table class="tablestyle_noborder">';
-        foreach ($conditions as $cond) {
-            $condId  = (int)($cond['id'] ?? 0);
-            $checked = ($condId === $current) ? ' checked' : '';
-            $label   = htmlspecialchars((string)($cond['label'] ?? ''), ENT_QUOTES, 'UTF-8');
-            $html .= '<tr>';
-            $html .= '<td><input type="radio" name="pa_condition" value="' . $condId . '"' . $checked
-                . ' id="pa_condition_' . $condId . '"></td>';
-            $html .= '<td><label for="pa_condition_' . $condId . '">' . $label . '</label></td>';
-            $html .= '</tr>';
-        }
-        $html .= '</table></fieldset>';
     }
 }

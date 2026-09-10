@@ -48,7 +48,6 @@ class VariationsTabTest extends TestCase
     public function testRenderTabContentEmptyStockId(): void
     {
         $_SERVER['REQUEST_METHOD'] = 'GET';
-        $this->dao->expects($this->once())->method('listCategories')->willReturn([]);
         $this->dao->expects($this->never())->method('getProductParent');
 
         ob_start();
@@ -64,7 +63,6 @@ class VariationsTabTest extends TestCase
     public function testRenderDoesNotContainFormTag(): void
     {
         $_SERVER['REQUEST_METHOD'] = 'GET';
-        $this->dao->expects($this->once())->method('listCategories')->willReturn([]);
         $this->dao->expects($this->once())->method('getProductParent')->willReturn(null);
 
         ob_start();
@@ -78,7 +76,6 @@ class VariationsTabTest extends TestCase
     public function testRenderShowsActionButtons(): void
     {
         $_SERVER['REQUEST_METHOD'] = 'GET';
-        $this->dao->expects($this->once())->method('listCategories')->willReturn([]);
         $this->dao->expects($this->once())->method('getProductParent')->willReturn(null);
 
         ob_start();
@@ -92,7 +89,6 @@ class VariationsTabTest extends TestCase
     public function testRenderShowsParentInfo(): void
     {
         $_SERVER['REQUEST_METHOD'] = 'GET';
-        $this->dao->expects($this->once())->method('listCategories')->willReturn([]);
         $this->dao->expects($this->once())->method('getProductParent')->willReturn([
             'stock_id' => 'PARENT001',
             'description' => 'Parent Product',
@@ -113,10 +109,6 @@ class VariationsTabTest extends TestCase
     public function testChildProductAssignmentsReadOnly(): void
     {
         $_SERVER['REQUEST_METHOD'] = 'GET';
-        $this->dao->expects($this->once())->method('listCategories')->willReturn([[
-            'id' => 1,
-            'label' => 'Colour',
-        ]]);
         $this->dao->expects($this->once())->method('getProductParent')->willReturn([
             'stock_id' => 'PARENT001',
             'description' => 'Parent Product',
@@ -155,7 +147,6 @@ class VariationsTabTest extends TestCase
             ->method('getParentProductData')
             ->with('PARENT001')
             ->willReturn(['stock_id' => 'PARENT001', 'description' => 'Parent Product']);
-        $this->dao->expects($this->once())->method('listCategories')->willReturn([]);
         $this->dao->expects($this->once())->method('listCategoryAssignments')->willReturn([]);
 
         ob_start();
@@ -173,7 +164,6 @@ class VariationsTabTest extends TestCase
     public function testActionButtonsHiddenWithEmptyStockId(): void
     {
         $_SERVER['REQUEST_METHOD'] = 'GET';
-        $this->dao->expects($this->once())->method('listCategories')->willReturn([]);
         $this->dao->expects($this->never())->method('getProductParent');
 
         ob_start();
@@ -182,6 +172,33 @@ class VariationsTabTest extends TestCase
 
         $this->assertStringNotContainsString('create_child_product', $output, 'Create Child button should not render with no product');
         $this->assertStringNotContainsString('generate_variations', $output, 'Generate Variations should not render with no product');
+    }
+
+    /**
+     * Parent products on the Variations tab cannot assign/unassign categories
+     * either (that moved to the admin assignments page). Assigned categories
+     * render display-only: no Actions column, no assign dropdown, no Remove.
+     */
+    public function testParentAssignmentsDisplayOnly(): void
+    {
+        $_SERVER['REQUEST_METHOD'] = 'GET';
+        $this->dao->expects($this->once())->method('getProductParent')->willReturn(null);
+        $this->dao->expects($this->once())->method('listCategoryAssignments')->willReturn([[
+            'id' => 1,
+            'label' => 'Colour',
+        ]]);
+        $this->coreDao->expects($this->once())->method('listActiveValues')->willReturn([['id' => 1]]);
+
+        ob_start();
+        $this->tab->renderTabContent('SKU001');
+        $output = ob_get_clean();
+
+        $this->assertStringContainsString('Colour', $output);
+        $this->assertStringContainsString('1 values', $output);
+        $this->assertStringNotContainsString('assign_category_submit', $output, 'Assign Category must not render on the Variations tab');
+        $this->assertStringNotContainsString('unassign_category_submit', $output, 'Remove button must not render on the Variations tab');
+        $this->assertStringNotContainsString('Manage Values', $output, 'Manage Values belongs on the admin page');
+        $this->assertStringNotContainsString('<th>Actions</th>', $output, 'No Actions column in display-only mode');
     }
 
     public function testHandleSaveDoesNothing(): void

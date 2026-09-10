@@ -246,7 +246,7 @@ class ProductAttributesServiceTest extends TestCase
         $service->deleteProductAttributes('TEST123');
     }
 
-    public function testRenderProductAttributesTabPreselectsProductCondition(): void
+    public function testRenderProductAttributesTabDoesNotRenderConditionControls(): void
     {
         $dao = $this->createMock(ProductAttributesDao::class);
         $dao->expects($this->once())
@@ -255,78 +255,11 @@ class ProductAttributesServiceTest extends TestCase
             ->willReturn([]);
         $dao->expects($this->once())
             ->method('listCategories')
-            ->willReturn([]);
-        $dao->expects($this->once())
-            ->method('listConditions')
-            ->with(true)
             ->willReturn([
-                ['id' => 71, 'code' => 'new', 'label' => 'New', 'sort_order' => 10],
-                ['id' => 73, 'code' => 'as_is', 'label' => 'As Is', 'sort_order' => 70],
+                ['id' => 1, 'code' => 'colour', 'label' => 'Colour', 'sort_order' => 10],
             ]);
-        $dao->expects($this->once())
-            ->method('getProductCondition')
-            ->with('TEST123')
-            ->willReturn(73);
         $dao->expects($this->never())
-            ->method('getDefaultCondition');
-
-        $db = $this->createMock(DbAdapterInterface::class);
-
-        $service = new ProductAttributesService($dao, $db);
-        $result = $service->renderProductAttributesTab('TEST123');
-
-        $this->assertTrue(strpos($result, 'Condition') !== false, 'Should render Condition box');
-        $this->assertTrue(strpos($result, 'name="pa_condition" value="71"') !== false, 'Should have New radio');
-        $this->assertTrue(strpos($result, 'name="pa_condition" value="73" checked') !== false, 'Product condition should be checked');
-        $this->assertTrue(strpos($result, 'name="pa_condition" value="71" id="pa_condition_71"') !== false, 'New radio should be unchecked');
-    }
-
-    public function testRenderProductAttributesTabFallsBackToDefaultCondition(): void
-    {
-        $dao = $this->createMock(ProductAttributesDao::class);
-        $dao->expects($this->once())
-            ->method('listAssignments')
-            ->with('TEST123')
-            ->willReturn([]);
-        $dao->expects($this->once())
-            ->method('listCategories')
-            ->willReturn([]);
-        $dao->expects($this->once())
-            ->method('listConditions')
-            ->with(true)
-            ->willReturn([
-                ['id' => 71, 'code' => 'new', 'label' => 'New', 'sort_order' => 10],
-            ]);
-        $dao->expects($this->once())
-            ->method('getProductCondition')
-            ->with('TEST123')
-            ->willReturn(null);
-        $dao->expects($this->once())
-            ->method('getDefaultCondition')
-            ->willReturn(71);
-
-        $db = $this->createMock(DbAdapterInterface::class);
-
-        $service = new ProductAttributesService($dao, $db);
-        $result = $service->renderProductAttributesTab('TEST123');
-
-        $this->assertTrue(strpos($result, 'name="pa_condition" value="71" checked') !== false, 'Default condition should be checked');
-    }
-
-    public function testRenderProductAttributesTabSkipsConditionBoxWhenNoActiveConditions(): void
-    {
-        $dao = $this->createMock(ProductAttributesDao::class);
-        $dao->expects($this->once())
-            ->method('listAssignments')
-            ->with('TEST123')
-            ->willReturn([]);
-        $dao->expects($this->once())
-            ->method('listCategories')
-            ->willReturn([]);
-        $dao->expects($this->once())
-            ->method('listConditions')
-            ->with(true)
-            ->willReturn([]);
+            ->method('listConditions');
         $dao->expects($this->never())
             ->method('getProductCondition');
 
@@ -335,7 +268,93 @@ class ProductAttributesServiceTest extends TestCase
         $service = new ProductAttributesService($dao, $db);
         $result = $service->renderProductAttributesTab('TEST123');
 
-        $this->assertTrue(strpos($result, 'name="pa_condition"') === false, 'No radios when no active conditions');
+        $this->assertStringNotContainsString('pa_condition', $result, 'Condition lived on the Lifecycle tab');
+        $this->assertStringNotContainsString('save_pa_condition', $result);
+        $this->assertStringNotContainsString('Condition</legend>', $result);
+        $this->assertStringContainsString('name="add_pa_assignment" value="1"', $result, 'Add Assignment box should use a dedicated submit name');
+        $this->assertStringNotContainsString('value="add_pa_assignment"', $result, 'No generic action hidden input leftover');
+    }
+
+    public function testRenderWiresCategoryToValueViaAjaxEndpoint(): void
+    {
+        $dao = $this->createMock(ProductAttributesDao::class);
+        $dao->expects($this->once())
+            ->method('listAssignments')
+            ->with('TEST123')
+            ->willReturn([]);
+        $dao->expects($this->once())
+            ->method('listCategoryAssignments')
+            ->with('TEST123')
+            ->willReturn([]);
+        $dao->expects($this->once())
+            ->method('listCategories')
+            ->willReturn([
+                ['id' => 2, 'code' => 'color', 'label' => 'Color', 'sort_order' => 60],
+            ]);
+
+        $db = $this->createMock(DbAdapterInterface::class);
+
+        $service = new ProductAttributesService($dao, $db);
+        $result = $service->renderProductAttributesTab('TEST123');
+
+        $this->assertStringContainsString('id="pa_category_select"', $result);
+        $this->assertStringContainsString('id="pa_values_box"', $result);
+        $this->assertStringContainsString('name="value_ids[]"', $result, 'Multi-value checkboxes (same box as admin page)');
+        $this->assertStringContainsString('name="add_all"', $result, 'Add All flag present');
+        $this->assertStringNotContainsString('onchange=', $result, 'No inline handler with embedded quotes');
+        $this->assertStringNotContainsString('var paValues=', $result, 'Values loaded via the shared ajax endpoint');
+        $this->assertStringContainsString('modules/FA_ProductAttributes/public/ajax_get_values.php', $result);
+        $this->assertStringContainsString('encodeURIComponent(sel.value)', $result);
+        $this->assertStringContainsString('</script>', $result);
+    }
+
+    public function testRenderProductAttributesTabKeepsAddAssignmentBox(): void
+    {
+        $dao = $this->createMock(ProductAttributesDao::class);
+        $dao->expects($this->once())
+            ->method('listAssignments')
+            ->with('TEST123')
+            ->willReturn([]);
+        $dao->expects($this->once())
+            ->method('listCategories')
+            ->willReturn([
+                ['id' => 1, 'code' => 'colour', 'label' => 'Colour', 'sort_order' => 10],
+            ]);
+
+        $db = $this->createMock(DbAdapterInterface::class);
+
+        $service = new ProductAttributesService($dao, $db);
+        $result = $service->renderProductAttributesTab('TEST123');
+
+        $this->assertStringContainsString('Add Assignment', $result);
+        $this->assertStringContainsString('name="category_id"', $result);
+        $this->assertStringContainsString('name="value_ids[]"', $result);
+        $this->assertStringContainsString('name="add_all"', $result);
+        $this->assertStringContainsString('name="sort_order"', $result);
+        $this->assertStringContainsString('name="add_pa_assignment"', $result);
+    }
+
+    public function testRenderProductAttributesTabSkipsConditionUi(): void
+    {
+        $dao = $this->createMock(ProductAttributesDao::class);
+        $dao->expects($this->once())
+            ->method('listAssignments')
+            ->with('TEST123')
+            ->willReturn([]);
+        $dao->expects($this->once())
+            ->method('listCategories')
+            ->willReturn([]);
+        $dao->expects($this->never())
+            ->method('listConditions');
+        $dao->expects($this->never())
+            ->method('getProductCondition');
+
+        $db = $this->createMock(DbAdapterInterface::class);
+
+        $service = new ProductAttributesService($dao, $db);
+        $result = $service->renderProductAttributesTab('TEST123');
+
+        $this->assertStringNotContainsString('pa_condition', $result, 'Condition UI lives on the Lifecycle tab');
     }
 
     public function testSaveProductAttributesPersistsCondition(): void
@@ -351,6 +370,42 @@ class ProductAttributesServiceTest extends TestCase
 
         $postData = [
             'pa_condition' => '73',
+        ];
+
+        $service->saveProductAttributes('TEST123', $postData);
+    }
+
+    public function testSaveProductAttributesPersistsConditionIdFromDropdown(): void
+    {
+        $dao = $this->createMock(ProductAttributesDao::class);
+        $dao->expects($this->once())
+            ->method('setProductCondition')
+            ->with('TEST123', 6);
+
+        $db = $this->createMock(DbAdapterInterface::class);
+
+        $service = new ProductAttributesService($dao, $db);
+
+        $postData = [
+            'condition_id' => '6',
+        ];
+
+        $service->saveProductAttributes('TEST123', $postData);
+    }
+
+    public function testSaveProductAttributesClearsConditionOnDefaultDropdownSelection(): void
+    {
+        $dao = $this->createMock(ProductAttributesDao::class);
+        $dao->expects($this->once())
+            ->method('setProductCondition')
+            ->with('TEST123', null);
+
+        $db = $this->createMock(DbAdapterInterface::class);
+
+        $service = new ProductAttributesService($dao, $db);
+
+        $postData = [
+            'condition_id' => '',
         ];
 
         $service->saveProductAttributes('TEST123', $postData);
@@ -407,5 +462,111 @@ class ProductAttributesServiceTest extends TestCase
         $service = new ProductAttributesService($dao, $db);
 
         $service->deleteProductAttributes('TEST123');
+    }
+
+    public function testHandleAddAssignmentWithMultipleValues(): void
+    {
+        $dao = $this->createMock(ProductAttributesDao::class);
+        $dao->expects($this->once())
+            ->method('addCategoryAssignment')
+            ->with('TEST123', 6);
+        $dao->expects($this->once())
+            ->method('assignValues')
+            ->with('TEST123', [
+                ['category_id' => 6, 'value_id' => 13, 'sort_order' => 0],
+                ['category_id' => 6, 'value_id' => 14, 'sort_order' => 0],
+            ])
+            ->willReturn([
+                ['category_id' => 6, 'value_id' => 13, 'sort_order' => 0],
+                ['category_id' => 6, 'value_id' => 14, 'sort_order' => 0],
+            ]);
+
+        $db = $this->createMock(DbAdapterInterface::class);
+
+        $service = new ProductAttributesService($dao, $db);
+        $result = $service->handleAddAssignment('TEST123', [
+            'category_id' => '6',
+            'sort_order'  => '0',
+            'value_ids'   => ['13', '14', '14'],
+        ]);
+
+        $this->assertEquals('2 assignment(s) added.', $result);
+    }
+
+    public function testHandleAddAssignmentWithAddAll(): void
+    {
+        $dao = $this->createMock(ProductAttributesDao::class);
+        $dao->expects($this->once())
+            ->method('listActiveValues')
+            ->with(6)
+            ->willReturn([
+                ['id' => 13], ['id' => 14], ['id' => 15],
+            ]);
+        $dao->expects($this->once())
+            ->method('addCategoryAssignment')
+            ->with('TEST123', 6);
+        $dao->expects($this->once())
+            ->method('assignValues')
+            ->with('TEST123', [
+                ['category_id' => 6, 'value_id' => 13, 'sort_order' => 2],
+                ['category_id' => 6, 'value_id' => 14, 'sort_order' => 2],
+                ['category_id' => 6, 'value_id' => 15, 'sort_order' => 2],
+            ])
+            ->willReturn(array_slice([
+                ['category_id' => 6, 'value_id' => 13, 'sort_order' => 2],
+                ['category_id' => 6, 'value_id' => 14, 'sort_order' => 2],
+                ['category_id' => 6, 'value_id' => 15, 'sort_order' => 2],
+            ], 0, 3));
+
+        $db = $this->createMock(DbAdapterInterface::class);
+
+        $service = new ProductAttributesService($dao, $db);
+        $result = $service->handleAddAssignment('TEST123', [
+            'category_id' => '6',
+            'sort_order'  => '2',
+            'add_all'     => '1',
+        ]);
+
+        $this->assertEquals('3 assignment(s) added.', $result);
+    }
+
+    public function testHandleAddAssignmentRejectsNoSelection(): void
+    {
+        $dao = $this->createMock(ProductAttributesDao::class);
+        $dao->expects($this->never())
+            ->method('addCategoryAssignment');
+        $dao->expects($this->never())
+            ->method('assignValues');
+
+        $db = $this->createMock(DbAdapterInterface::class);
+
+        $service = new ProductAttributesService($dao, $db);
+        $result = $service->handleAddAssignment('TEST123', [
+            'category_id' => '6',
+            'sort_order'  => '0',
+        ]);
+
+        $this->assertEquals('Please select at least one value, or check "Add All".', $result);
+    }
+
+    public function testHandleAddAssignmentReportDuplicate(): void
+    {
+        $dao = $this->createMock(ProductAttributesDao::class);
+        $dao->expects($this->once())
+            ->method('addCategoryAssignment')
+            ->with('TEST123', 6);
+        $dao->expects($this->once())
+            ->method('assignValues')
+            ->willReturn([]);
+
+        $db = $this->createMock(DbAdapterInterface::class);
+
+        $service = new ProductAttributesService($dao, $db);
+        $result = $service->handleAddAssignment('TEST123', [
+            'category_id' => '6',
+            'value_ids'   => ['13'],
+        ]);
+
+        $this->assertEquals('Those category-value pairs are already assigned.', $result);
     }
 }
