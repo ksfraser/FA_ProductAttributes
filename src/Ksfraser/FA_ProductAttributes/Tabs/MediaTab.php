@@ -88,27 +88,67 @@ class MediaTab extends AbstractTab
         $maxUploadSize = isset($SysPrefs->max_image_size) ? (int)$SysPrefs->max_image_size : 500000;
 
         echo '<fieldset><legend>' . _('Upload Image') . '</legend>';
-        echo '<form method="post" action="" enctype="multipart/form-data">';
+        // Issue #11: the host item page renders every tab inside a single,
+        // urlencoded start_form() (no CSRF token in FA). A nested multipart
+        // <form> is therefore flattened away by the HTML parser, so a plain
+        // submit never populates $_FILES. The upload button instead posts a
+        // FormData body with fetch() to the SAME page URL — FA re-runs its
+        // POST handling and re-renders the full page, matching FA's own
+        // post-submit behaviour. No JS asset registry needed: this module's
+        // other tabs already emit inline scripts.
         echo '<input type="hidden" name="stock_id" value="'
             . htmlspecialchars($stockId, ENT_QUOTES, 'UTF-8') . '">';
-        echo '<input type="hidden" name="_tabs_sel" value="product_media">';
         if ($maxUploadSize > 0) {
             echo '<input type="hidden" name="MAX_FILE_SIZE" value="' . (int)$maxUploadSize . '">';
         }
         echo '<table class="tablestyle_noborder">';
         echo '<tr><td>' . _('File') . '</td>';
-        echo '<td><input type="file" name="media_file" accept="image/jpeg,image/png,image/gif"></td></tr>';
+        echo '<td><input type="file" name="media_file" id="pa_media_file" '
+            . 'accept="image/jpeg,image/png,image/gif"></td></tr>';
         echo '<tr><td>' . _('Alt Text') . '</td>';
-        echo '<td><input type="text" name="alt_text" maxlength="255" style="width:100%" '
-            . 'placeholder="Describe the image for accessibility"></td></tr>';
+        echo '<td><input type="text" name="alt_text" id="pa_media_alt" maxlength="255" '
+            . 'style="width:100%" placeholder="Describe the image for accessibility"></td></tr>';
         echo '<tr><td>' . _('Sort Order') . '</td>';
-        echo '<td><input type="number" name="sort_order" min="0" value="0"></td></tr>';
+        echo '<td><input type="number" name="sort_order" id="pa_media_sort" min="0" value="0"></td></tr>';
         echo '</table>';
         echo '<p><small>' . _('Accepted formats: JPEG, PNG, GIF.')
             . ($maxUploadSize > 0 ? ' ' . sprintf(_('Maximum size: %s bytes.'), number_format($maxUploadSize)) : '')
             . '</small></p>';
-        echo '<p><input type="submit" name="pa_media_upload" value="' . _('Upload Image') . '"></p>';
-        echo '</form>';
+        echo '<p><button type="button" id="pa_media_upload_btn">' . _('Upload Image') . '</button></p>';
+        echo '<script>
+(function () {
+    var btn = document.getElementById("pa_media_upload_btn");
+    if (!btn) { return; }
+    var busy = false;
+    btn.addEventListener("click", function () {
+        if (busy) { return; }
+        var file = document.getElementById("pa_media_file");
+        if (!file || !file.files || !file.files.length) {
+            alert(' . json_encode(_('Please choose a file first.')) . ');
+            return;
+        }
+        busy = true;
+        btn.disabled = true;
+        var fd = new FormData();
+        fd.append("stock_id", document.getElementById("stock_id")
+            ? document.getElementById("stock_id").value : "");
+        fd.append("_tabs_sel", "product_media");
+        fd.append("pa_media_upload", "1");
+        fd.append("media_file", file.files[0]);
+        var alt = document.getElementById("pa_media_alt");
+        if (alt) { fd.append("alt_text", alt.value); }
+        var sort = document.getElementById("pa_media_sort");
+        if (sort) { fd.append("sort_order", sort.value); }
+        fetch(window.location.href, {method: "POST", body: fd})
+            .then(function () { window.location.reload(); })
+            .catch(function () {
+                busy = false;
+                btn.disabled = false;
+                alert(' . json_encode(_('Upload failed — please try again.')) . ');
+            });
+    });
+})();
+</script>';
         echo '</fieldset>';
     }
 

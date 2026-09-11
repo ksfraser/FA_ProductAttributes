@@ -74,13 +74,14 @@ class GenerateCombosAction
             $valueSetKey = $this->buildValueSetKey($sorted);
             $slugKey = $this->buildSlugKey($sorted);
             // Per-value combination: lets Create Child record the child's concrete
-            // value assignments (product_attribute_assignments), not just the
-            // dedupe/slug keys.
+            // value assignments (product_attribute_assignments) and name the child
+            // from the human-readable labels (#63), not just the dedupe/slug keys.
             $valueSet = array_map(function ($item) {
                 return [
                     'category_id' => (int)$item['category_id'],
                     'value_id' => (int)$item['value_id'],
                     'slug' => (string)$item['value_slug'],
+                    'label' => (string)($item['value_label'] ?? ''),
                 ];
             }, $sorted);
             $comboRecords[] = [

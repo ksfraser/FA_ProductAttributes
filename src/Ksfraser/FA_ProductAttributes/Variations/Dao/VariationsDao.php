@@ -399,9 +399,16 @@ class VariationsDao
     }
 
     /**
-     * Create child product in stock_master
+     * Create child product in stock_master.
+     *
+     * @param string $childStockId   New child stock id.
+     * @param array  $parentData     Full parent stock_master row.
+     * @param string $variationLabel Human-readable attribute chain (e.g. "Blue Size 32")
+     *                               appended to the parent description so the child's
+     *                               short description names its variations (issue #63).
+     *                               Empty keeps the legacy "<parent> (Variation)" form.
      */
-    public function createChildProduct(string $childStockId, array $parentData): void
+    public function createChildProduct(string $childStockId, array $parentData, string $variationLabel = ''): void
     {
         // Prefer FA's native item save path so a generated child is fully
         // registered as an invoice-selectable product. FA's add_item() writes
@@ -412,14 +419,14 @@ class VariationsDao
         //
         // add_item() is only defined at FA runtime, so unit tests / standalone
         // usage fall back to the direct stock_master insert (unchanged).
-        if ($this->tryNativeAddItem($childStockId, $parentData)) {
+        if ($this->tryNativeAddItem($childStockId, $parentData, $variationLabel)) {
             return;
         }
 
         // Copy most fields from parent, but modify description and set as service item (variation)
         $childData = $parentData;
         $childData['stock_id'] = $childStockId;
-        $childData['description'] = $parentData['description'] . ' (Variation)';
+        $childData['description'] = $this->childDescription($parentData, $variationLabel);
         $childData['long_description'] = ($parentData['long_description'] ?? '') . ' - Variation of ' . $parentData['stock_id'];
         $childData['mb_flag'] = 'D'; // Dimension/service item for variations
 
@@ -444,9 +451,10 @@ class VariationsDao
      *
      * @param string $childStockId New child stock id.
      * @param array  $parentData   Full parent stock_master row.
+     * @param string $variationLabel Attribute chain shown in the short description (issue #63).
      * @return bool True when the native path ran and fully created the child.
      */
-    private function tryNativeAddItem(string $childStockId, array $parentData): bool
+    private function tryNativeAddItem(string $childStockId, array $parentData, string $variationLabel = ''): bool
     {
         if (!function_exists('add_item')) {
             return false;
@@ -454,7 +462,7 @@ class VariationsDao
 
         add_item(
             $childStockId,
-            $parentData['description'] . ' (Variation)',
+            $this->childDescription($parentData, $variationLabel),
             ($parentData['long_description'] ?? '') . ' - Variation of ' . $parentData['stock_id'],
             (int)($parentData['category_id'] ?? 0),
             (int)($parentData['tax_type_id'] ?? 0),
@@ -473,6 +481,22 @@ class VariationsDao
         );
 
         return true;
+    }
+
+    /**
+     * Compose the child short description.
+     *
+     * With a variation label the child is named "Parent Blue Size 32" (#63);
+     * without one the legacy "<parent> (Variation)" form is kept so pre-NAMING
+     * clones and tests behave exactly as before.
+     */
+    private function childDescription(array $parentData, string $variationLabel): string
+    {
+        $variationLabel = trim($variationLabel);
+        if ($variationLabel === '') {
+            return $parentData['description'] . ' (Variation)';
+        }
+        return $parentData['description'] . ' ' . $variationLabel;
     }
 
     /**

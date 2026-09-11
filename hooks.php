@@ -331,6 +331,15 @@ class hooks_FA_ProductAttributes extends hooks
         }
 
         foreach ($this->get_tab_registry()->getAll() as $tab) {
+            // Parent-with-children guard (issue #53): refuse to delete a product
+            // that still has variation children BEFORE any tab cleanup runs. FA's
+            // own check_usage() only guards items with transactions/foreign codes,
+            // so this is what keeps generated children from being orphaned. The
+            // nothing here may throw AFTER cleanup, so the guard must come first.
+            if ($tab instanceof \Ksfraser\FA_ProductAttributes\Tabs\VariationsTab) {
+                $tab->assertDeletable((string)$stockId);
+            }
+
             if ($tab instanceof \FrontAccounting\ProductAttributes\Plugin\ProductAttributeTabInterface) {
                 $tab->handleDelete((string)$stockId);
             }

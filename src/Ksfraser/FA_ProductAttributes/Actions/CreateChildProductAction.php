@@ -142,7 +142,8 @@ class CreateChildProductAction
             }
 
             try {
-                $this->variationsDao->createChildProduct($childStockId, $parentData);
+                $variationLabel = $this->resolveValueLabels((array)($combo['value_set'] ?? []));
+                $this->variationsDao->createChildProduct($childStockId, $parentData, $variationLabel);
                 $this->variationsDao->copyParentCategoryAssignments($childStockId, $stockId);
                 $this->variationsDao->setParentRelationship($childStockId, $stockId);
                 $this->coreDao->setProductParent($childStockId, $stockId);
@@ -226,6 +227,65 @@ class CreateChildProductAction
                 $parentStockId
             );
         }
+    }
+
+    /**
+     * Build the human-readable attribute chain used to NAME the child
+     * (issue #63), e.g. "Blue Size 32".
+     *
+     * Labels come from the combo's value_set `label` when present (combo rows
+     * generated after the label was added to the pool), falling back to a
+     * single lookup on product_attribute_values for legacy pools that only
+     * store {category_id, value_id, slug}.
+     *
+     * @param array $valueSet Combo value_set payload.
+     * @return string Space-joined label chain ('' when nothing resolvable).
+     */
+    private function resolveValueLabels(array $valueSet): string
+    {
+        $ids = [];
+        $needLookup = false;
+        foreach ($valueSet as $item) {
+            $valueId = (int)($item['value_id'] ?? 0);
+            if ($valueId <= 0) {
+                continue;
+            }
+            if (trim((string)($item['label'] ?? '')) !== '') {
+                continue;
+            }
+            $ids[$valueId] = $valueId;
+            $needLookup = true;
+        }
+
+        $map = [];
+        if ($needLookup && !empty($ids)) {
+            $p = $this->db->getTablePrefix();
+            $rows = $this->db->query(
+                "SELECT id, value FROM `{$p}product_attribute_values` WHERE id IN (" . implode(',', $ids) . ")",
+                []
+            ) ?: [];
+            foreach ($rows as $row) {
+                $map[(int)($row['id'] ?? 0)] = (string)($row['value'] ?? '');
+            }
+        }
+
+        $labels = [];
+        foreach ($valueSet as $item) {
+            $valueId = (int)($item['value_id'] ?? 0);
+            $label = (string)($item['label'] ?? '');
+            if ($label === '') {
+                $label = (string)($map[$valueId] ?? '');
+            }
+            if ($label === '') {
+                $label = (string)($item['slug'] ?? '');
+            }
+            $label = trim($label);
+            if ($label !== '') {
+                $labels[] = $label;
+            }
+        }
+
+        return implode(' ', $labels);
     }
 
     /**

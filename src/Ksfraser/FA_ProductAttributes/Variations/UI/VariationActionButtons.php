@@ -23,35 +23,45 @@ namespace Ksfraser\FA_ProductAttributes\Variations\UI;
 class VariationActionButtons
 {
     /**
-     * @param bool $render Whether the action row should be shown (parent item).
+     * @param bool $render    Whether the action row should be shown (parent item).
+     * @param bool $hasCombos Whether a combination set is persisted for the item.
+     *                        Create Child stays disabled without one (#62).
      */
-    public function render(bool $render): void
+    public function render(bool $render, bool $hasCombos = true): void
     {
         if (!$render) {
             return;
         }
 
+        $disabled = !$hasCombos;
+
         echo '<p>';
         echo $this->button('generate_combos', _('Generate Combinations'));
         echo ' ';
-        echo $this->button('create_child_product', _('Create Child Product'));
+        echo $this->button('create_child_product', _('Create Child Product'), $disabled);
         echo '</p>';
+
+        if ($disabled) {
+            echo '<p class="pa_btn_hint"><small>' . _('Create Child Product requires a saved combination set — run Generate Combinations first.') . '</small></p>';
+        }
     }
 
     /**
      * Build a single ajaxsubmit submit button.
      *
-     * @param string $name  Button name (also the POST key gating the action).
-     * @param string $label Button label.
+     * @param string $name     Button name (also the POST key gating the action).
+     * @param string $label    Button label.
+     * @param bool   $disabled Render the button disabled (no POST can fire).
      * @return string Button HTML.
      */
-    private function button(string $name, string $label): string
+    private function button(string $name, string $label, bool $disabled = false): string
     {
         $name  = htmlspecialchars($name, ENT_QUOTES);
         $label = htmlspecialchars($this->localise($label), ENT_QUOTES);
 
         return '<button class="ajaxsubmit" type="submit" formnovalidate name="' . $name
-            . '" id="' . $name . '" value="' . $label . '"><span>' . $label . '</span></button>';
+            . '" id="' . $name . '" value="' . $label . '"' . ($disabled ? ' disabled' : '')
+            . '><span>' . $label . '</span></button>';
     }
 
     /**

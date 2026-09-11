@@ -449,3 +449,30 @@ patch file; both must stay in sync.
 - Full flow passes live 12/12: login → seed → create parent → assign 2
   categories → Generate Combinations → Create Child Product → children listed →
   child read-only (issue #52).
+## Issue resolutions landed in dev tree (2026-09-11) — code + unit suite green
+
+Each fix has a phpunit unit test and every touched file passes `php -l`. Live
+E2E needs a credentialed FA session (localhost:8080 serves the Login page to
+anonymous probes, login.php 404 — FA 2.4.3 auth is at the session root).
+
+- **#11** MediaTab already uses a Fetch `FormData` POST (bypasses the nested
+  multipart form that the host `start_form(true)` flattens — same mechanism as
+  the module's other tabs; verified in MediaTab.php).
+- **#53 pre_item_delete guard + pool cleanup**: `VariationsTab::assertDeletable()`
+  throws a RuntimeException before ANY tab cleanup when the product still has
+  children; `hooks.php` calls it first in the loop, then all tabs' `handleDelete`
+  (which now purge the parent's `product_variation_combos` pool via
+  `CombosDao::deleteParentPool()`). Deleting a parent with children → FA's
+  exception renderer → delete blocked (Mockito SmartReporter catches it).
+- **#62 button gating**: `VariationActionButtons::render(bool $render, bool
+  $hasCombos)` — Create Child Product stays `disabled` until the combination
+  pool is persisted (`CombinationPoolSection` reuses `CombosDao::listCombos`).
+- **#63 child description**: `createChildProduct(..., $variationLabel)` composes
+  child description as "<parent description> <label1> <label2>" from the combo's
+  value-set labels (issue #63) on BOTH paths; `VariationsDao::tryNativeAddItem`
+  and the fallback `add_item`. `GenerateCombonsAction` value-set now carries the
+  human label; `CreateChildProductAction::resolveValueLabels()` maps value_ids →
+  labels so pool rows store readable names.
+
+Test state: full suite 1010 tests / 2334 assertions, 0 failures, 2 pre-existing
+skips (sql/schema.sql not shipped).

@@ -245,4 +245,21 @@ class CombosDao
         );
         $this->db->execute("DELETE FROM `{$p}stock_master` WHERE stock_id = :child", ['child' => $stockId]);
     }
+
+    /**
+     * Drop a parent's entire combination pool (item-delete cleanup, issue #53).
+     *
+     * Only called once the item is being deleted, so no child products may
+     * remain — the pre_item_delete guard refuses to delete a parent that still
+     * has children, so this only ever removes pool rows whose children were
+     * already cleaned up.
+     */
+    public function deleteParentPool(string $parentStockId): void
+    {
+        $p = $this->db->getTablePrefix();
+        $this->db->execute(
+            "DELETE FROM `{$p}product_variation_combos` WHERE parent_stock_id = :parent",
+            ['parent' => $parentStockId]
+        );
+    }
 }
