@@ -34,6 +34,7 @@ use Ksfraser\FA_ProductAttributes\Variations\Dao\VariationsDao;
 use FrontAccounting\ProductAttributes\Variations\Service\FrontAccountingVariationService;
 use Ksfraser\ModulesDAO\Db\FrontAccountingDbAdapter;
 use FrontAccounting\ProductAttributes\Plugin\TabRegistry;
+use Ksfraser\FA_ProductAttributes\Install\ItemsPhpTabHookPatcher;
 
 if (!class_exists('hooks')) {
 ini_set('log_errors', '1');
@@ -185,7 +186,26 @@ class hooks_FA_ProductAttributes extends hooks
         }
 
         if (!empty($updates)) {
-            return $this->update_databases($company, $updates, $check_only);
+            $dbOk = $this->update_databases($company, $updates, $check_only);
+            if (!$dbOk) {
+                return false;
+            }
+            if ($check_only) {
+                return true; // schema check passed; no file mutations on dry run
+            }
+        }
+
+        if (!$check_only) {
+            // Ensure FA core inventory/manage/items.php invokes the module's
+            // host hooks (item_display_tab_headers / item_display_tab_content /
+            // post_item_write / pre_item_delete). Idempotent: already-patched
+            // files are a no-op. Never fatal — the tabs degrade by hiding.
+            try {
+                $patchResult = (new ItemsPhpTabHookPatcher())->ensurePatched();
+                @file_put_contents('/tmp/pa_items_patch.log', date('c') . ' ' . json_encode($patchResult) . "\n", FILE_APPEND);
+            } catch (\Throwable $e) {
+                @file_put_contents('/tmp/pa_items_patch.log', date('c') . ' PATCH ERROR ' . $e->getMessage() . "\n", FILE_APPEND);
+            }
         }
 
         return true;

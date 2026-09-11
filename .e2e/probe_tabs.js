@@ -1,0 +1,10 @@
+const { chromium } = require('/home/kevin/Documents/ksf_FA_Square/node_modules/playwright');
+const BASE='http://localhost:8080', EXE='/home/kevin/.cache/ms-playwright/chromium-1234/chrome-linux64/chrome';
+(async()=>{const b=await chromium.launch({executablePath:EXE,headless:false,args:['--no-sandbox','--disable-dev-shm-usage']});const p=await b.newPage();
+await p.goto(BASE+'/',{waitUntil:'networkidle',timeout:45000});
+await p.fill('input[name="user_name_entry_field"]','opencode');await p.fill('input[name="password"]','opencode');await p.click('input[type="submit"]');await p.waitForLoadState('networkidle');
+await p.goto(BASE+'/inventory/manage/items.php?stock_id=auto-gas',{waitUntil:'networkidle',timeout:45000});await new Promise(r=>setTimeout(r,1200));
+await p.locator('button[name="tabs_product_variations"]').first().click();await new Promise(r=>setTimeout(r,3000));await p.waitForLoadState('networkidle');
+const tabs=await p.evaluate(()=>Array.from(document.querySelectorAll('button[name^="tabs_product_"]')).map(b=>({name:b.getAttribute('name'),text:(b.innerText||'').trim()})).filter(o=>o.name).sort((a,b)=>a.name<b.name?-1:1));
+console.log(JSON.stringify(tabs,null,1));
+await b.close();})().catch(e=>{console.error('FATAL',e.message);process.exit(1);});

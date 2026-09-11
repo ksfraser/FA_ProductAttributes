@@ -1,0 +1,48 @@
+--- a/inventory/manage/items.php
++++ b/inventory/manage/items.php
+@@ -258,6 +258,9 @@
+ 			set_focus('NewStockID');
+ 		}
+ 		$Ajax->activate('_page_body');
++		// KSF host hook: modules may persist tab data after the item write.
++		$itemWritten = array('stock_id' => $_POST['NewStockID']);
++		hook_invoke_all('post_item_write', $itemWritten, $_POST['NewStockID']);
+ 	}
+ }
+ 
+@@ -290,6 +293,8 @@
+ 	if (check_usage($_POST['NewStockID'])) {
+ 
+ 		$stock_id = $_POST['NewStockID'];
++		// KSF host hook: modules may clean up their data before the item delete.
++		hook_invoke_all('pre_item_delete', $stock_id);
+ 		delete_item($stock_id);
+ 		$filename = company_path().'/images/'.item_img_name($stock_id).".jpg";
+ 		if (file_exists($filename))
+@@ -596,10 +601,14 @@
+ 		'status' => array(_('&Status'), (user_check_access('SA_ITEMSSTATVIEW') ? $stock_id : null)),
+ 	);
+ 
++	// KSF host hook: installed modules may add item tabs (e.g. FA_ProductAttributes).
++	$moduleTabs = hook_invoke_all('item_display_tab_headers', $tabs, $stock_id);
++	if (is_array($moduleTabs) && count($moduleTabs))
++		$tabs = $moduleTabs;
++
+ tabbed_content_start('tabs', $tabs);
+ 
+ 	switch (get_post('_tabs_sel')) {
+-		default:
+ 		case 'settings':
+ 			item_settings($stock_id, $new_item); 
+ 			break;
+@@ -635,6 +644,10 @@
+ 			$_GET['stock_id'] = $stock_id;
+ 			include_once($path_to_root."/inventory/inquiry/stock_status.php");
+ 			break;
++		// KSF host hook: module-provided tabs render their content here.
++		default:
++			hook_invoke_all('item_display_tab_content', $stock_id, get_post('_tabs_sel'));
++			break;
+ 	};
+ 
+ br();
