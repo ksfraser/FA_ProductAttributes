@@ -7,6 +7,6 @@ Homepage: http://ksfraser.com
 Type: extension
 InstallPath: modules/FA_ProductAttributes
 Filename: FA_ProductAttributes
-Version: 2.6.0
+Version: 2.4.4
 FA-Version: 2.4
 PHP-Version: 7.3

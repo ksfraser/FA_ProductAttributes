@@ -1,6 +1,6 @@
 {
   "name": "ksfraser/fa-product-attributes",
-  "version": "1.0.2",
+  "version": "1.1.0",
   "description": "FrontAccounting-compatible ordered product attributes (royal order of adjectives)",
   "type": "library",
   "license": "MIT",
