@@ -1,4 +1,4 @@
-INSERT IGNORE INTO `{TB_PREF}product_condition_defs` (`code`, `label`, `sort_order`, `active`, `is_default`) VALUES
+INSERT IGNORE INTO `0_product_condition_defs` (`code`, `label`, `sort_order`, `active`, `is_default`) VALUES
 ('new',             'New',               10, 1, 1),
 ('used_like_new',   'Used - Like New',   20, 1, 0),
 ('used_excellent',  'Used - Excellent',  30, 1, 0),

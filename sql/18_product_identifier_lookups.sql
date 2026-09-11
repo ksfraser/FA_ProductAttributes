@@ -1,4 +1,4 @@
-CREATE TABLE IF NOT EXISTS `{TB_PREF}product_identifier_lookups` (
+CREATE TABLE IF NOT EXISTS `0_product_identifier_lookups` (
     `id`          int(11) unsigned NOT NULL AUTO_INCREMENT,
     `type`        varchar(32) NOT NULL COMMENT 'brand or manufacturer',
     `name`        varchar(128) NOT NULL,

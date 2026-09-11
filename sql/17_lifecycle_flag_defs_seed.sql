@@ -1,4 +1,4 @@
-INSERT IGNORE INTO `{TB_PREF}product_lifecycle_flag_defs` (`code`, `label`, `sort_order`, `active`) VALUES
+INSERT IGNORE INTO `0_product_lifecycle_flag_defs` (`code`, `label`, `sort_order`, `active`) VALUES
 ('clearance',           'Clearance',            10, 1),
 ('discontinued',        'Discontinued',         20, 1),
 ('on_sale',             'On Sale',              30, 1),

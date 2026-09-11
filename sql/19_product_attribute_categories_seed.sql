@@ -1,4 +1,4 @@
-INSERT IGNORE INTO `{TB_PREF}product_attribute_categories` (`code`, `label`, `description`, `sort_order`, `active`) VALUES
+INSERT IGNORE INTO `0_product_attribute_categories` (`code`, `label`, `description`, `sort_order`, `active`) VALUES
 ('color',            'Color',           'Product color variants',      6, 1),
 ('size_alpha',       'Size (Alpha)',    'S, M, L, XL text sizes',     3, 1),
 ('size_numeric',     'Size (Numeric)',  '30, 32, 34 numeric sizes',   3, 1),
