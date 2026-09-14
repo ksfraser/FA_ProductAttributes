@@ -1,9 +1,14 @@
 # AGENTS.md — KSF FrontAccounting Architecture Notes
 
-Operational memory for the KSF FA infrastructure codebase. Files live under
-`~/Documents/ksf_Infrastructure/fa_modules/`. This doc captures cross-module
-architecture **decisions** and findings. Read this before designing or
-refactoring anything that spans modules.
+Operational memory for the KSF FA infrastructure codebase.
+
+Files live under `/home/kevin/Documents/.
+
+Git repositories (dev trees) live under /home/kevin/Documents/<modulename>.
+
+Files deployed for Integration Testing live under ksf_Infrastructure/fa_modules/`.
+This doc captures cross-module architecture **decisions** and findings. 
+Read this before designing or refactoring anything that spans modules.
 
 > **Companion doc:** `AGENTS_ARCH.md` (co-located, hardlinked into each repo)
 > holds the shared module **conventions** and cross-repo engineering standards
@@ -36,7 +41,8 @@ switch to `ksf_payment_destinations/` immediately.
   `b0ef4da`) for the PHP 7.4 container; lock regeneration is blocked locally on
   the private `ksfraser/import-staging` package.
 - **FA_ProductAttributes issue #52 (child not detected as read-only)** root cause
-  found: two parallel, un-unified parent-relationship mechanisms (see below).
+  found: two parallel, un-unified parent-relationship mechanisms. Full write-up
+  is in that repo's `AGENTS.local.md` (migrated out of this file).
 
 ## The "generic data-dictionary + query-builder" direction (active design)
 
@@ -162,89 +168,72 @@ NEXT STEPS (cross-module): port other modules' DAOs onto `DbConnectionInterface`
   per-row CRUD. Per-row CRUD hooks are not provided by core; they come from the
   traits/adapters above.
 
-## FA_ProductAttributes issue #52 root cause (verified)
+## FA_ProductAttributes — module/tree-specific findings moved to its own repo
 
-Two parallel, un-unified parent-relationship mechanisms:
+Anything FA_ProductAttributes-specific that used to live here (issue #52 root
+cause, Generate Combinations semantics, the ksf-fa blank-page/bootstrap logs for
+that module) has been migrated OUT of this shared file into the repo's
+`AGENTS.local.md` (`~/Documents/FA_ProductAttributes/AGENTS.local.md`). Working
+on that module? Read that file. This shared doc keeps only cross-module
+decisions and mechanics.
 
-| Concern | `product_hierarchy` (via `ProductAttributesDao`) | `product_attribute_assignments.parent_stock_id` (via `VariationsDao`) |
-|---|---|---|
-| Writes | `setProductParent($child,$parent)` (INSERT…ON DUP UPD / DELETE) | `setParentRelationship()` (called by `CreateChildAction`) AND `addAssignment(...,$parentStockId)` |
-| Reads | `getProductParent()` — **used by `VariationsTab` for `$isChild` detection** | `getProductVariations()`, `isVariation()` |
-| Populated on CreateChildAction? | **NO** — nothing calls it | **YES** |
+## FA extension install & activation mechanics (verified 2026-09, cross-module)
 
-- `VariationsDao::setParentRelationship()` (VariationsDao.php:334) writes
-  `product_attribute_assignments.parent_stock_id`.
-- `ProductAttributesDao::setProductParent()`/`getProductParent()`
-  (ProductAttributesDao.php:392/416) write/read `product_hierarchy`.
-- `CreateChildAction::handle()` calls `variationsDao->setParentRelationship($childId,
-  $stockId)` (CreateChildAction.php:88) but NEVER `setProductParent()`.
-- `VariationsTab::renderTabContent()` sets `$isChild = !empty($this->dao->getProductParent($stockId))`
-  (VariationsTab.php, ~line 51-54) and renders read-only + hides buttons when child.
-- Net: generated children (`auto-gas-L-11-36-Ind` etc.) are registered only in
-  `product_attribute_assignments`, so `product_hierarchy` is empty for them →
-  `getProductParent()` returns null → `$isChild` false → read-only protection never
-  engages for generated children → issue #52.
+How FA 2.4.x actually installs/activates third-party extensions — applies to
+every ksf_* module, and is why "clicks on the Extensions page" silently do
+nothing on a fresh mount. Verified against `fa/2.4.3` source + live UAT box.
 
-## FA_ProductAttributes Generate Combinations semantics (2026-09)
+**Registries** — two PHP files of `$installed_extensions` arrays:
+- GLOBAL: `company/installed_extensions.php` (what "Local<pkg>" and the
+  repo-index install write to).
+- PER-COMPANY: `company/<id>/installed_extensions.php` — this is what
+  activation (Refresh/Update) actually reads and rewrites.
+Both must be writable by the container's PHP/MySQL UID (see the per-instance
+bind fix in the repo-local notes).
 
-- Combos derive from the product's OWN value assignments
-  (`product_attribute_assignments`), **one value per category** — NOT from every
-  active value of its assigned categories. A product assigned 4 Awesomeness + 1
-  Shoe Size produces 4 × 1 = 4 combos. (Before: stock 101 `ipad` produced 168
-  because all 7 Color × 2 Shoe × 3 Clothes × 4 Awe taxonomy values were fed in.)
-  Implemented in `GenerateCombosAction::assignedCategoryValues()`.
-- Re-running **Generate** now reconciles the pool: `CombosDao::pruneStale()`
-  deletes uninstantiated rows no longer produced (`child_stock_id IS NULL` only);
-  rows stamped with a child are always preserved. The `syncCombos` insert-only
-  doctrine is gone; orphan reconciliation stays a Create Child concern for
-  *children*, while *pool* staleness is Generate's concern.
-- The Variations tab renders the persisted pool in a "Saved Combinations"
-  fieldset (`VariationSections`... `CombinationPoolSection` +
-  `CombosDao::listCombos`), so the generated set is visible immediately —
-  "changing tabs and coming back shows nothing" was fixed by this, plus
-  `Existing Variations` still lists only instantiated children (Create Child).
-- Live-verified on stock 101: `Combination set saved: 4 new / 4 total. 168 stale
-  combinations pruned.`
+**Registering a local module**: the `Local<pkg>` button
+(`local_extension()` in `admin/inst_module.php`) hardcodes
+`'version' => '-', 'available' => ''` and copies nothing from the module's
+`_init/config`. It includes the module's `hooks.php` and calls
+`install_extension(false)`.
 
-## ksf-fa integration instance — blank-page bootstrap findings (2026-09)
+**Activivating** (the "Activated for '<company>'" view, `extset=<id>`):
+- Checkboxes are named `Active<i>` where `$i` is the index in the MERGED +
+  natural-sorted GLOBAL registry list, NOT the company registry. Map each row's
+  checkbox to its package name from the page HTML before POSTing.
+- POST `extset=<id>&Refresh=Update&Active<i>=1` (needs the current `_token`).
+- Gate: `check_src_ext_version()` in `includes/packages.inc` rejects any
+  version with a leading component below the app's (`2.4.3`). **A version of
+  `'-'` ALWAYS fails** → "incompatible with current application version and
+  cannot be activated". Private/local modules therefore MUST carry a numeric
+  version in the registries (manually set what `_init/config` declares, e.g.
+  `'2.4.4'`), the same value the repo index would have supplied.
+- `activate_hooks($pkg, $comp, true)` then calls the module's
+  `hooks_<pkg>::activate_extension($comp, false)`.
 
-Env access facts + the two stacked bootstrap failures found while E2E-testing the
-condition feature. Container: PHP 7.4.33 + Apache. `podman exec` blocked (`crun:
-/sys/fs/cgroup … Permission denied`) → read FS via `/proc/<pid>/root/var/www/html`,
-execute via HTTP-served PHP in a bind-mounted module `public/` dir.
+**SQL prefix convention in module `sql/` files**: the install engine
+`db_import()` (`admin/db/maintenance_db.inc`) replaces ONLY the literal
+`0_` → `TB_PREF`. It does NOT touch `{TB_PREF}` or `@TB_PREF@` (those only
+work in ksf_FA_Common's own hand-rolled `install_schema()` helper). **All
+extension `sql/*.sql` for the FA install path must use literal `0_` table
+names** — `{TB_PREF}` yields "Table 'ksf_fa.{TB_PREF}x' doesn't exist".
+(FA_ProductAttributes had 4 files with `{TB_PREF}`; fixed to `0_` in commit
+`b9f484e`.)
 
-- **FAModuleMenu double-declare fatal = STALE OPCACHE, not a source bug.** Current
-  `ksf_FA_Common/src/Menu/FAModuleMenu.php` has a working `class_exists(..., false)`
-  guard; the vendored copy `FA_ProductAttributes/vendor/ksfraser/ksf-fa-common/
-  src/Menu/FAModuleMenu.php` has NO guard and wins the race via Composer "files"
-  during session.inc's hooks include loop; `ksf_FA_HRM/hooks.php:12–14` then
-  top-level requires the ksf copy (guard returns). Live opcache held a pre-guard
-  bytecode entry (`validate_timestamps=1, revalidate_freq=2`); one HTTP probe that
-  called `opcache_reset()` cleared it — **no source change needed**.
-- **Blank pages** (`/index.php` + module `public/index.php` → HTTP 200, 0 bytes):
-  `/tmp/php_errors.log` shows session.inc's `[before upgrade]` branch failing
-  relative includes (`./tmp/faillog.php`, `./includes/access_levels.inc`,
-  `./version.php`, `./includes/main.inc`, `./includes/app_entries.inc`) →
-  `Class 'references' not found` at session.inc:469 → `errors.inc` exception_handler
-  calls `end_page()` (defined in main.inc:57, not yet included) → empty body.
-- **Suspect / open question:** CWD appears wrong when session.inc lines 454–457 run
-  (relative `./` includes fail) — a hooks/session_start callback `chdir()`'d, or a
-  request-time composer exec did. Log also shows `The HOME or COMPOSER_HOME
-  environment variable must be set` from a module's `composer install`. All
-  chdir+composer code is method-level (`ensure_composer_dependencies()` /
-  `Utils/ComposerDependencies.php`), not top-level — NOT confirmed as the trigger.
-  `[before upgrade]` means `!$SysPrefs->db_ok` yet `sysprefs.inc:66` compares
-  `version_id` (`2.4.1`) == `$db_version` (`2.4.1`) — likely a transient DB-connect
-  hiccup cached in the session, or prefs-load drift.
-- **Extension registry** `/var/www/html/company/0/installed_extensions.php` (28
-  active). Composer-run candidates: `ksf_FA_EmailManager` (id 29, active, NO
-  `vendor/`, NO `composer.lock`), `ksf_FA_SuggestedPurchaseOrder` (NO `vendor/`).
-  Host dirs missing but shadowed by image copies: `ksf_FA_Attachments`,
-  `ksf_FA_OrgChart`, `ksf_FA_Timesheets`, `ksf_FA_Training`. DB health from the web
-  container is fine (mysqli `ksf-mariadb`/`ksf_user`/`ksf_fa` OK, 586 stock rows).
-- **Handed-off fix path:** set `HOME`/`COMPOSER_HOME` in the container env, vendor
-  the vendor-less active modules (or harden `ComposerDependencies` to restore CWD /
-  `putenv`) and restart the container; then re-run the Playwright E2E (chrome at
-  `~/Documents/ksf_FA_Square/node_modules`, login `opencode`/`opencode`). Scheme
-  was applied directly to the integration DB via an HTTP probe because the FA
-  re-activation UI is unusable while login renders blank.
+**Login gotcha** (`includes/session.inc:545`): without `company_login_name`
+in the POST, login always fails with 401 "Incorrect Password" even when the
+user/password is right. Send `company_login_name=<id>` (+ `_token` from the
+login page).
+
+**Cross-module activation hazard — duplicate ksf-fa-common class load**:
+`ksf_FA_Common` ships `src/autoload.php` as the canonical loader for the
+`ksfraser\FrontAccounting\Common\*` namespaces and explicitly must NOT have a
+PSR-4 pointing at a vendored copy. If another module's Composer autoloader
+(vendored `ksfraser/ksf-fa-common`, e.g. FA_ProductAttributes') loads those
+classes FIRST, then activating ksf_FA_Common (constructor `require_once
+src/autoload.php`) redeclares the already-loaded classes → fatal that kills
+the extension page mid-render (page shows footer only, no message, no
+registry write). Symptom: activation "does nothing". On the UAT box the
+workaround was manual activation (schema via raw SQL, `active => true` set
+directly in both registries). Proper fix is order-independent guarded
+loading in `src/autoload.php`.

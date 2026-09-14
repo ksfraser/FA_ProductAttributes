@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "5b1948a19d102ddd0194215e05e55697",
+    "content-hash": "c8e1a760aa4a10f477d91f3e2bb6457a",
     "packages": [
         {
             "name": "ksfraser/exceptions",
@@ -140,16 +140,16 @@
         },
         {
             "name": "ksfraser/ksf-fa-common",
-            "version": "v1.0.6",
+            "version": "v1.0.9",
             "source": {
                 "type": "git",
                 "url": "https://github.com/ksfraser/ksf_FA_Common.git",
-                "reference": "6f382cbd27cc8bd9cc5f48800a71386f26bca162"
+                "reference": "aa78173206521f4090649bea96f7d3fe98181911"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/ksfraser/ksf_FA_Common/zipball/6f382cbd27cc8bd9cc5f48800a71386f26bca162",
-                "reference": "6f382cbd27cc8bd9cc5f48800a71386f26bca162",
+                "url": "https://api.github.com/repos/ksfraser/ksf_FA_Common/zipball/aa78173206521f4090649bea96f7d3fe98181911",
+                "reference": "aa78173206521f4090649bea96f7d3fe98181911",
                 "shasum": ""
             },
             "require": {
@@ -182,9 +182,9 @@
             "description": "Shared FrontAccounting platform utilities, contracts, and extension points for the KSF ecosystem",
             "support": {
                 "issues": "https://github.com/ksfraser/ksf_FA_Common/issues",
-                "source": "https://github.com/ksfraser/ksf_FA_Common/tree/v1.0.6"
+                "source": "https://github.com/ksfraser/ksf_FA_Common/tree/v1.0.9"
             },
-            "time": "2026-08-16T18:08:54+00:00"
+            "time": "2026-08-31T04:03:33+00:00"
         },
         {
             "name": "ksfraser/ksf-modules-dao",
@@ -283,12 +283,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/ksfraser/Traits.git",
-                "reference": "2d0b46930a4976374dd69dc5a89e8b5ce736ca79"
+                "reference": "7bd2fe30a6af0581db27c87cf6c5f9b5caf7ece7"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/ksfraser/Traits/zipball/2d0b46930a4976374dd69dc5a89e8b5ce736ca79",
-                "reference": "2d0b46930a4976374dd69dc5a89e8b5ce736ca79",
+                "url": "https://api.github.com/repos/ksfraser/Traits/zipball/7bd2fe30a6af0581db27c87cf6c5f9b5caf7ece7",
+                "reference": "7bd2fe30a6af0581db27c87cf6c5f9b5caf7ece7",
                 "shasum": ""
             },
             "require": {
@@ -315,7 +315,7 @@
                 "issues": "https://github.com/ksfraser/Traits/issues",
                 "source": "https://github.com/ksfraser/Traits/tree/main"
             },
-            "time": "2026-08-15T00:27:18+00:00"
+            "time": "2026-08-29T06:05:36+00:00"
         },
         {
             "name": "psr/log",
@@ -441,16 +441,16 @@
         },
         {
             "name": "ksfraser/famock",
-            "version": "v0.10.3",
+            "version": "v0.10.4",
             "source": {
                 "type": "git",
                 "url": "https://github.com/ksfraser/FAMock.git",
-                "reference": "6ba1ece204af849fa0b4170e63fa0ded7c9fc949"
+                "reference": "207d698e3feeb7b2cf8f807731c43a2117aecbf0"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/ksfraser/FAMock/zipball/6ba1ece204af849fa0b4170e63fa0ded7c9fc949",
-                "reference": "6ba1ece204af849fa0b4170e63fa0ded7c9fc949",
+                "url": "https://api.github.com/repos/ksfraser/FAMock/zipball/207d698e3feeb7b2cf8f807731c43a2117aecbf0",
+                "reference": "207d698e3feeb7b2cf8f807731c43a2117aecbf0",
                 "shasum": ""
             },
             "require": {
@@ -483,9 +483,9 @@
             "description": "FrontAccounting function mocks for unit testing",
             "support": {
                 "issues": "https://github.com/ksfraser/FAMock/issues",
-                "source": "https://github.com/ksfraser/FAMock/tree/v0.10.3"
+                "source": "https://github.com/ksfraser/FAMock/tree/v0.10.4"
             },
-            "time": "2026-07-24T01:13:17+00:00"
+            "time": "2026-08-24T16:33:25+00:00"
         },
         {
             "name": "myclabs/deep-copy",
@@ -1037,16 +1037,16 @@
         },
         {
             "name": "phpunit/phpunit",
-            "version": "9.6.35",
+            "version": "9.6.36",
             "source": {
                 "type": "git",
                 "url": "https://github.com/sebastianbergmann/phpunit.git",
-                "reference": "0edba2f3a0c48df3553cb9b640810b30df60302b"
+                "reference": "abab27ed286d3e1246fbbfe6b56bfd732d945ec9"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/sebastianbergmann/phpunit/zipball/0edba2f3a0c48df3553cb9b640810b30df60302b",
-                "reference": "0edba2f3a0c48df3553cb9b640810b30df60302b",
+                "url": "https://api.github.com/repos/sebastianbergmann/phpunit/zipball/abab27ed286d3e1246fbbfe6b56bfd732d945ec9",
+                "reference": "abab27ed286d3e1246fbbfe6b56bfd732d945ec9",
                 "shasum": ""
             },
             "require": {
@@ -1071,7 +1071,7 @@
                 "sebastian/comparator": "^4.0.10",
                 "sebastian/diff": "^4.0.6",
                 "sebastian/environment": "^5.1.5",
-                "sebastian/exporter": "^4.0.8",
+                "sebastian/exporter": "^4.0.9",
                 "sebastian/global-state": "^5.0.8",
                 "sebastian/object-enumerator": "^4.0.4",
                 "sebastian/resource-operations": "^3.0.4",
@@ -1120,7 +1120,7 @@
             "support": {
                 "issues": "https://github.com/sebastianbergmann/phpunit/issues",
                 "security": "https://github.com/sebastianbergmann/phpunit/security/policy",
-                "source": "https://github.com/sebastianbergmann/phpunit/tree/9.6.35"
+                "source": "https://github.com/sebastianbergmann/phpunit/tree/9.6.36"
             },
             "funding": [
                 {
@@ -1128,7 +1128,7 @@
                     "type": "other"
                 }
             ],
-            "time": "2026-07-06T14:48:07+00:00"
+            "time": "2026-08-11T06:25:15+00:00"
         },
         {
             "name": "sebastian/cli-parser",
@@ -1571,16 +1571,16 @@
         },
         {
             "name": "sebastian/exporter",
-            "version": "4.0.8",
+            "version": "4.0.9",
             "source": {
                 "type": "git",
                 "url": "https://github.com/sebastianbergmann/exporter.git",
-                "reference": "14c6ba52f95a36c3d27c835d65efc7123c446e8c"
+                "reference": "4352c1a3df741a7ba9e61af6fed51d1fee41cbf7"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/sebastianbergmann/exporter/zipball/14c6ba52f95a36c3d27c835d65efc7123c446e8c",
-                "reference": "14c6ba52f95a36c3d27c835d65efc7123c446e8c",
+                "url": "https://api.github.com/repos/sebastianbergmann/exporter/zipball/4352c1a3df741a7ba9e61af6fed51d1fee41cbf7",
+                "reference": "4352c1a3df741a7ba9e61af6fed51d1fee41cbf7",
                 "shasum": ""
             },
             "require": {
@@ -1636,7 +1636,7 @@
             ],
             "support": {
                 "issues": "https://github.com/sebastianbergmann/exporter/issues",
-                "source": "https://github.com/sebastianbergmann/exporter/tree/4.0.8"
+                "source": "https://github.com/sebastianbergmann/exporter/tree/4.0.9"
             },
             "funding": [
                 {
@@ -1656,7 +1656,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2025-09-24T06:03:27+00:00"
+            "time": "2026-08-11T04:55:59+00:00"
         },
         {
             "name": "sebastian/global-state",
@@ -1905,16 +1905,16 @@
         },
         {
             "name": "sebastian/recursion-context",
-            "version": "4.0.6",
+            "version": "4.0.7",
             "source": {
                 "type": "git",
                 "url": "https://github.com/sebastianbergmann/recursion-context.git",
-                "reference": "539c6691e0623af6dc6f9c20384c120f963465a0"
+                "reference": "c85be6922b7fd365942b986b9a50397d65407611"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/sebastianbergmann/recursion-context/zipball/539c6691e0623af6dc6f9c20384c120f963465a0",
-                "reference": "539c6691e0623af6dc6f9c20384c120f963465a0",
+                "url": "https://api.github.com/repos/sebastianbergmann/recursion-context/zipball/c85be6922b7fd365942b986b9a50397d65407611",
+                "reference": "c85be6922b7fd365942b986b9a50397d65407611",
                 "shasum": ""
             },
             "require": {
@@ -1956,7 +1956,7 @@
             "homepage": "https://github.com/sebastianbergmann/recursion-context",
             "support": {
                 "issues": "https://github.com/sebastianbergmann/recursion-context/issues",
-                "source": "https://github.com/sebastianbergmann/recursion-context/tree/4.0.6"
+                "source": "https://github.com/sebastianbergmann/recursion-context/tree/4.0.7"
             },
             "funding": [
                 {
@@ -1976,7 +1976,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2025-08-10T06:57:39+00:00"
+            "time": "2026-08-11T05:25:24+00:00"
         },
         {
             "name": "sebastian/resource-operations",
