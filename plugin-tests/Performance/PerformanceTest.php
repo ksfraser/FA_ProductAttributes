@@ -107,18 +107,18 @@ class PerformanceTest extends TestCase
     // ------------------------------------------------------------------
 
     /**
-     * Verify that schema.sql defines KEY indexes for every lookup column
+     * Verify that the schema defines KEY indexes for every lookup column
      * that the application queries by.
+     *
+     * The schema is split one-file-per-table under sql/ (see the
+     * <table>_uninstall.sql convention in AGENTS_ARCH.md), so this reads the
+     * whole directory rather than a single monolithic sql/schema.sql, which no
+     * longer exists. Reading only sql/schema.sql made this test SKIP silently,
+     * so none of the index guarantees below were actually being enforced.
      */
     public function testSchemaSqlDefinesRequiredIndexes(): void
     {
-        $schemaFile = dirname(__DIR__, 2) . '/sql/schema.sql';
-
-        if (!is_file($schemaFile)) {
-            $this->markTestSkipped('sql/schema.sql not present in this environment');
-        }
-
-        $sql = file_get_contents($schemaFile);
+        $sql = $this->schemaSql();
 
         $requiredIndexes = [
             // product_attribute_assignments — most queried
@@ -147,16 +147,37 @@ class PerformanceTest extends TestCase
      */
     public function testSchemaSqlDefinesUniqueConstraints(): void
     {
-        $schemaFile = dirname(__DIR__, 2) . '/sql/schema.sql';
-
-        if (!is_file($schemaFile)) {
-            $this->markTestSkipped('sql/schema.sql not present in this environment');
-        }
-
-        $sql = file_get_contents($schemaFile);
+        $sql = $this->schemaSql();
 
         $this->assertStringContainsString('uq_stock_category_value', $sql, 'Unique constraint on assignments prevents duplicate entries');
         $this->assertStringContainsString('uq_stock_category', $sql, 'Unique constraint on category assignments');
         $this->assertStringContainsString('uq_child', $sql, 'Unique constraint on hierarchy child_stock_id');
+    }
+
+    /**
+     * Concatenates every per-table SQL file under sql/.
+     *
+     * The schema is one-file-per-table, so index/constraint names must be
+     * searched across the whole set. Fails loudly if the directory is empty —
+     * a silently-empty string would satisfy none of the assertions above and
+     * turn this into a vacuous pass.
+     *
+     * @return string All SQL under sql/
+     */
+    private function schemaSql(): string
+    {
+        $files = glob(dirname(__DIR__, 2) . '/sql/*.sql');
+
+        $this->assertNotEmpty(
+            $files,
+            'no .sql files found under sql/ — the schema is missing, not relocated'
+        );
+
+        $sql = '';
+        foreach ($files as $file) {
+            $sql .= file_get_contents($file) . "\n";
+        }
+
+        return $sql;
     }
 }
