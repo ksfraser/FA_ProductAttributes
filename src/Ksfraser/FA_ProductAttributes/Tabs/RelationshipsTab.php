@@ -4,8 +4,8 @@ declare(strict_types=1);
 namespace Ksfraser\FA_ProductAttributes\Tabs;
 
 use FrontAccounting\ProductAttributes\Plugin\AbstractTab;
+use Ksfraser\FA_ProductAttributes\Dao\RelationshipsDao;
 use ksfraser\FrontAccounting\Common\Repository\EntityRegistry;
-use ksfraser\RelatedTo\DTO\RelatedQueryDto;
 use ksfraser\RelatedTo\DTO\RelatedRecordDto;
 
 /**
@@ -18,12 +18,25 @@ use ksfraser\RelatedTo\DTO\RelatedRecordDto;
  *
  * Label resolution uses the shared EntityRegistry (ksf_FA_Common) to find
  * the owning table, primary key and label column for each entity type, then
- * issues a native FA db_query against that table.
+ * delegates to RelationshipsDao (named params via FrontAccountingDbAdapter ->
+ * native FA db_* calls at runtime).
  *
  * @since 1.2.0
  */
 class RelationshipsTab extends AbstractTab
 {
+    /** @var RelationshipsDao */
+    private $dao;
+
+    /** @var EntityRegistry */
+    private $registry;
+
+    public function __construct(RelationshipsDao $dao, EntityRegistry $registry = null)
+    {
+        $this->dao = $dao;
+        $this->registry = $registry ?? new EntityRegistry();
+    }
+
     public function getName(): string
     {
         return 'product_relationships';
@@ -166,15 +179,15 @@ class RelationshipsTab extends AbstractTab
     }
 
     /**
-     * Resolve display labels for all related records via the EntityRegistry.
+     * Resolve display labels for all related records via the EntityRegistry +
+     * RelationshipsDao.
      *
      * @return array<string, array<string, string>> rhsType => rhsId => label
      */
     private function resolveLabels(array $related): array
     {
         $labels = array();
-        $registry = new EntityRegistry();
-        $allTypes = $registry->all();
+        $allTypes = $this->registry->all();
 
         foreach ($related as $rel) {
             if (!$rel instanceof RelatedRecordDto) {
@@ -192,29 +205,14 @@ class RelationshipsTab extends AbstractTab
                 continue;
             }
 
-            if (!function_exists('db_query')
-                || !function_exists('db_fetch_assoc')
-                || !function_exists('db_num_rows')
-                || !defined('TB_PREF')) {
-                $labels[$rel->rhsType][$rhsId] = $rhsId;
-                continue;
-            }
+            $label = $this->dao->resolveLabel(
+                $def['table'],
+                $def['pk'],
+                $def['label'],
+                $rhsId
+            );
 
-            $table = TB_PREF . $def['table'];
-            $pk    = $def['pk'];
-            $labelCol = $def['label'];
-            $id    = $this->escapeSql($rhsId);
-
-            $sql = "SELECT `$labelCol` AS label FROM `$table` WHERE `$pk` = $id LIMIT 1";
-            $result = db_query($sql);
-            if ($result !== false && db_num_rows($result) > 0) {
-                $row = db_fetch_assoc($result);
-                $labels[$rel->rhsType][$rhsId] = ($row !== false && !empty($row['label']))
-                    ? (string) $row['label']
-                    : $rhsId;
-            } else {
-                $labels[$rel->rhsType][$rhsId] = $rhsId;
-            }
+            $labels[$rel->rhsType][$rhsId] = $label !== null ? $label : $rhsId;
         }
 
         return $labels;
@@ -225,8 +223,7 @@ class RelationshipsTab extends AbstractTab
      */
     private function typeLabel(string $type): string
     {
-        $registry = new EntityRegistry();
-        $allTypes = $registry->all();
+        $allTypes = $this->registry->all();
         $def = isset($allTypes[$type]) ? $allTypes[$type] : null;
         if ($def !== null && !empty($def['title'])) {
             return (string) $def['title'];
@@ -248,24 +245,5 @@ class RelationshipsTab extends AbstractTab
         );
 
         return isset($fallbacks[$type]) ? $fallbacks[$type] : ucfirst((string) $type);
-    }
-
-    /**
-     * Escape a value as a SQL string literal.
-     */
-    private function escapeSql(string $value): string
-    {
-        $db = null;
-        if (isset($GLOBALS['db'])
-            && is_object($GLOBALS['db'])
-            && method_exists($GLOBALS['db'], 'real_escape_string')) {
-            $db = $GLOBALS['db'];
-        }
-
-        if ($db !== null) {
-            return "'" . $db->real_escape_string($value) . "'";
-        }
-
-        return "'" . addslashes($value) . "'";
     }
 }

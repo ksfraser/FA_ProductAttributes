@@ -17,6 +17,7 @@ use Ksfraser\FA_ProductAttributes\Dao\ProductCategoryHierarchyDao;
 use Ksfraser\FA_ProductAttributes\Dao\ProductShippingClassesDao;
 use Ksfraser\FA_ProductAttributes\Dao\ProductCartRulesDao;
 use Ksfraser\FA_ProductAttributes\Dao\ProductRelatedProductsDao;
+use Ksfraser\FA_ProductAttributes\Dao\RelationshipsDao;
 use Ksfraser\FA_ProductAttributes\Dao\ProductMeasurementUnitsDao;
 use Ksfraser\FA_ProductAttributes\Handler\ProductAttributesHandler;
 use Ksfraser\FA_ProductAttributes\Plugin\PluginLoader;
@@ -406,7 +407,7 @@ class hooks_FA_ProductAttributes extends hooks
         $registry->register(new WarrantyTab($services['warranty_dao']));
         $registry->register(new VariationsTab($services['variations_dao'], $services['dao'], $services['db']));
         $registry->register(new TagsTab($services['dao'], $services['tags_dao']));
-$registry->register(new RelationshipsTab());
+$registry->register(new RelationshipsTab($services['relationships_dao']));
 
         $GLOBALS['fa_product_attributes_tab_registry'] = $registry;
         return $registry;
@@ -522,6 +523,7 @@ $registry->register(new RelationshipsTab());
             'shipping_classes_dao' => $shippingClassesDao,
             'cart_rules_dao' => $cartRulesDao,
             'related_products_dao' => $relatedProductsDao,
+        'relationships_dao' => new RelationshipsDao($db),
             'measurement_units_dao' => $measurementUnitsDao,
         );
 
