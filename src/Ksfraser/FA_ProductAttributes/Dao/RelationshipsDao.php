@@ -6,16 +6,17 @@ namespace Ksfraser\FA_ProductAttributes\Dao;
 use Ksfraser\ModulesDAO\Db\DbAdapterInterface;
 
 /**
- * Label resolution for related records via the shared EntityRegistry.
+ * Label resolution and option lists for related records via the shared
+ * EntityRegistry.
  *
  * Queries the owning table of each entity type (customer, supplier, item,
- * invoice, contact, …) to resolve a primary key to its display label, using
- * named params through the DbAdapterInterface (which translates to FA's
- * native db_* calls at runtime).
+ * invoice, contact, …) to resolve a primary key to its display label, or to
+ * list id=>label options for a type's picker. All SQL goes through
+ * DbAdapterInterface (named params -> native FA db_* calls at runtime).
  *
  * Table/column identifiers come from the trusted EntityRegistry, not user
- * input, so they are interpolated via sprintf placeholders rather than
- * bound params (bound params only work for values, not identifiers).
+ * input, so they are interpolated via sprintf placeholders rather than bound
+ * params (bound params only work for values, not identifiers).
  *
  * @since 1.2.0
  */
@@ -57,5 +58,36 @@ class RelationshipsDao
         }
 
         return null;
+    }
+
+    /**
+     * List id => label options for one entity type's owning table.
+     *
+     * @param string $table   Table name without the company prefix
+     * @param string $pk      Primary key column name
+     * @param string $labelCol Label column name
+     * @return array<string, string> id => label
+     * @since 1.2.0
+     */
+    public function listOptions(string $table, string $pk, string $labelCol): array
+    {
+        $sql = sprintf(
+            'SELECT `%s`, `%s` FROM `%s` ORDER BY `%s`',
+            $pk,
+            $labelCol,
+            $table,
+            $labelCol
+        );
+
+        $options = array();
+        foreach ($this->db->query($sql, []) as $row) {
+            $key   = (string) ($row[$pk] ?? '');
+            $label = (string) ($row[$labelCol] ?? '');
+            if ($key !== '' && $label !== '') {
+                $options[$key] = $label;
+            }
+        }
+
+        return $options;
     }
 }

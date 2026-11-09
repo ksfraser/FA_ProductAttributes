@@ -6,20 +6,28 @@ namespace Ksfraser\FA_ProductAttributes\Tabs;
 use FrontAccounting\ProductAttributes\Plugin\AbstractTab;
 use Ksfraser\FA_ProductAttributes\Dao\RelationshipsDao;
 use ksfraser\FrontAccounting\Common\Repository\EntityRegistry;
+use ksfraser\RelatedTo\DTO\RelatedQueryDto;
 use ksfraser\RelatedTo\DTO\RelatedRecordDto;
+use ksfraser\RelatedTo\UI\DefaultRelatedRecordsRenderer;
+use ksfraser\RelatedTo\UI\RelateRecordsBar;
 
 /**
  * Relationships tab — shows records related to this item via RelatedTo.
  *
- * Displays all records related to the current stock item (the item may be
- * either the lhs or rhs side of the association), grouped by related entity
- * type with resolved labels. Each row offers a Remove control that deletes
- * the association from 0_ksf_RelatedTo.
+ * Displays a "Relate to" bar (Type DDL -> Record DDL -> Relate button) for
+ * creating associations through the RelatedTo module hooks, then lists every
+ * record related to the current item (symmetric — item may be lhs or rhs),
+ * grouped by related entity type under collapsible twistie sections with
+ * resolved labels. Each row offers a Remove control.
  *
- * Label resolution uses the shared EntityRegistry (ksf_FA_Common) to find
- * the owning table, primary key and label column for each entity type, then
- * delegates to RelationshipsDao (named params via FrontAccountingDbAdapter ->
- * native FA db_* calls at runtime).
+ * Listing uses the `RELATED_TO` hook; assignment uses the `RELATE_RECORDS`
+ * hook — both dispatched to `ksf_FA_RelatedTo`. Label/URL resolution uses the
+ * shared EntityRegistry (ksf_FA_Common) + RelationshipsDao (named params via
+ * FrontAccountingDbAdapter -> native FA db_* calls at runtime).
+ *
+ * The "Relate to" bar and the twistie display both come from
+ * `ksfraser\RelatedTo\UI` so every module reuses the same controls instead of
+ * re-inventing them.
  *
  * @since 1.2.0
  */
@@ -30,6 +38,12 @@ class RelationshipsTab extends AbstractTab
 
     /** @var EntityRegistry */
     private $registry;
+
+    /** @var RelateRecordsBar */
+    private $bar;
+
+    /** @var string|null Type key submitted in the Relate-to bar */
+    private $submittedType = '';
 
     public function __construct(RelationshipsDao $dao, EntityRegistry $registry = null)
     {
@@ -59,109 +73,211 @@ class RelationshipsTab extends AbstractTab
 
     public function renderTabContent(string $stockId): void
     {
-        // Handle remove POST before rendering.
-        if ($_SERVER['REQUEST_METHOD'] === 'POST' && $stockId !== '') {
-            if (isset($_POST['pa_remove_relationship'])) {
-                $rhsType = (string) ($_POST['rhs_type'] ?? '');
-                $rhsId   = (string) ($_POST['rhs_id'] ?? '');
-                $linkRole = isset($_POST['link_role']) ? (string) $_POST['link_role'] : null;
-                $this->removeRelationship($stockId, $rhsType, $rhsId, $linkRole);
+        // Handle mutating requests before rendering.
+        if ($stockId !== '') {
+            if (isset($_GET['remove_rel_type'])) {
+                $this->removeRelationship(
+                    $stockId,
+                    (string) $_GET['remove_rel_type'],
+                    (string) $_GET['remove_rel_id'],
+                    isset($_GET['remove_rel_role']) ? (string) $_GET['remove_rel_role'] : null
+                );
                 display_notification(_('Relationship removed.'));
+            } elseif (isset($_POST['relate_record_action'])) {
+                $rhsType = (string) ($_POST['relate_type'] ?? '');
+                $rhsId   = (string) ($_POST['relate_record'] ?? '');
+                $this->doRelate($stockId, $rhsType, $rhsId);
+                display_notification(_('Record related.'));
             }
         }
+
+        $this->setupBar($stockId);
 
         $related = $this->getRelatedRecords($stockId);
         $labels  = $this->resolveLabels($related);
 
         echo '<div class="relationships-tab">';
-        echo '<h2>' . _('Related Records') . '</h2>';
 
-        if (empty($related)) {
-            echo '<p>' . _('This item is not related to any records.') . '</p>';
-            echo '</div>';
-            return;
-        }
+        // ---- Relate-to bar (shared component) ----------------------------
+        echo $this->bar->render();
 
-        echo '<table class="table" style="width:100%; border-collapse:collapse;">';
-        echo '<thead><tr>';
-        echo '<th>' . _('Related Record') . '</th>';
-        echo '<th>' . _('Role') . '</th>';
-        echo '<th></th>';
-        echo '</tr></thead>';
-        echo '<tbody>';
+        // ---- Twistie related-records display (shared renderer) -----------
+        $renderer = new DefaultRelatedRecordsRenderer(array(
+            'css_class'    => 'related-records',
+            'header_class' => 'related-header',
+            'table_class'  => 'related-table',
+            'table_border' => true,
+            'type_labels'  => $this->registry->typeLabels(),
+            'label_resolver' => array($this, 'resolveLabel'),
+            'url_resolver'   => array($this, 'resolveUrl'),
+            'remove_resolver' => array($this, 'renderRemove'),
+            'escape'         => array($this, 'esc'),
+            'translate'      => function ($v) { return _( $v ); },
+        ));
 
-        $currentType = null;
-        foreach ($related as $rel) {
-            if (!$rel instanceof RelatedRecordDto) {
-                continue;
-            }
+        echo $renderer->renderRelatedRecords(
+            'item',
+            $stockId,
+            $related,
+            array()
+        );
 
-            // Section header when the related type changes.
-            if ($rel->rhsType !== $currentType) {
-                $currentType = $rel->rhsType;
-                echo '<tr><td colspan="3"><strong>'
-                    . htmlspecialchars($this->typeLabel($rel->rhsType))
-                    . '</strong></td></tr>';
-            }
-
-            $rhsId = (string) $rel->rhsId;
-            $label = isset($labels[$rel->rhsType][$rhsId])
-                ? $labels[$rel->rhsType][$rhsId]
-                : $rhsId;
-            $role = $rel->linkRole !== null ? $rel->linkRole : _('reference');
-
-            echo '<tr>';
-            echo '<td>' . htmlspecialchars($label) . '</td>';
-            echo '<td>' . htmlspecialchars($role) . '</td>';
-            echo '<td>';
-            echo '<form method="post" style="display:inline;margin:0;">';
-            echo '<input type="hidden" name="pa_remove_relationship" value="1">';
-            echo '<input type="hidden" name="rhs_type" value="'
-                . htmlspecialchars($rel->rhsType) . '">';
-            echo '<input type="hidden" name="rhs_id" value="'
-                . htmlspecialchars($rhsId) . '">';
-            if ($rel->linkRole !== null) {
-                echo '<input type="hidden" name="link_role" value="'
-                    . htmlspecialchars($rel->linkRole) . '">';
-            }
-            echo '<button type="submit" class="button" onclick="return confirm(\''
-                . _('Remove this relationship?') . '\');">' . _('Remove') . '</button>';
-            echo '</form>';
-            echo '</td>';
-            echo '</tr>';
-        }
-
-        echo '</tbody></table>';
         echo '</div>';
     }
 
     /**
-     * Fetch all records related to this item (symmetric — item may be lhs or rhs).
+     * Build the shared RelateRecordsBar for this item, wiring FA hooks for
+     * type/record options.
+     */
+    private function setupBar(string $stockId): void
+    {
+        $bar = new RelateRecordsBar(array(
+            'lhs_type'    => 'item',
+            'lhs_id'      => $stockId,
+            'form_action' => $_SERVER['REQUEST_URI'] ?? '',
+            'type_options_provider' => array($this, 'availableTypes'),
+            'record_options_provider' => array($this, 'recordOptionsFor'),
+            'escape'      => array($this, 'esc'),
+            'translate'   => function ($v) { return _( $v ); },
+        ));
+
+        if (!empty($_POST['relate_type'])) {
+            $bar->setSelectedType((string) $_POST['relate_type']);
+            $this->submittedType = (string) $_POST['relate_type'];
+        } elseif ($this->submittedType !== '') {
+            $bar->setSelectedType($this->submittedType);
+        }
+
+        $this->bar = $bar;
+    }
+
+    /**
+     * Available relate-to types, from RELATED_MODULES hook responses or the
+     * EntityRegistry pickable types as fallback.
+     *
+     * @return array<string,string> type key => label
+     */
+    public function availableTypes(): array
+    {
+        if (function_exists('hook_invoke_all')) {
+            $data = ['modules' => array()];
+            hook_invoke_all('RELATED_MODULES', $data);
+            $modules = isset($data['modules']) && is_array($data['modules'])
+                ? $data['modules']
+                : array();
+            $types = array();
+            foreach ($modules as $entry) {
+                if (!is_array($entry)) {
+                    continue;
+                }
+                $key  = isset($entry['type']) ? (string) $entry['type'] : '';
+                $label = isset($entry['label']) ? (string) $entry['label'] : $key;
+                if ($key !== '') {
+                    $types[$key] = $label;
+                }
+            }
+            if (!empty($types)) {
+                return $types;
+            }
+        }
+
+        $types = array();
+        foreach ($this->registry->pickable() as $key => $def) {
+            $types[$key] = isset($def['title']) ? (string) $def['title'] : $key;
+        }
+
+        return $types;
+    }
+
+    /**
+     * Record id => label options for one entity type, via a
+     * `GET_<Type>Options` hook responder or a direct table read fallback.
+     *
+     * @param string $type Entity type key
+     * @return array<string,string>
+     */
+    public function recordOptionsFor(string $type): array
+    {
+        if (function_exists('hook_invoke_all')) {
+            $hookName = 'get' . ucfirst((string) $type) . 'Options';
+            $payload  = ['entity_type' => $type, 'options' => array()];
+            hook_invoke_all($hookName, $payload);
+            if (isset($payload['options']) && is_array($payload['options'])) {
+                $options = array();
+                foreach ($payload['options'] as $value => $label) {
+                    $options[(string) $value] = (string) $label;
+                }
+                if (!empty($options)) {
+                    return $options;
+                }
+            }
+        }
+
+        $def = $this->registry->get($type);
+        if ($def === null) {
+            return array();
+        }
+
+        return $this->dao->listOptions($def['table'], $def['pk'], $def['label']);
+    }
+
+    // ------------------------------------------------------------------
+    // Mutations via RelatedTo hooks / repository
+    // ------------------------------------------------------------------
+
+    /**
+     * Create a relationship from this item to the selected record.
+     */
+    private function doRelate(string $stockId, string $rhsType, string $rhsId): void
+    {
+        if ($rhsType === '' || $rhsId === '') {
+            return;
+        }
+
+        $dto = new RelatedRecordDto('item', $stockId, $rhsType, $rhsId, 'reference');
+
+        if (function_exists('hook_invoke')) {
+            $result = $dto;
+            hook_invoke('ksf_FA_RelatedTo', 'RELATE_RECORDS', $result, null);
+            return;
+        }
+
+        $repoClass = '\\ksfraser\\FrontAccounting\\RelatedTo\\Repository\\RelatedRecordRepository';
+        if (class_exists($repoClass)) {
+            (new $repoClass())->relate($dto);
+        }
+    }
+
+    /**
+     * Fetch all records related to this item via the RELATED_TO hook.
      *
      * @return RelatedRecordDto[]
      */
     private function getRelatedRecords(string $stockId): array
     {
-        $repoClass = '\\ksfraser\\FrontAccounting\\RelatedTo\\Repository\\RelatedRecordRepository';
-        if (!class_exists($repoClass)) {
+        if (!function_exists('hook_invoke')) {
             return array();
         }
 
-        $repo = new $repoClass();
-        $related = $repo->relatedSymmetric('item', $stockId);
+        $query = new RelatedQueryDto('item', $stockId);
+        $result = $query;
+        hook_invoke('ksf_FA_RelatedTo', 'RELATED_TO', $result, null);
 
-        $out = array();
-        foreach ($related as $rel) {
-            if ($rel instanceof RelatedRecordDto) {
-                $out[] = $rel;
+        $dtos = array();
+        if (is_array($result) && isset($result['related']) && is_array($result['related'])) {
+            foreach ($result['related'] as $rel) {
+                if ($rel instanceof RelatedRecordDto) {
+                    $dtos[] = $rel;
+                }
             }
         }
 
-        return $out;
+        return $dtos;
     }
 
     /**
-     * Remove a relationship from the master table.
+     * Remove a relationship from the master table (direct repository call;
+     * RelatedTo exposes no UNRELATE hook).
      */
     private function removeRelationship(
         string $stockId,
@@ -174,76 +290,59 @@ class RelationshipsTab extends AbstractTab
             return;
         }
 
-        $repo = new $repoClass();
-        $repo->unrelate('item', $stockId, $rhsType, $rhsId, $linkRole);
+        (new $repoClass())->unrelate('item', $stockId, $rhsType, $rhsId, $linkRole);
+    }
+
+    // ------------------------------------------------------------------
+    // Renderer callbacks
+    // ------------------------------------------------------------------
+
+    /**
+     * Resolve a record label via EntityRegistry + RelationshipsDao.
+     */
+    public function resolveLabel(string $type, string $id): string
+    {
+        $def = $this->registry->get($type);
+        if ($def === null) {
+            return $id;
+        }
+
+        $label = $this->dao->resolveLabel($def['table'], $def['pk'], $def['label'], $id);
+        return $label !== null ? $label : $id;
     }
 
     /**
-     * Resolve display labels for all related records via the EntityRegistry +
-     * RelationshipsDao.
-     *
-     * @return array<string, array<string, string>> rhsType => rhsId => label
+     * Resolve a record URL via EntityUrlResolver pattern — best effort.
      */
-    private function resolveLabels(array $related): array
+    public function resolveUrl(string $type, string $id): string
     {
-        $labels = array();
-        $allTypes = $this->registry->all();
-
-        foreach ($related as $rel) {
-            if (!$rel instanceof RelatedRecordDto) {
-                continue;
-            }
-
-            $rhsId = (string) $rel->rhsId;
-            if (isset($labels[$rel->rhsType][$rhsId])) {
-                continue;
-            }
-
-            $def = isset($allTypes[$rel->rhsType]) ? $allTypes[$rel->rhsType] : null;
-            if ($def === null) {
-                $labels[$rel->rhsType][$rhsId] = $rhsId;
-                continue;
-            }
-
-            $label = $this->dao->resolveLabel(
-                $def['table'],
-                $def['pk'],
-                $def['label'],
-                $rhsId
-            );
-
-            $labels[$rel->rhsType][$rhsId] = $label !== null ? $label : $rhsId;
-        }
-
-        return $labels;
+        return '#';
     }
 
     /**
-     * Human label for an entity type, from the registry title with fallbacks.
+     * Render a Remove link for one related record (GET-based, processed at
+     * the top of renderTabContent).
      */
-    private function typeLabel(string $type): string
+    public function renderRemove(RelatedRecordDto $rel, string $lhsId): string
     {
-        $allTypes = $this->registry->all();
-        $def = isset($allTypes[$type]) ? $allTypes[$type] : null;
-        if ($def !== null && !empty($def['title'])) {
-            return (string) $def['title'];
+        $url = $_SERVER['REQUEST_URI'] ?? '';
+        $sep = strpos($url, '?') === false ? '?' : '&';
+        $url .= $sep . 'remove_rel_type=' . urlencode($rel->rhsType)
+            . '&remove_rel_id=' . urlencode((string) $rel->rhsId);
+        if ($rel->linkRole !== null) {
+            $url .= '&remove_rel_role=' . urlencode($rel->linkRole);
         }
 
-        $fallbacks = array(
-            'customer'    => _('Customers'),
-            'supplier'    => _('Suppliers'),
-            'item'        => _('Items'),
-            'contact'     => _('Contacts'),
-            'invoice'     => _('Invoices'),
-            'meeting'     => _('Meetings'),
-            'opportunity' => _('Opportunities'),
-            'project'     => _('Projects'),
-            'task'        => _('Tasks'),
-            'contract'    => _('Contracts'),
-            'calendar'    => _('Calendar Entries'),
-            'attachment'  => _('Attachments'),
-        );
+        return '<a href="' . $this->esc($url) . '" onclick="return confirm(\''
+            . $this->esc(_('Remove this relationship?')) . '\');">'
+            . _('Remove') . '</a>';
+    }
 
-        return isset($fallbacks[$type]) ? $fallbacks[$type] : ucfirst((string) $type);
+    /**
+     * HTML escape.
+     */
+    private function esc(string $value): string
+    {
+        return htmlspecialchars((string) $value, ENT_QUOTES, 'UTF-8');
     }
 }
