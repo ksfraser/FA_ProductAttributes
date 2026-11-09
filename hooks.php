@@ -30,6 +30,7 @@ use Ksfraser\FA_ProductAttributes\Tabs\UrlsTab;
 use Ksfraser\FA_ProductAttributes\Tabs\WarrantyTab;
 use Ksfraser\FA_ProductAttributes\Tabs\VariationsTab;
 use Ksfraser\FA_ProductAttributes\Tabs\TagsTab;
+use Ksfraser\FA_ProductAttributes\Tabs\RelationshipsTab;
 use Ksfraser\FA_ProductAttributes\Variations\Dao\VariationsDao;
 use FrontAccounting\ProductAttributes\Variations\Service\FrontAccountingVariationService;
 use Ksfraser\ModulesDAO\Db\FrontAccountingDbAdapter;
@@ -405,6 +406,7 @@ class hooks_FA_ProductAttributes extends hooks
         $registry->register(new WarrantyTab($services['warranty_dao']));
         $registry->register(new VariationsTab($services['variations_dao'], $services['dao'], $services['db']));
         $registry->register(new TagsTab($services['dao'], $services['tags_dao']));
+$registry->register(new RelationshipsTab());
 
         $GLOBALS['fa_product_attributes_tab_registry'] = $registry;
         return $registry;

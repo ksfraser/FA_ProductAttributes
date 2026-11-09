@@ -15,6 +15,10 @@
     {
       "type": "vcs",
       "url": "https://github.com/ksfraser/ksf_ModulesDAO.git"
+    },
+    {
+      "type": "path",
+      "url": "/home/kevin/Documents/ksf_FA_RelatedTo"
     }
   ],
   "require": {
@@ -23,6 +27,7 @@
     "ksfraser/ksf-modules-dao": "^0.3",
     "ksfraser/ksf-schemamanager": "*",
     "ksfraser/ksf-fa-common": "*",
+    "ksfraser/ksf-fa-related-to": "^1.0",
     "ksfraser/fa-product-attributes-core": "*",
     "ksfraser/traits": "^1.4 || dev-main"
   },
@@ -43,7 +48,7 @@
   },
   "config": {
     "platform": {
-      "php": "7.3.21"
+      "php": "7.4.33"
     }
   }
 }

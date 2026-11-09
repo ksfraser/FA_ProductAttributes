@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "c8e1a760aa4a10f477d91f3e2bb6457a",
+    "content-hash": "a7dbc078a8607e6c26aa47561fd4fdb1",
     "packages": [
         {
             "name": "ksfraser/exceptions",
@@ -187,6 +187,35 @@
             "time": "2026-08-31T04:03:33+00:00"
         },
         {
+            "name": "ksfraser/ksf-fa-related-to",
+            "version": "1.0.0",
+            "dist": {
+                "type": "path",
+                "url": "/home/kevin/Documents/ksf_FA_RelatedTo",
+                "reference": "cbcc574fe45ac423fd7e751b63e4cc34b03920be"
+            },
+            "require": {
+                "ksfraser/related-to-core": "^1.0",
+                "php": ">=7.4"
+            },
+            "require-dev": {
+                "phpunit/phpunit": "^9.6"
+            },
+            "type": "fa-module",
+            "autoload": {
+                "psr-4": {
+                    "ksfraser\\FrontAccounting\\RelatedTo\\": "src/Ksfraser/FrontAccounting/RelatedTo/"
+                }
+            },
+            "license": [
+                "GPL-3.0"
+            ],
+            "description": "FrontAccounting module: generic related-records master table with hooks (RELATE_RECORDS, RELATED_TO, RELATED_MODULES) and a native db_* repository",
+            "transport-options": {
+                "relative": false
+            }
+        },
+        {
             "name": "ksfraser/ksf-modules-dao",
             "version": "v0.3.5",
             "source": {
@@ -276,6 +305,49 @@
                 "source": "https://github.com/ksfraser/ksf_SchemaManager/tree/main"
             },
             "time": "2026-02-10T21:11:23+00:00"
+        },
+        {
+            "name": "ksfraser/related-to-core",
+            "version": "1.0.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/ksfraser/ksf-related-to-core.git",
+                "reference": "7f6b4e951c542d074ecd04e463b491f47d297480"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/ksfraser/ksf-related-to-core/zipball/7f6b4e951c542d074ecd04e463b491f47d297480",
+                "reference": "7f6b4e951c542d074ecd04e463b491f47d297480",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=7.3"
+            },
+            "require-dev": {
+                "phpunit/phpunit": "^9.6"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "ksfraser\\RelatedTo\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "GPL-3.0"
+            ],
+            "authors": [
+                {
+                    "name": "Kevin Fraser",
+                    "email": "kevin@ksfraser.com"
+                }
+            ],
+            "description": "Framework-agnostic related-records core: DTOs, repository interface, exceptions, and UI renderer contracts",
+            "support": {
+                "issues": "https://github.com/ksfraser/ksf-related-to-core/issues",
+                "source": "https://github.com/ksfraser/ksf-related-to-core/tree/v1.0.1"
+            },
+            "time": "2026-11-05T23:38:43+00:00"
         },
         {
             "name": "ksfraser/traits",
@@ -2205,7 +2277,7 @@
     },
     "platform-dev": [],
     "platform-overrides": {
-        "php": "7.3.21"
+        "php": "7.4.33"
     },
     "plugin-api-version": "2.3.0"
 }
