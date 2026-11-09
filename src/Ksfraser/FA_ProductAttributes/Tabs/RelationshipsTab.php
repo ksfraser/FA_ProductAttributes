@@ -276,8 +276,9 @@ class RelationshipsTab extends AbstractTab
     }
 
     /**
-     * Remove a relationship from the master table (direct repository call;
-     * RelatedTo exposes no UNRELATE hook).
+     * Remove a relationship via the UNRELATE_RECORDS hook (dispatched to
+     * ksf_FA_RelatedTo). Falls back to direct repository call when hooks are
+     * unavailable.
      */
     private function removeRelationship(
         string $stockId,
@@ -285,12 +286,18 @@ class RelationshipsTab extends AbstractTab
         string $rhsId,
         ?string $linkRole
     ): void {
-        $repoClass = '\\ksfraser\\FrontAccounting\\RelatedTo\\Repository\\RelatedRecordRepository';
-        if (!class_exists($repoClass)) {
+        $dto = new RelatedRecordDto('item', $stockId, $rhsType, $rhsId, $linkRole);
+
+        if (function_exists('hook_invoke')) {
+            $result = $dto;
+            hook_invoke('ksf_FA_RelatedTo', 'UNRELATE_RECORDS', $result, null);
             return;
         }
 
-        (new $repoClass())->unrelate('item', $stockId, $rhsType, $rhsId, $linkRole);
+        $repoClass = '\\ksfraser\\FrontAccounting\\RelatedTo\\Repository\\RelatedRecordRepository';
+        if (class_exists($repoClass)) {
+            (new $repoClass())->unrelate('item', $stockId, $rhsType, $rhsId, $linkRole);
+        }
     }
 
     // ------------------------------------------------------------------
