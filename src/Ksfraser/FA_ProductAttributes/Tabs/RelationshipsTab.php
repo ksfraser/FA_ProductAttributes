@@ -6,6 +6,7 @@ namespace Ksfraser\FA_ProductAttributes\Tabs;
 use FrontAccounting\ProductAttributes\Plugin\AbstractTab;
 use Ksfraser\FA_ProductAttributes\Dao\RelationshipsDao;
 use ksfraser\FrontAccounting\Common\Repository\EntityRegistry;
+use ksfraser\FrontAccounting\Common\Repository\EntityUrlResolver;
 use ksfraser\RelatedTo\DTO\RelatedQueryDto;
 use ksfraser\RelatedTo\DTO\RelatedRecordDto;
 use ksfraser\RelatedTo\UI\DefaultRelatedRecordsRenderer;
@@ -315,7 +316,15 @@ class RelationshipsTab extends AbstractTab
         }
 
         $label = $this->dao->resolveLabel($def['table'], $def['pk'], $def['label'], $id);
-        return $label !== null ? $label : $id;
+        $title = !empty($def['title']) ? (string) $def['title'] : ucfirst((string) $type);
+
+        // When the label differs from the id (e.g. invoice trans_no vs reference),
+        // show "Title id (label)". Otherwise just "Title id".
+        if ($label !== null && $label !== $id) {
+            return "$title $id ($label)";
+        }
+
+        return "$title " . ($label !== null ? $label : $id);
     }
 
     /**
@@ -323,7 +332,8 @@ class RelationshipsTab extends AbstractTab
      */
     public function resolveUrl(string $type, string $id): string
     {
-        return '#';
+        $resolver = new EntityUrlResolver();
+        return $resolver->resolveUrl($type, $id);
     }
 
     /**
